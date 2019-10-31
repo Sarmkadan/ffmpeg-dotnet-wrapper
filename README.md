@@ -1,10 +1,10 @@
+[![Build](https://github.com/sarmkadan/ffmpeg-dotnet-wrapper/actions/workflows/build.yml/badge.svg)](https://github.com/sarmkadan/ffmpeg-dotnet-wrapper/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](https://dotnet.microsoft.com/)
+
 # FFmpeg .NET Wrapper
 
 **Strongly-typed FFmpeg wrapper for .NET** – Transcode, trim, merge, and watermark videos with a fluent, intuitive API.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=.net)](https://dotnet.microsoft.com)
-[![Build Status](https://github.com/vladyslav-zaiets/ffmpeg-dotnet-wrapper/workflows/build/badge.svg)](https://github.com/vladyslav-zaiets/ffmpeg-dotnet-wrapper/actions)
 
 ## Overview
 
