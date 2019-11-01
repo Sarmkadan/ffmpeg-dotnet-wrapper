@@ -30,9 +30,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IOperationRepository, OperationRepository>();
 
         // Register services
-        services.AddSingleton<IFFmpegService, FFmpegService>();
         services.AddSingleton<TranscodeService>();
-        services.AddSingleton<BatchOperationService>();
 
         // Register options
         services.AddSingleton(options);

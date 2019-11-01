@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="FFmpegDotnetWrapper.csproj" />
+  <Project Path="tests/ffmpeg-dotnet-wrapper.Tests/ffmpeg-dotnet-wrapper.Tests.csproj" />
 </Solution>
