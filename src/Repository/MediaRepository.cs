@@ -3,6 +3,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Models;
 
 namespace FFmpegDotnetWrapper.Repository;

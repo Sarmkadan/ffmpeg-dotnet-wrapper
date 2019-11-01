@@ -66,7 +66,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// <summary>
         /// Creates a successful API response with the provided data.
         /// </summary>
-        public static ApiResponse<T> Success(T data, string message = "Operation completed successfully")
+        public static ApiResponse<T> Ok(T data, string message = "Operation completed successfully")
         {
             return new ApiResponse<T>
             {
@@ -81,7 +81,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// Creates a successful API response with custom status code.
         /// Used for operations that return 201 (Created) or other non-200 success codes.
         /// </summary>
-        public static ApiResponse<T> Success(T data, int statusCode, string message = "Operation completed successfully")
+        public static ApiResponse<T> Ok(T data, int statusCode, string message = "Operation completed successfully")
         {
             return new ApiResponse<T>
             {
@@ -180,7 +180,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         public List<ApiError> Errors { get; set; } = [];
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
-        public static ApiResponse Success(string message = "Operation completed successfully")
+        public static ApiResponse Ok(string message = "Operation completed successfully")
         {
             return new ApiResponse
             {
