@@ -10,15 +10,22 @@
     <ImplicitUsings>enable</ImplicitUsings>
 
     <!-- NuGet Package Info -->
-    <PackageId>FFmpegDotnetWrapper</PackageId>
+    <PackageId>Zaiets.ffmpeg.dotnet.wrapper</PackageId>
     <Version>1.0.0</Version>
     <Authors>Vladyslav Zaiets</Authors>
     <Description>Strongly-typed FFmpeg wrapper for .NET - transcode, trim, merge, watermark with fluent API</Description>
-    <RepositoryUrl>https://github.com/sarmkadan/ffmpeg-dotnet-wrapper</RepositoryUrl>
-    <PackageProjectUrl>https://sarmkadan.com</PackageProjectUrl>
+    <PackageTags>ffmpeg video transcoding media streaming dotnet wrapper</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageTags>ffmpeg;video;transcoding;media;streaming</PackageTags>
+    <PackageProjectUrl>https://github.com/sarmkadan/ffmpeg-dotnet-wrapper</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sarmkadan/ffmpeg-dotnet-wrapper</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="examples/**/*.cs" />
