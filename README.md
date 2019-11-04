@@ -726,7 +726,7 @@ Benchmarks measured on a 4-core/8-thread machine (Intel i7-12700, 32 GB RAM, NVM
 
 ---
 
-## Ecosystem
+## Related Projects
 
 Part of a collection of .NET libraries and tools. See more at [github.com/sarmkadan](https://github.com/sarmkadan).
 
@@ -805,10 +805,10 @@ dotnet test
 
 MIT License – See [LICENSE](LICENSE) file for details.
 
-Copyright © 2026 Vladyslav Zaiets
+Copyright © 2025 Vladyslav Zaiets
 
 ---
 
-**Built by [Vladyslav Zaiets](https://sarmkadan.com) - CTO & Software Architect**
+Built by [Vladyslav Zaiets](https://sarmkadan.com)
 
 [Portfolio](https://sarmkadan.com) | [GitHub](https://github.com/vladyslav-zaiets) | [Telegram](https://t.me/sarmkadan)

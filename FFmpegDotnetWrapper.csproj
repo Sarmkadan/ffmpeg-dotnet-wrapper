@@ -15,6 +15,7 @@
     <Authors>Vladyslav Zaiets</Authors>
     <Description>Strongly-typed FFmpeg wrapper for .NET - transcode, trim, merge, watermark with fluent API</Description>
     <PackageTags>ffmpeg video transcoding media streaming dotnet wrapper</PackageTags>
+    <Copyright>Copyright © 2025 Vladyslav Zaiets</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/sarmkadan/ffmpeg-dotnet-wrapper</PackageProjectUrl>
     <RepositoryUrl>https://github.com/sarmkadan/ffmpeg-dotnet-wrapper</RepositoryUrl>
