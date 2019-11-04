@@ -5,208 +5,258 @@ All notable changes to FFmpeg .NET Wrapper are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - 2026-05-04
+## [1.0.0] - 2025-09-22
 
 ### Added
 
-- **Background Job Service**: Asynchronous operation queue with persistence
-  - `BackgroundJobService` for enqueuing transcode/trim/merge/watermark operations
-  - `IJobRepository` abstraction for job storage
-  - Job state tracking: Pending, Processing, Completed, Failed
-  - Webhook notifications on job completion
+- **NuGet Packaging**: `FFmpegDotnetWrapper` available on NuGet
+  - Package ID, version, license, and readme metadata configured
+  - Source link support for debugging into the library
+  - XML documentation generated for IntelliSense
 
-- **Webhook Integration**: Notify external systems on operation completion
-  - `WebhookService` for registering and triggering webhooks
-  - Configurable webhook endpoints
-  - Retry logic with exponential backoff
+- **Docker Support**: `Dockerfile` and `docker-compose.yml`
+  - Multi-stage build (SDK → runtime) for minimal image size
+  - FFmpeg pre-installed in image
+  - Volume mounts for input/output directories
+  - Health checks and environment variable configuration
+
+- **CI/CD**: GitHub Actions workflows
+  - `build.yml`: Build and test on Linux, macOS, Windows
+  - `codeql.yml`: Automated security scanning on push and schedule
+  - `nuget-publish.yml`: Automated NuGet publishing on release tags
+  - Dependabot configuration for weekly dependency updates
+
+- **Streaming Progress**: `StreamingProgressService` for real-time progress over HTTP
+  - Server-sent events for long-running operations
+  - Progress reporting compatible with `IProgress<OperationStatistics>`
+
+- **Security**: Input hardening across all code paths
+  - Process arguments passed as arrays (no shell expansion)
+  - Path traversal checks in `ValidationUtilities`
+  - Rate limiting middleware to prevent resource exhaustion
+
+### Changed
+
+- Promoted all APIs to stable; removed `Experimental` annotations
+- `FFmpegOptions.DefaultTimeout` default raised from 300 s to 600 s
+- Documentation overhauled: architecture diagram, FAQ, deployment guide
+
+### Fixed
+
+- Temporary file cleanup on cancellation and process timeout
+- `ProgressTracker` reported stale frame count at operation end
+
+---
+
+## [0.9.0] - 2025-07-28
+
+### Added
 
 - **REST API Controller**: `FFmpegController` with endpoints for all operations
-  - `POST /api/ffmpeg/transcode` – Transcode video files
-  - `POST /api/ffmpeg/trim` – Trim video segments
-  - `POST /api/ffmpeg/merge` – Merge multiple videos
-  - `POST /api/ffmpeg/watermark` – Add watermarks
+  - `POST /api/ffmpeg/transcode`
+  - `POST /api/ffmpeg/trim`
+  - `POST /api/ffmpeg/merge`
+  - `POST /api/ffmpeg/watermark`
+  - `ApiRequest` and `ApiResponse` DTOs
+
+- **Background Job Service**: Asynchronous operation queue
+  - `BackgroundJobService` for enqueuing transcode/trim/merge/watermark jobs
+  - `JobQueue` with in-memory persistence
+  - Job state tracking: Pending, Processing, Completed, Failed
+
+- **Webhook Integration**: Notify external systems on operation completion
+  - `WebhookService` with configurable endpoints
+  - Retry logic with exponential backoff
+
+- **Middleware pipeline**: `ErrorHandlingMiddleware`, `RateLimitingMiddleware`,
+  `RequestLoggingMiddleware`, `ValidationMiddleware`
+
+- **`ApplicationStartup`**: Centralised startup configuration for API mode
+
+### Fixed
+
+- Middleware order causing validation errors to bypass error handler
+- Job queue blocking thread pool under high concurrency
+
+---
+
+## [0.8.0] - 2025-06-16
+
+### Added
+
+- **Repository Pattern**: Persistence abstraction layer
+  - `IMediaRepository`, `MediaRepository` for media file metadata
+  - `IOperationRepository`, `OperationRepository` for operation history
+  - In-memory implementations suitable for testing and small deployments
+
+- **Event Publishing**: `EventPublisher` for internal operation lifecycle events
+  - Raised on operation start, completion, and failure
+
+- **Caching**: `CacheService` for ffprobe metadata results
+  - Avoids repeated analysis of the same file
+
+### Changed
+
+- DI registration updated: `AddFFmpegWrapper()` now registers repositories and cache
+- `IFFmpegService` made fully mockable via interface segregation
+
+---
+
+## [0.7.0] - 2025-05-19
+
+### Added
 
 - **Batch Processing**: `BatchOperationService` for concurrent file processing
-  - Process multiple files in parallel with configurable concurrency
-  - Aggregate statistics: completion rate, success rate, duration
+  - Process multiple files with configurable parallelism (`MaxConcurrentOperations`)
+  - Aggregate statistics: total, completed, failed, success rate, elapsed time
   - Progress reporting via `IProgress<OperationStatistics>`
 
-- **Media Analysis**: `AnalyzeMediaAsync()` to extract file metadata
-  - Duration, resolution, codecs, frame rate, bitrate
-  - Codec detection (video/audio)
-  - Used for validation and progress estimation
-
-### Changed
-
-- **Improved Error Handling**: `FFmpegException` with exit code and raw output
-  - Detailed error messages for debugging
-  - FFmpeg stderr captured in result
-  - Timeout handling with proper cancellation
-
-- **Logging Architecture**: Structured logging throughout the pipeline
-  - `ILogger<T>` injected into all services
-  - Information, Debug, Warning, Error levels
-  - Progress updates logged at Debug level
-
-- **Configuration**: Flexible `FFmpegOptions` for startup customization
-  - `DefaultTimeout`: Configurable per-operation timeout
-  - `MaxConcurrentOperations`: Control parallelism
-  - `FFmpegPath`: Custom FFmpeg executable path
-  - `WorkingDirectory`: Temporary file location
-  - `EnableDetailedLogging`: Debug output control
+- **`OperationStatistics`** model with counts, rates, and timing
 
 ### Fixed
 
-- Process cleanup on timeout or cancellation
-- Proper handling of special characters in file paths
-- Audio/video sync issues with keyframe alignment
-- Memory leak in progress tracking with large files
+- `SemaphoreSlim` not released on exception in batch loop
+- Incorrect elapsed time reported for very short operations (<100 ms)
 
-## [1.1.0] - 2026-04-15
+---
+
+## [0.6.0] - 2025-04-28
 
 ### Added
 
-- **Watermark Support**: Add image overlays to videos
-  - `WatermarkSettings` with position, scale, opacity
-  - Multiple position options: TopLeft, TopRight, BottomLeft, BottomRight, Center
-  - Aspect ratio preservation
+- **Media Analysis**: `AnalyzeMediaAsync()` to extract file metadata via ffprobe
+  - Duration, resolution (width × height), codecs, frame rate, bitrate
+  - `MediaFile` model with analysed properties
+  - Used internally for progress estimation and validation
 
-- **Video Merge**: Concatenate multiple video files
-  - `MergeAsync()` method supporting multiple inputs
-  - Configurable audio/video preservation
-  - Optional crossfade transitions
+### Changed
 
-- **Video Trim**: Extract segments from videos
-  - `TrimAsync()` for segment extraction
-  - Keyframe-aligned trimming option
-  - Selective audio/video stream preservation
+- `ProcessUtilities` refactored to handle both ffmpeg and ffprobe invocations
+- `FFmpegConstants` updated with ffprobe argument templates
+
+---
+
+## [0.5.0] - 2025-04-07
+
+### Added
 
 - **CLI Command Parser**: `CliCommandParser` for command-line interface
-  - Commands: transcode, trim, merge, watermark
-  - Argument parsing and validation
-  - Output formatting with progress
+  - Commands: `transcode`, `trim`, `merge`, `watermark`
+  - Argument parsing and `--help` output
+  - `OutputFormatter` for human-readable console output
 
-- **Repository Pattern**: Data abstraction layer
-  - `IMediaRepository` for media file storage
-  - `IOperationRepository` for operation history
-  - In-memory implementations included
+- **Progress Tracking**: `ProgressTracker` parses FFmpeg stderr lines
+  - Extracts frame, time, bitrate, and speed fields
+  - Emits `FFmpegProgressUpdate` objects consumed by `IProgress<T>`
 
 ### Changed
 
-- Refactored `TranscodeSettings` for clarity
-  - Separated video/audio bitrate
-  - Added quality presets: Low, Medium, High, Lossless
-  - Added auto-scaling with max dimensions
+- `src/Program.cs` updated to dispatch between CLI and API startup modes
 
-- Improved `ProcessUtilities` robustness
-  - Better FFmpeg output parsing
-  - Frame/time/bitrate extraction for progress
-  - Timeout enforcement via `CancellationToken`
+---
 
-### Fixed
-
-- Incorrect frame rate calculation from FFmpeg output
-- Memory issues with large concurrent operations
-- Path normalization on Windows with UNC paths
-
-## [1.0.0] - 2026-03-01
+## [0.4.0] - 2025-03-14
 
 ### Added
 
-- **Core Transcoding**: `IFFmpegService` with transcode operation
-  - Video codec support: H.264, H.265, VP9, AV1
-  - Audio codec support: AAC, MP3, Opus, FLAC, Vorbis
-  - Container formats: MP4, WebM, MKV, OGG, AVI
-  - Bitrate and quality configuration
-  - Frame rate and resolution control
-  - Aspect ratio preservation
+- **Watermark Support**: `WatermarkAsync()` adds image overlays to videos
+  - `WatermarkSettings`: position, scale (0–1), opacity (0–1), pixel offsets
+  - Positions: `TopLeft`, `TopRight`, `BottomLeft`, `BottomRight`, `Center`
+  - Aspect ratio preservation for overlay images
 
-- **Dependency Injection**: `ServiceCollectionExtensions`
-  - Clean DI registration: `AddFFmpegWrapper()`
-  - Configuration via `FFmpegOptions`
-  - Logging integration
+### Fixed
+
+- `overlay` filter expression used wrong variable for Y offset on `BottomLeft`/`BottomRight`
+
+---
+
+## [0.3.0] - 2025-02-24
+
+### Added
+
+- **Video Merge**: `MergeAsync()` concatenates multiple video files
+  - `MergeSettings`: audio/video stream preservation, optional crossfade flag
+  - Generates concat demuxer list file; cleaned up after operation
+
+- **Video Trim**: `TrimAsync()` extracts segments
+  - `TrimSettings`: start time, duration (null = to end), keyframe alignment
+  - Selective audio/video stream inclusion
+
+### Fixed
+
+- Merge operation left temporary concat list on disk when FFmpeg exited non-zero
+- Trim with `Keyframe = false` produced audio drift on some codecs
+
+---
+
+## [0.2.0] - 2025-02-03
+
+### Added
+
+- **Error Handling**: `FFmpegException` with `ExitCode` and `RawOutput` properties
+- **Validation**: `ValidationUtilities` — path existence, null/empty guards, bitrate bounds
+- **File Utilities**: `FileUtilities` — path normalisation, extension checks, temp file helpers
+- **Formatting**: `FormattingUtilities` — duration, bitrate, and codec string helpers
+- **Extension Methods**: `ExtensionMethods` — LINQ and string convenience helpers
+
+### Changed
+
+- `ConversionResult` now includes `ErrorMessage`, `RawOutput`, and `ExitCode`
+- Failed operations no longer throw by default; check `result.Success` instead
+
+---
+
+## [0.1.0] - 2025-01-15
+
+### Added
+
+- **Core Transcoding**: `IFFmpegService` / `FFmpegService` with `TranscodeAsync()`
+  - Video codecs: H.264, H.265, VP9, AV1
+  - Audio codecs: AAC, MP3, Opus, FLAC, Vorbis
+  - Container formats: MP4, WebM, MKV, OGG, AVI
+  - Bitrate, quality preset, frame rate, and resolution control
 
 - **Process Management**: `ProcessUtilities`
-  - Safe FFmpeg subprocess spawning
-  - Array-based arguments (injection-proof)
-  - Output stream capture
-  - Exit code validation
-  - Timeout enforcement
+  - FFmpeg subprocess spawning with array-based arguments
+  - stdout/stderr capture; exit code validation
+  - Timeout enforcement via `CancellationToken`
 
-- **Utilities**: Helper functions for common tasks
-  - `FileUtilities`: Path validation, normalization
-  - `ValidationUtilities`: Input validation
-  - `ProgressTracker`: FFmpeg output parsing
-  - `ExtensionMethods`: LINQ extensions
+- **Configuration**: `FFmpegOptions` and `ServiceCollectionExtensions`
+  - `AddFFmpegWrapper()` DI extension for clean registration
+  - Options: `FFmpegPath`, `DefaultTimeout`, `WorkingDirectory`, `EnableDetailedLogging`
 
-- **Configuration**: `FFmpegOptions` class
-  - FFmpeg executable path
-  - Operation timeout
-  - Working directory
-  - Logging control
+- **Models**: `TranscodeSettings`, `ConversionResult`, `FFmpegOperation`
 
-- **Documentation**: Comprehensive guides
-  - README.md with examples
-  - Architecture.md with design patterns
-  - API reference
-  - Getting started guide
-  - FAQ
+- **Constants**: `FFmpegConstants`, `OperationConstants`
 
-- **Examples**: 7 complete example programs
-  - Basic transcoding
-  - Batch processing
-  - Video trimming
-  - Video merging
-  - Watermarking
-  - Media analysis
-  - REST API server
-
-- **CI/CD**: GitHub Actions workflow
-  - Build on Linux, macOS, Windows
-  - Test with .NET 10
-  - Docker image building
-  - NuGet package publishing
-
-- **Docker Support**: Dockerfile and docker-compose.yml
-  - Multi-stage build for optimization
-  - Health checks
-  - Volume mounts for input/output
-  - Configurable via environment variables
-
-### Security
-
-- Command injection prevention via array arguments
-- Path traversal prevention with validation
-- Input validation for all user-provided data
-- No shell execution (process array API)
+- **Logging**: `ILogger<T>` injected into all services; Information/Debug/Warning/Error levels
 
 ---
 
 ## Version Support
 
-| Version | Release Date | .NET Versions | Status |
-|---------|--------------|---------------|--------|
-| 1.2.0 | 2026-05-04 | 10.0 | Current |
-| 1.1.0 | 2026-04-15 | 10.0 | Supported |
-| 1.0.0 | 2026-03-01 | 10.0 | Supported |
+| Version | Release Date | .NET Versions | Status    |
+|---------|--------------|---------------|-----------|
+| 1.0.0   | 2025-09-22   | 10.0          | Current   |
+| 0.9.0   | 2025-07-28   | 10.0          | Supported |
+| 0.8.0   | 2025-06-16   | 10.0          | Supported |
 
 ---
 
 ## Upgrade Guide
 
-### From 1.1.0 to 1.2.0
+### From 0.9.0 to 1.0.0
 
-No breaking changes. New features:
-- Background jobs: Enable with `options.EnableBackgroundJobs = true`
-- Webhooks: Enable with `options.EnableWebhooks = true`
-- REST API: Use new `FFmpegController` endpoints
+No breaking changes. New optional features:
+- Streaming progress: use `StreamingProgressService` in API projects
+- NuGet install: `dotnet add package FFmpegDotnetWrapper`
 
-### From 1.0.0 to 1.1.0
+### From 0.8.0 to 0.9.0
 
-No breaking changes. New methods:
-- `TrimAsync()` – Extract video segments
-- `MergeAsync()` – Concatenate videos
-- `WatermarkAsync()` – Add image overlays
+No breaking changes. New methods and services:
+- `BackgroundJobService.EnqueueTranscodeAsync()` — asynchronous job queue
+- `WebhookService.NotifyAsync()` — completion webhooks
+- REST API via `FFmpegController`
 
 ---
 
@@ -220,4 +270,4 @@ See [README.md](README.md#contributing) for contribution guidelines.
 
 MIT License – See [LICENSE](LICENSE) file.
 
-Copyright © 2026 Vladyslav Zaiets
+Copyright © 2025 Vladyslav Zaiets
