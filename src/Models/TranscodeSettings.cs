@@ -71,10 +71,24 @@ public class TranscodeSettings
     public string? CustomFFmpegArgs { get; set; }
 
     /// <summary>
-    /// Validates the transcode settings for consistency and compatibility.
+    /// Known-good video codec / container combinations. Entries not listed here
+    /// will be rejected during validation to prevent silent FFmpeg failures.
+    /// </summary>
+    private static readonly Dictionary<ContainerFormat, HashSet<VideoCodec>> ContainerVideoCodecMap = new()
+    {
+        [ContainerFormat.MP4]  = [VideoCodec.H264, VideoCodec.H265, VideoCodec.AV1],
+        [ContainerFormat.MKV]  = [VideoCodec.H264, VideoCodec.H265, VideoCodec.VP8, VideoCodec.VP9, VideoCodec.AV1],
+        [ContainerFormat.WebM] = [VideoCodec.VP8, VideoCodec.VP9, VideoCodec.AV1],
+    };
+
+    /// <summary>
+    /// Validates the transcode settings for consistency, compatibility, and
+    /// codec/container support.
     /// </summary>
     public void Validate()
     {
+        ValidateCodecContainerCompatibility();
+
         if (Width.HasValue && Width < 1)
             throw new InvalidOperationConfigurationException("Width must be greater than 0");
 
@@ -97,6 +111,20 @@ public class TranscodeSettings
         {
             if (TargetLoudness < -40 || TargetLoudness > -5)
                 throw new InvalidOperationConfigurationException("Target loudness must be between -40 and -5 LUFS");
+        }
+    }
+
+    private void ValidateCodecContainerCompatibility()
+    {
+        if (!ContainerVideoCodecMap.TryGetValue(Container, out var supportedCodecs))
+            return; // unknown containers are allowed (user may use CustomFFmpegArgs)
+
+        if (!supportedCodecs.Contains(VideoCodec))
+        {
+            var allowed = string.Join(", ", supportedCodecs);
+            throw new InvalidOperationConfigurationException(
+                $"{VideoCodec} is not supported in {Container} container. " +
+                $"Supported video codecs for {Container}: {allowed}");
         }
     }
 
