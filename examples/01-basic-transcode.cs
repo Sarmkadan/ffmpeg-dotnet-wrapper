@@ -56,7 +56,7 @@ public class BasicTranscodeExample
         try
         {
             // Check FFmpeg availability
-            var available = await ffmpeg.IsFFmpegAvailableAsync();
+            var available = await ffmpeg.IsFFmpegAvailableAsync().ConfigureAwait(false);
             if (!available)
             {
                 logger.LogError("FFmpeg is not installed or not available in PATH");
@@ -92,7 +92,7 @@ public class BasicTranscodeExample
             });
 
             // Perform transcode
-            var result = await ffmpeg.TranscodeAsync(inputFile, outputFile, settings, progress);
+            var result = await ffmpeg.TranscodeAsync(inputFile, outputFile, settings, progress).ConfigureAwait(false);
 
             Console.WriteLine();  // New line after progress
 

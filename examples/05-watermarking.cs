@@ -76,14 +76,14 @@ public class WatermarkingExample
             // Analyze video
             logger.LogInformation("Analyzing video: {File}", videoFile);
             var media = new MediaFile { Path = videoFile };
-            var videoProps = await ffmpeg.AnalyzeMediaAsync(media);
+            var videoProps = await ffmpeg.AnalyzeMediaAsync(media).ConfigureAwait(false);
 
             logger.LogInformation("Video resolution: {Width}x{Height}", videoProps.Width, videoProps.Height);
             logger.LogInformation("Duration: {Duration}s", videoProps.Duration.TotalSeconds);
 
             // Analyze watermark
             var watermarkMedia = new MediaFile { Path = watermarkFile };
-            var watermarkProps = await ffmpeg.AnalyzeMediaAsync(watermarkMedia);
+            var watermarkProps = await ffmpeg.AnalyzeMediaAsync(watermarkMedia).ConfigureAwait(false);
             logger.LogInformation("Watermark size: {Width}x{Height}", watermarkProps.Width, watermarkProps.Height);
 
             // Create watermark settings

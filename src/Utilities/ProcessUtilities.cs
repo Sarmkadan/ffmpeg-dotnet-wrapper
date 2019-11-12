@@ -187,10 +187,10 @@ namespace FFmpegDotnetWrapper.Utilities
                 try
                 {
                     // Wait for completion with cancellation support
-                    await process.WaitForExitAsync(cts.Token);
+                    await process.WaitForExitAsync(cts.Token).ConfigureAwait(false);
 
-                    var output = await process.StandardOutput.ReadToEndAsync();
-                    var error = await process.StandardError.ReadToEndAsync();
+                    var output = await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
+                    var error = await process.StandardError.ReadToEndAsync().ConfigureAwait(false);
                     var executionTime = DateTime.UtcNow - startTime;
 
                     return new ProcessResult

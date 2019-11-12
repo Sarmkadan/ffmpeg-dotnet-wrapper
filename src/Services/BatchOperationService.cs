@@ -50,13 +50,13 @@ public class BatchOperationService
 
         foreach (var inputFile in files)
         {
-            await semaphore.WaitAsync(cancellationToken);
+            await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             tasks.Add(ProcessFileAsync(inputFile, outputDirectory, settings, semaphore, result, cancellationToken));
         }
 
         try
         {
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -91,13 +91,13 @@ public class BatchOperationService
 
         foreach (var filePath in files)
         {
-            await semaphore.WaitAsync(cancellationToken);
+            await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             tasks.Add(AnalyzeFileAsync(filePath, result, semaphore, cancellationToken));
         }
 
         try
         {
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -136,11 +136,11 @@ public class BatchOperationService
 
         var tasks = files.Select(async inputFile =>
         {
-            await semaphore.WaitAsync(cancellationToken);
+            await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 var outputFile = Path.Combine(outputDirectory, Path.GetFileName(inputFile));
-                var operationResult = await processFunc(inputFile, outputFile, cancellationToken);
+                var operationResult = await processFunc(inputFile, outputFile, cancellationToken).ConfigureAwait(false);
 
                 lock (result.Results)
                 {
@@ -163,7 +163,7 @@ public class BatchOperationService
 
         try
         {
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -232,7 +232,7 @@ public class BatchOperationService
             var fileName = Path.GetFileName(filePath);
             _logger.LogDebug("Analyzing file: {File}", fileName);
 
-            var mediaFile = await _ffmpegService.AnalyzeMediaAsync(filePath, cancellationToken);
+            var mediaFile = await _ffmpegService.AnalyzeMediaAsync(filePath, cancellationToken).ConfigureAwait(false);
 
             lock (result.AnalyzedFiles)
             {

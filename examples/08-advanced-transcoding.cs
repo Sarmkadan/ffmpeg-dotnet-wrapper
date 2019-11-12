@@ -65,7 +65,7 @@ public class AdvancedTranscodingExample
             // Analyze input
             logger.LogInformation("Analyzing input file: {File}", inputFile);
             var media = new MediaFile { Path = inputFile };
-            var analyzed = await ffmpeg.AnalyzeMediaAsync(media);
+            var analyzed = await ffmpeg.AnalyzeMediaAsync(media).ConfigureAwait(false);
 
             logger.LogInformation("Duration: {Duration}", analyzed.Duration);
             logger.LogInformation("Resolution: {Width}x{Height}", analyzed.Width, analyzed.Height);
@@ -105,7 +105,7 @@ public class AdvancedTranscodingExample
             });
 
             // Perform transcode
-            var result = await ffmpeg.TranscodeAsync(inputFile, outputFile, settings, progress);
+            var result = await ffmpeg.TranscodeAsync(inputFile, outputFile, settings, progress).ConfigureAwait(false);
 
             Console.WriteLine();
 

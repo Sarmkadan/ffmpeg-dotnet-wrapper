@@ -189,7 +189,7 @@ public class FFmpegOperationTests
             .ReturnsAsync(expectedResult);
 
         var service = mockService.Object;
-        var result = await service.TranscodeAsync(inputMedia, outputPath, settings);
+        var result = await service.TranscodeAsync(inputMedia, outputPath, settings).ConfigureAwait(false);
 
         result.IsSuccess.Should().BeTrue();
         result.OutputFilePath.Should().Be(outputPath);
@@ -205,7 +205,7 @@ public class FFmpegOperationTests
         mockService.Setup(s => s.IsFFmpegAvailableAsync(It.IsAny<CancellationToken>()))
                    .ReturnsAsync(true);
 
-        var available = await mockService.Object.IsFFmpegAvailableAsync();
+        var available = await mockService.Object.IsFFmpegAvailableAsync().ConfigureAwait(false);
 
         available.Should().BeTrue();
     }

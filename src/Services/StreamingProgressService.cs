@@ -89,7 +89,7 @@ public sealed class StreamingProgressService : IStreamingProgressService
             string? line;
             try
             {
-                line = await ffmpegProcess.StandardError.ReadLineAsync(cancellationToken);
+                line = await ffmpegProcess.StandardError.ReadLineAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {

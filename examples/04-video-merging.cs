@@ -66,7 +66,7 @@ public class VideoMergingExample
             foreach (var file in inputFiles)
             {
                 var media = new MediaFile { Path = file };
-                var analyzed = await ffmpeg.AnalyzeMediaAsync(media);
+                var analyzed = await ffmpeg.AnalyzeMediaAsync(media).ConfigureAwait(false);
                 totalDuration = totalDuration.Add(analyzed.Duration);
 
                 logger.LogInformation("  {File}: {Duration}s, {Width}x{Height}, {Codec}",
@@ -104,7 +104,7 @@ public class VideoMergingExample
             });
 
             // Perform merge
-            var result = await ffmpeg.MergeAsync(inputFiles, outputFile, settings, progress);
+            var result = await ffmpeg.MergeAsync(inputFiles, outputFile, settings, progress).ConfigureAwait(false);
 
             Console.WriteLine();  // New line after progress
 

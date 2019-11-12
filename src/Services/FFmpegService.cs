@@ -65,11 +65,11 @@ public class FFmpegService : IFFmpegService
             BuildTranscodeArguments(operation, settings);
 
             _logger.LogInformation("Starting transcode operation for {File}", inputMedia.Name);
-            var result = await ExecuteFFmpegAsync(operation, cancellationToken);
+            var result = await ExecuteFFmpegAsync(operation, cancellationToken).ConfigureAwait(false);
 
             if (result.IsSuccess)
             {
-                var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken);
+                var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken).ConfigureAwait(false);
                 result.OutputMedia = outputMedia;
                 result.SetMetric("InputSize", inputMedia.FileSize);
                 result.SetMetric("OutputSize", outputMedia.FileSize);
@@ -109,11 +109,11 @@ public class FFmpegService : IFFmpegService
             BuildTrimArguments(operation, settings);
 
             _logger.LogInformation("Starting trim operation for {File}", inputMedia.Name);
-            var result = await ExecuteFFmpegAsync(operation, cancellationToken);
+            var result = await ExecuteFFmpegAsync(operation, cancellationToken).ConfigureAwait(false);
 
             if (result.IsSuccess)
             {
-                var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken);
+                var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken).ConfigureAwait(false);
                 result.OutputMedia = outputMedia;
             }
 
@@ -149,11 +149,11 @@ public class FFmpegService : IFFmpegService
             settings.Validate();
 
             _logger.LogInformation("Starting merge operation with {Count} files", operation.InputFiles.Count);
-            var result = await ExecuteFFmpegAsync(operation, cancellationToken);
+            var result = await ExecuteFFmpegAsync(operation, cancellationToken).ConfigureAwait(false);
 
             if (result.IsSuccess)
             {
-                var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken);
+                var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken).ConfigureAwait(false);
                 result.OutputMedia = outputMedia;
             }
 
@@ -190,11 +190,11 @@ public class FFmpegService : IFFmpegService
             BuildWatermarkArguments(operation, settings, inputMedia);
 
             _logger.LogInformation("Starting watermark operation for {File}", inputMedia.Name);
-            var result = await ExecuteFFmpegAsync(operation, cancellationToken);
+            var result = await ExecuteFFmpegAsync(operation, cancellationToken).ConfigureAwait(false);
 
             if (result.IsSuccess)
             {
-                var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken);
+                var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken).ConfigureAwait(false);
                 result.OutputMedia = outputMedia;
             }
 
@@ -221,7 +221,7 @@ public class FFmpegService : IFFmpegService
             // This is a simplified analysis - in production, parse ffprobe JSON output
             mediaFile.Description = $"Analyzed on {DateTime.UtcNow:O}";
 
-            await _mediaRepository.AddAsync(mediaFile, cancellationToken);
+            await _mediaRepository.AddAsync(mediaFile, cancellationToken).ConfigureAwait(false);
             return mediaFile;
         }
         catch (Exception ex)
@@ -240,7 +240,7 @@ public class FFmpegService : IFFmpegService
             operation.Validate();
             _logger.LogInformation("Executing custom FFmpeg operation: {Name}", operation.Name);
 
-            var result = await ExecuteFFmpegAsync(operation, cancellationToken);
+            var result = await ExecuteFFmpegAsync(operation, cancellationToken).ConfigureAwait(false);
             return result;
         }
         catch (Exception ex)
@@ -267,8 +267,8 @@ public class FFmpegService : IFFmpegService
             };
 
             process.Start();
-            var versionOutput = await process.StandardOutput.ReadLineAsync(cancellationToken);
-            await process.WaitForExitAsync(cancellationToken);
+            var versionOutput = await process.StandardOutput.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
 
             return versionOutput ?? "Unknown";
         }
@@ -299,7 +299,7 @@ public class FFmpegService : IFFmpegService
 
         try
         {
-            await _operationRepository.AddAsync(operation, cancellationToken);
+            await _operationRepository.AddAsync(operation, cancellationToken).ConfigureAwait(false);
 
             var arguments = operation.BuildCommandLine();
             _logger.LogDebug("Executing FFmpeg command: {Command}", arguments);
@@ -345,7 +345,7 @@ public class FFmpegService : IFFmpegService
             }
 
             operation.ExecutedAt = DateTime.UtcNow;
-            await _operationRepository.UpdateAsync(operation, cancellationToken);
+            await _operationRepository.UpdateAsync(operation, cancellationToken).ConfigureAwait(false);
 
             return result;
         }

@@ -150,7 +150,7 @@ namespace FFmpegDotnetWrapper.Integration
         /// </summary>
         async Task IEventHandler<OperationCompletedEvent>.HandleAsync(OperationCompletedEvent @event)
         {
-            await DeliverEventToWebhooksAsync(@event, nameof(OperationCompletedEvent));
+            await DeliverEventToWebhooksAsync(@event, nameof(OperationCompletedEvent)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -159,7 +159,7 @@ namespace FFmpegDotnetWrapper.Integration
         /// </summary>
         async Task IEventHandler<OperationFailedEvent>.HandleAsync(OperationFailedEvent @event)
         {
-            await DeliverEventToWebhooksAsync(@event, nameof(OperationFailedEvent));
+            await DeliverEventToWebhooksAsync(@event, nameof(OperationFailedEvent)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace FFmpegDotnetWrapper.Integration
         /// </summary>
         async Task IEventHandler<OperationStartedEvent>.HandleAsync(OperationStartedEvent @event)
         {
-            await DeliverEventToWebhooksAsync(@event, nameof(OperationStartedEvent));
+            await DeliverEventToWebhooksAsync(@event, nameof(OperationStartedEvent)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -192,7 +192,7 @@ namespace FFmpegDotnetWrapper.Integration
             var payload = JsonSerializer.Serialize(@event);
             var tasks = webhooksToNotify.Select(wh => DeliverEventWithRetryAsync(wh, payload, eventTypeName));
 
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -224,7 +224,7 @@ namespace FFmpegDotnetWrapper.Integration
                     request.Headers.Add("X-Event-Type", eventType);
                     request.Headers.Add("X-Event-Id", Guid.NewGuid().ToString());
 
-                    using var response = await _httpClient.SendAsync(request);
+                    using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
 
                     if (response.IsSuccessStatusCode)
                     {
@@ -258,7 +258,7 @@ namespace FFmpegDotnetWrapper.Integration
                 if (attempt < webhook.MaxRetries)
                 {
                     var delayMs = (int)Math.Pow(2, attempt) * 1000; // 1s, 2s, 4s, 8s
-                    await Task.Delay(delayMs);
+                    await Task.Delay(delayMs).ConfigureAwait(false);
                 }
             }
 

@@ -227,7 +227,7 @@ namespace FFmpegDotnetWrapper.Events
             // Wait for all handlers to complete
             try
             {
-                await Task.WhenAll(tasks);
+                await Task.WhenAll(tasks).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

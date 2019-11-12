@@ -58,7 +58,7 @@ public class MediaAnalysisExample
         try
         {
             // Check FFmpeg availability
-            var available = await ffmpeg.IsFFmpegAvailableAsync();
+            var available = await ffmpeg.IsFFmpegAvailableAsync().ConfigureAwait(false);
             if (!available)
             {
                 Console.WriteLine("Error: FFmpeg is not installed");
@@ -66,7 +66,7 @@ public class MediaAnalysisExample
             }
 
             // Get FFmpeg version
-            var version = await ffmpeg.GetFFmpegVersionAsync();
+            var version = await ffmpeg.GetFFmpegVersionAsync().ConfigureAwait(false);
             Console.WriteLine($"FFmpeg: {version}\n");
 
             // Analyze each file
@@ -77,7 +77,7 @@ public class MediaAnalysisExample
                 Console.WriteLine("╚════════════════════════════════════════╝");
 
                 var media = new MediaFile { Path = file };
-                var analyzed = await ffmpeg.AnalyzeMediaAsync(media);
+                var analyzed = await ffmpeg.AnalyzeMediaAsync(media).ConfigureAwait(false);
 
                 // Display file information
                 Console.WriteLine($"File:               {file}");

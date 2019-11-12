@@ -96,7 +96,7 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
                 OperationType = "StreamingPipeline"
             });
 
-            result.MasterPlaylistPath = await InitialisePipelineAsync(settings, linkedCts.Token);
+            result.MasterPlaylistPath = await InitialisePipelineAsync(settings, linkedCts.Token).ConfigureAwait(false);
 
             _logger.LogInformation(
                 "Pipeline {Id} started — {Count} profiles, format {Format}",
@@ -285,7 +285,7 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
                 }
 
                 if (!process.HasExited)
-                    await Task.Delay(250, cancellationToken);
+                    await Task.Delay(250, cancellationToken).ConfigureAwait(false);
             }
         }
         finally
@@ -332,7 +332,7 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
         try
         {
             await foreach (var segment in EncodeRenditionAsync(settings, profile, cancellationToken))
-                await writer.WriteAsync(segment, cancellationToken);
+                await writer.WriteAsync(segment, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) { /* pipeline cancelled — channel closed by WhenAll continuation */ }
         catch (Exception ex)

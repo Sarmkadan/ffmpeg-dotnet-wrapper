@@ -257,7 +257,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
                 });
 
                 // Execute the job
-                await jobWork(cancellationToken);
+                await jobWork(cancellationToken).ConfigureAwait(false);
 
                 // Mark as completed
                 lock (_lockObject)

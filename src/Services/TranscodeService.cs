@@ -49,7 +49,7 @@ public class TranscodeService
         };
 
         _logger.LogInformation("Transcoding {File} to web format (H.264)", inputMedia.Name);
-        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken);
+        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ public class TranscodeService
         };
 
         _logger.LogInformation("Transcoding {File} to H.265 format", inputMedia.Name);
-        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken);
+        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -102,7 +102,7 @@ public class TranscodeService
         };
 
         _logger.LogInformation("Transcoding {File} to mobile format", inputMedia.Name);
-        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken);
+        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -128,7 +128,7 @@ public class TranscodeService
         };
 
         _logger.LogInformation("Transcoding {File} to high-quality format", inputMedia.Name);
-        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken);
+        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -160,7 +160,7 @@ public class TranscodeService
             videoBitrate,
             audioBitrate);
 
-        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken);
+        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -183,7 +183,7 @@ public class TranscodeService
         };
 
         _logger.LogInformation("Extracting audio from {File} as {Codec}", inputMedia.Name, audioCodec);
-        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken);
+        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -212,6 +212,6 @@ public class TranscodeService
         };
 
         _logger.LogInformation("Resizing {File} to {Width}x{Height}", inputMedia.Name, width, height);
-        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken);
+        return await _ffmpegService.TranscodeAsync(inputMedia, outputPath, settings, cancellationToken).ConfigureAwait(false);
     }
 }

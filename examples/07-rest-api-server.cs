@@ -49,11 +49,11 @@ public class RestApiServerExample
         // Get FFmpeg version
         app.MapGet("/api/info", async (IFFmpegService ffmpeg) =>
         {
-            var available = await ffmpeg.IsFFmpegAvailableAsync();
+            var available = await ffmpeg.IsFFmpegAvailableAsync().ConfigureAwait(false);
             if (!available)
                 return Results.ServiceUnavailable();
 
-            var version = await ffmpeg.GetFFmpegVersionAsync();
+            var version = await ffmpeg.GetFFmpegVersionAsync().ConfigureAwait(false);
             return Results.Ok(new { available = true, version });
         })
         .WithName("FFmpeg Info")
@@ -68,7 +68,7 @@ public class RestApiServerExample
             try
             {
                 var media = new MediaFile { Path = request.FilePath };
-                var analyzed = await ffmpeg.AnalyzeMediaAsync(media);
+                var analyzed = await ffmpeg.AnalyzeMediaAsync(media).ConfigureAwait(false);
 
                 return Results.Ok(new
                 {
@@ -192,7 +192,7 @@ public class RestApiServerExample
         Console.WriteLine("  POST /api/trim             - Trim video");
         Console.WriteLine();
 
-        await app.RunAsync();
+        await app.RunAsync().ConfigureAwait(false);
     }
 }
 

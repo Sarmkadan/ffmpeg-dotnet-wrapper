@@ -104,7 +104,7 @@ public class BatchProcessingExample
                 options: 4);
 
             var startTime = DateTime.UtcNow;
-            await batchService.ProcessFilesAsync(files, outputDir, settings, progress);
+            await batchService.ProcessFilesAsync(files, outputDir, settings, progress).ConfigureAwait(false);
             var duration = DateTime.UtcNow - startTime;
 
             // Summary
