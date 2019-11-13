@@ -4,6 +4,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- CS1591: suppress missing XML doc warnings on members not yet documented -->
+    <NoWarn>1591</NoWarn>
     <Authors>Vladyslav Zaiets</Authors>
     <PackageProjectUrl>https://github.com/sarmkadan/ffmpeg-dotnet-wrapper</PackageProjectUrl>
   </PropertyGroup>
