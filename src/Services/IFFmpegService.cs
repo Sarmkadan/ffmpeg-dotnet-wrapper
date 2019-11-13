@@ -8,13 +8,21 @@ using FFmpegDotnetWrapper.Models;
 namespace FFmpegDotnetWrapper.Services;
 
 /// <summary>
-/// Main interface for FFmpeg operations orchestration.
+/// Main interface for orchestrating FFmpeg media operations. Provides a high-level
+/// .NET API over FFmpeg CLI commands for transcoding, trimming, merging, watermarking,
+/// and media analysis with progress tracking and cancellation support.
 /// </summary>
 public interface IFFmpegService
 {
     /// <summary>
-    /// Transcodes a media file with specified settings.
+    /// Transcodes a media file to a different codec, container, or bitrate using the
+    /// provided settings. Supports hardware acceleration when configured.
     /// </summary>
+    /// <param name="inputMedia">The source media file with pre-analyzed metadata.</param>
+    /// <param name="outputPath">Destination file path for the transcoded output.</param>
+    /// <param name="settings">Transcoding settings including codec, bitrate, resolution, and audio parameters.</param>
+    /// <param name="cancellationToken">Token to cancel the FFmpeg process.</param>
+    /// <returns>A <see cref="ConversionResult"/> with output file info, duration, and success status.</returns>
     Task<ConversionResult> TranscodeAsync(
         MediaFile inputMedia,
         string outputPath,
@@ -22,8 +30,14 @@ public interface IFFmpegService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Trims a media file.
+    /// Trims a media file to the time range specified in <paramref name="settings"/>,
+    /// using stream copy when possible to avoid re-encoding.
     /// </summary>
+    /// <param name="inputMedia">The source media file to trim.</param>
+    /// <param name="outputPath">Destination file path for the trimmed output.</param>
+    /// <param name="settings">Trim settings including start time, end time, and re-encoding preference.</param>
+    /// <param name="cancellationToken">Token to cancel the FFmpeg process.</param>
+    /// <returns>A <see cref="ConversionResult"/> with output metadata.</returns>
     Task<ConversionResult> TrimAsync(
         MediaFile inputMedia,
         string outputPath,
@@ -31,8 +45,14 @@ public interface IFFmpegService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Merges multiple media files.
+    /// Concatenates multiple media files into a single output file. Input files must
+    /// share the same codec and stream parameters for concat demuxer compatibility.
     /// </summary>
+    /// <param name="inputFiles">Ordered collection of file paths to merge.</param>
+    /// <param name="outputPath">Destination file path for the merged output.</param>
+    /// <param name="settings">Merge settings including transition effects and re-encoding options.</param>
+    /// <param name="cancellationToken">Token to cancel the FFmpeg process.</param>
+    /// <returns>A <see cref="ConversionResult"/> with the merged file metadata.</returns>
     Task<ConversionResult> MergeAsync(
         IEnumerable<string> inputFiles,
         string outputPath,
@@ -40,8 +60,13 @@ public interface IFFmpegService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Applies a watermark to a video.
+    /// Overlays a watermark image or text onto a video using FFmpeg's overlay filter.
     /// </summary>
+    /// <param name="inputMedia">The source video file.</param>
+    /// <param name="outputPath">Destination file path for the watermarked output.</param>
+    /// <param name="settings">Watermark configuration including image path, position, opacity, and scaling.</param>
+    /// <param name="cancellationToken">Token to cancel the FFmpeg process.</param>
+    /// <returns>A <see cref="ConversionResult"/> with output metadata.</returns>
     Task<ConversionResult> AddWatermarkAsync(
         MediaFile inputMedia,
         string outputPath,
@@ -49,24 +74,36 @@ public interface IFFmpegService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Analyzes a media file and extracts metadata.
+    /// Probes a media file using ffprobe and extracts detailed metadata including
+    /// codec info, duration, bitrate, resolution, and stream details.
     /// </summary>
+    /// <param name="filePath">Path to the media file to analyze.</param>
+    /// <param name="cancellationToken">Token to cancel the probe operation.</param>
+    /// <returns>A <see cref="MediaFile"/> populated with the extracted metadata.</returns>
     Task<MediaFile> AnalyzeMediaAsync(string filePath, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Executes a custom FFmpeg operation.
+    /// Executes a custom FFmpeg operation with user-defined input/output arguments.
+    /// Use for operations not covered by the typed methods above.
     /// </summary>
+    /// <param name="operation">The custom operation definition with raw FFmpeg arguments.</param>
+    /// <param name="cancellationToken">Token to cancel the FFmpeg process.</param>
+    /// <returns>A <see cref="ConversionResult"/> with process exit code and output.</returns>
     Task<ConversionResult> ExecuteCustomOperationAsync(
         FFmpegOperation operation,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets the FFmpeg version information.
+    /// Returns the installed FFmpeg version string (e.g., "ffmpeg version 6.1.1").
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The FFmpeg version string from stdout.</returns>
     Task<string> GetFFmpegVersionAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Checks if FFmpeg is installed and available.
+    /// Checks whether FFmpeg is installed and accessible on the system PATH.
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><c>true</c> if FFmpeg is available; otherwise <c>false</c>.</returns>
     Task<bool> IsFFmpegAvailableAsync(CancellationToken cancellationToken = default);
 }
