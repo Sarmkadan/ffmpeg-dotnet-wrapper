@@ -31,6 +31,8 @@ public static class ServiceCollectionExtensions
 
         // Register services
         services.AddSingleton<TranscodeService>();
+        services.AddSingleton<SubtitleService>();
+        services.AddSingleton<ThumbnailService>();
 
         // Register options
         services.AddSingleton(options);

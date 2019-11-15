@@ -670,4 +670,198 @@ public class FFmpegService : IFFmpegService
         // Return the executable name as fallback (assume it's in PATH)
         return executableName;
     }
+
+    public async Task<ConversionResult> EmbedSubtitlesAsync(
+        MediaFile inputMedia,
+        string outputPath,
+        SubtitleSettings settings,
+        CancellationToken cancellationToken = default)
+    {
+        var operation = new FFmpegOperation
+        {
+            Name = $"Embed subtitles into {inputMedia.Name}",
+            Type = FFmpegOperationType.Filter,
+            OutputFile = outputPath,
+            Timeout = _defaultTimeout
+        };
+
+        operation.AddInputFile(inputMedia.FilePath);
+
+        try
+        {
+            settings.Validate();
+
+            BuildSubtitleArguments(operation, settings);
+
+            _logger.LogInformation(
+                "Embedding subtitles ({Mode}) from {Sub} into {File}",
+                settings.HardEmbed ? "hard" : "soft",
+                settings.SubtitlePath,
+                inputMedia.Name);
+
+            var result = await ExecuteFFmpegAsync(operation, cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken);
+                result.OutputMedia = outputMedia;
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Subtitle embedding failed for {File}", inputMedia.Name);
+            throw;
+        }
+    }
+
+    public async Task<ThumbnailResult> ExtractThumbnailsAsync(
+        MediaFile inputMedia,
+        string outputPattern,
+        ThumbnailSettings settings,
+        CancellationToken cancellationToken = default)
+    {
+        var result = new ThumbnailResult();
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            settings.Validate(inputMedia);
+
+            var outputDir = Path.GetDirectoryName(outputPattern);
+            if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
+                Directory.CreateDirectory(outputDir);
+
+            if (settings.Times.Count > 0)
+            {
+                // Extract one thumbnail per explicit timestamp
+                for (var i = 0; i < settings.Times.Count; i++)
+                {
+                    var timestamp = settings.Times[i];
+                    var singleOutput = settings.Times.Count == 1
+                        ? outputPattern
+                        : string.Format(outputPattern.Replace("%03d", "{0:D3}"), i + 1);
+
+                    var operation = BuildThumbnailOperation(inputMedia, singleOutput, settings, timestamp);
+                    var opResult = await ExecuteFFmpegAsync(operation, cancellationToken);
+
+                    if (opResult.IsSuccess && File.Exists(singleOutput))
+                        result.Thumbnails.Add(singleOutput);
+                }
+            }
+            else
+            {
+                // Extract evenly spaced thumbnails
+                var operation = BuildThumbnailOperation(inputMedia, outputPattern, settings, null);
+                await ExecuteFFmpegAsync(operation, cancellationToken);
+
+                // Collect all generated files matching the pattern
+                var directory = Path.GetDirectoryName(outputPattern) ?? ".";
+                var fileNameTemplate = Path.GetFileName(outputPattern);
+                var ext = Path.GetExtension(fileNameTemplate);
+                var searchPattern = "*" + ext;
+
+                var generatedFiles = Directory.GetFiles(directory, searchPattern)
+                    .Where(f => f.StartsWith(
+                        Path.Combine(directory, Path.GetFileNameWithoutExtension(fileNameTemplate).Replace("%03d", "").TrimEnd('_')),
+                        StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(f => f)
+                    .ToList();
+
+                result.Thumbnails.AddRange(generatedFiles);
+            }
+
+            sw.Stop();
+            result.Duration = sw.Elapsed;
+            result.IsSuccess = result.Thumbnails.Count > 0;
+
+            _logger.LogInformation(
+                "Extracted {Count} thumbnail(s) from {File} in {Elapsed}ms",
+                result.Thumbnails.Count, inputMedia.Name, sw.ElapsedMilliseconds);
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+            result.Duration = sw.Elapsed;
+            result.IsSuccess = false;
+            result.ErrorMessage = ex.Message;
+            _logger.LogError(ex, "Thumbnail extraction failed for {File}", inputMedia.Name);
+            throw;
+        }
+
+        return result;
+    }
+
+    private FFmpegOperation BuildThumbnailOperation(
+        MediaFile inputMedia,
+        string outputPath,
+        ThumbnailSettings settings,
+        TimeSpan? timestamp)
+    {
+        var operation = new FFmpegOperation
+        {
+            Name = $"Extract thumbnail from {inputMedia.Name}",
+            Type = FFmpegOperationType.Filter,
+            OutputFile = outputPath,
+            Timeout = TimeSpan.FromSeconds(60)
+        };
+
+        operation.AddInputFile(inputMedia.FilePath);
+
+        if (timestamp.HasValue)
+            operation.AddArgument($"-ss {timestamp.Value.TotalSeconds:F3}");
+
+        var filters = new List<string>();
+
+        if (settings.Width.HasValue || settings.Height.HasValue)
+        {
+            var w = settings.Width ?? -1;
+            var h = settings.Height ?? -1;
+            filters.Add($"scale={w}:{h}");
+        }
+
+        if (filters.Count > 0)
+            operation.AddArgument($"-vf \"{string.Join(",", filters)}\"");
+
+        operation.AddArgument("-vframes 1");
+
+        if (settings.Format == ThumbnailFormat.Jpeg && settings.JpegQuality.HasValue)
+            operation.AddArgument($"-q:v {settings.JpegQuality.Value}");
+
+        return operation;
+    }
+
+    private void BuildSubtitleArguments(FFmpegOperation operation, SubtitleSettings settings)
+    {
+        if (settings.HardEmbed)
+        {
+            // Burn subtitles into video frames via the subtitles filter
+            var escapedPath = settings.SubtitlePath.Replace("\\", "/").Replace(":", "\\:");
+            var subtitlesFilter = $"subtitles='{escapedPath}'";
+
+            if (!string.IsNullOrWhiteSpace(settings.FontName) || settings.FontSize != 24)
+            {
+                var fontStyle = $"force_style='FontName={settings.FontName},FontSize={settings.FontSize}'";
+                subtitlesFilter = $"subtitles='{escapedPath}':{fontStyle}";
+            }
+
+            operation.AddArgument($"-vf \"{subtitlesFilter}\"");
+            operation.AddArgument("-c:a copy");
+        }
+        else
+        {
+            // Soft-embed: map original streams + subtitle file
+            operation.AddInputFile(settings.SubtitlePath);
+            operation.AddArgument("-c:v copy");
+            operation.AddArgument("-c:a copy");
+            operation.AddArgument("-c:s mov_text");
+            operation.AddArgument("-map 0:v");
+            operation.AddArgument("-map 0:a");
+            operation.AddArgument("-map 1:0");
+
+            if (!string.IsNullOrEmpty(settings.Language))
+                operation.AddArgument($"-metadata:s:s:0 language={settings.Language}");
+        }
+    }
 }

@@ -106,4 +106,36 @@ public interface IFFmpegService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns><c>true</c> if FFmpeg is available; otherwise <c>false</c>.</returns>
     Task<bool> IsFFmpegAvailableAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Embeds a subtitle file into a video, either as a soft-coded subtitle stream
+    /// or burned directly into the video frames based on <see cref="SubtitleSettings.HardEmbed"/>.
+    /// </summary>
+    /// <param name="inputMedia">The source video file with pre-analyzed metadata.</param>
+    /// <param name="outputPath">Destination file path for the output with embedded subtitles.</param>
+    /// <param name="settings">Subtitle settings including path, encoding mode, font, and language.</param>
+    /// <param name="cancellationToken">Token to cancel the FFmpeg process.</param>
+    /// <returns>A <see cref="ConversionResult"/> with the output file metadata.</returns>
+    Task<ConversionResult> EmbedSubtitlesAsync(
+        MediaFile inputMedia,
+        string outputPath,
+        SubtitleSettings settings,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Extracts one or more thumbnail images from a video file.
+    /// </summary>
+    /// <param name="inputMedia">The source video file with pre-analyzed metadata.</param>
+    /// <param name="outputPattern">
+    /// Output file path pattern. Use <c>%03d</c> for sequential numbering when extracting
+    /// multiple thumbnails (e.g. <c>/output/thumb_%03d.jpg</c>).
+    /// </param>
+    /// <param name="settings">Thumbnail settings including timestamps, format, and dimensions.</param>
+    /// <param name="cancellationToken">Token to cancel the FFmpeg process.</param>
+    /// <returns>A <see cref="ThumbnailResult"/> containing the paths of all extracted images.</returns>
+    Task<ThumbnailResult> ExtractThumbnailsAsync(
+        MediaFile inputMedia,
+        string outputPattern,
+        ThumbnailSettings settings,
+        CancellationToken cancellationToken = default);
 }

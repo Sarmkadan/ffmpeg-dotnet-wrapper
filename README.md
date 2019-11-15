@@ -4,7 +4,7 @@
 ![License](https://img.shields.io/github/license/sarmkadan/ffmpeg-dotnet-wrapper)
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)
 
-**Strongly-typed FFmpeg wrapper for .NET** – Transcode, trim, merge, and watermark videos with a fluent, intuitive API.
+**Strongly-typed FFmpeg wrapper for .NET** – Transcode, trim, merge, watermark, embed subtitles, extract thumbnails, and concatenate videos with a fluent, intuitive API.
 
 ## Overview
 
@@ -12,7 +12,7 @@ FFmpeg .NET Wrapper is a production-grade, strongly-typed abstraction layer over
 
 ### Key Features
 
-- **Strongly-typed Operations**: Transcode, trim, merge, watermark with type-safe enums and settings
+- **Strongly-typed Operations**: Transcode, trim, merge, watermark, subtitle embedding, thumbnail extraction, and video concatenation with type-safe enums and settings
 - **Fluent API**: Chain operations naturally – readable and maintainable code
 - **Progress Tracking**: Real-time progress updates via `IProgress<OperationStatistics>`
 - **Concurrent Processing**: Batch operations with configurable parallelism
@@ -58,6 +58,33 @@ await ffmpeg.WatermarkAsync(inputFile, watermarkFile, outputFile,
         Scale = 0.15,
         Opacity = 0.7
     });
+
+// Embed subtitles (soft stream)
+await ffmpeg.EmbedSubtitlesAsync(inputMedia, "output.mp4",
+    new SubtitleSettings
+    {
+        SubtitlePath = "subtitles.srt",
+        Language = "en"
+    });
+
+// Extract thumbnails at specific timestamps
+var result = await ffmpeg.ExtractThumbnailsAsync(inputMedia, "/out/thumb_%03d.jpg",
+    new ThumbnailSettings
+    {
+        Times = { TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(30) },
+        Width = 640,
+        Height = -1   // preserve aspect ratio
+    });
+
+// Build a concatenation sequence with the fluent builder
+var mergeSettings = new ConcatenationBuilder()
+    .Add("intro.mp4")
+    .Add("main.mp4", trimStart: TimeSpan.FromSeconds(10), trimDuration: TimeSpan.FromMinutes(5))
+    .Add("outro.mp4")
+    .WithTransition(ConcatTransition.Crossfade, duration: 0.5)
+    .Build();
+
+await ffmpeg.MergeAsync(mergeSettings.InputFiles, "final.mp4", mergeSettings);
 ```
 
 ---
@@ -526,6 +553,135 @@ public class WatermarkSettings
     public bool PreserveAspectRatio { get; set; }
 }
 ```
+
+### SubtitleSettings
+
+Configuration for subtitle embedding.
+
+```csharp
+public class SubtitleSettings
+{
+    public string SubtitlePath { get; set; }    // Path to .srt, .ass, .ssa, .vtt, or .sub
+    public bool HardEmbed { get; set; }         // true = burn into frames, false = soft stream
+    public string CharEncoding { get; set; }    // Subtitle file encoding (default: UTF-8)
+    public string? FontName { get; set; }       // Font for hard embed (default: Arial)
+    public int FontSize { get; set; }           // Font size for hard embed, 6–120 (default: 24)
+    public string? Language { get; set; }       // ISO 639-1 language code (e.g. "en")
+    public int SubtitleStreamIndex { get; set; } // Source subtitle stream index
+}
+```
+
+**Soft embedding** adds the subtitle track as a selectable stream. Viewers can toggle it on/off.  
+**Hard embedding** (burning) bakes the text directly into video pixels — visible on all players.
+
+```csharp
+// Soft-embed English subtitles into an MP4
+var result = await ffmpeg.EmbedSubtitlesAsync(inputMedia, "output.mp4",
+    new SubtitleSettings
+    {
+        SubtitlePath = "subtitles.srt",
+        Language = "en"
+    });
+
+// Burn subtitles with custom font into the video frames
+var result = await ffmpeg.EmbedSubtitlesAsync(inputMedia, "output.mp4",
+    new SubtitleSettings
+    {
+        SubtitlePath = "subtitles.ass",
+        HardEmbed = true,
+        FontName = "DejaVu Sans",
+        FontSize = 28
+    });
+```
+
+Or use the convenience service:
+
+```csharp
+var subtitleService = serviceProvider.GetRequiredService<SubtitleService>();
+
+// Soft embed
+await subtitleService.EmbedSoftSubtitlesAsync(inputMedia, "subs.srt", "output.mp4", language: "en");
+
+// Hard burn
+await subtitleService.BurnSubtitlesAsync(inputMedia, "subs.ass", "output.mp4", fontSize: 28);
+```
+
+### ThumbnailSettings
+
+Configuration for thumbnail extraction.
+
+```csharp
+public class ThumbnailSettings
+{
+    public List<TimeSpan> Times { get; set; }   // Explicit timestamps; overrides Count when non-empty
+    public int Count { get; set; }              // Number of evenly-spaced frames to extract (default: 1)
+    public ThumbnailFormat Format { get; set; } // Jpeg or Png (default: Jpeg)
+    public int? Width { get; set; }             // Output width in pixels (-1 = auto from Height)
+    public int? Height { get; set; }            // Output height in pixels (-1 = auto from Width)
+    public int? JpegQuality { get; set; }       // JPEG quality 1–31, lower = better (default: 2)
+}
+```
+
+Use `%03d` in the output path pattern when extracting multiple thumbnails.
+
+```csharp
+// Single thumbnail at 5 seconds
+var result = await ffmpeg.ExtractThumbnailsAsync(inputMedia, "/out/cover.jpg",
+    new ThumbnailSettings { Times = { TimeSpan.FromSeconds(5) } });
+
+// 10 evenly-spaced thumbnails at 640 px wide
+var result = await ffmpeg.ExtractThumbnailsAsync(inputMedia, "/out/thumb_%03d.jpg",
+    new ThumbnailSettings
+    {
+        Count = 10,
+        Width = 640,
+        Height = -1   // preserve aspect ratio
+    });
+
+Console.WriteLine($"Extracted {result.Count} thumbnails");
+foreach (var path in result.Thumbnails)
+    Console.WriteLine(path);
+```
+
+Or use the convenience service:
+
+```csharp
+var thumbService = serviceProvider.GetRequiredService<ThumbnailService>();
+
+// Single frame
+await thumbService.ExtractSingleAsync(inputMedia, "cover.jpg", at: TimeSpan.FromSeconds(10));
+
+// Storyboard strip
+await thumbService.ExtractStoryboardAsync(inputMedia, "/out/thumb_%03d.jpg", count: 12, width: 320);
+```
+
+### ConcatenationBuilder
+
+Fluent builder for assembling a concatenation pipeline.
+
+```csharp
+var mergeSettings = new ConcatenationBuilder()
+    .Add("intro.mp4")
+    .Add("main.mp4", trimStart: TimeSpan.FromSeconds(10), trimDuration: TimeSpan.FromMinutes(5))
+    .Add("outro.mp4")
+    .WithTransition(ConcatTransition.Crossfade, duration: 0.5)
+    .WithReencode(true)                         // re-encode when streams differ
+    .Build();
+
+await ffmpeg.MergeAsync(mergeSettings.InputFiles, "final.mp4", mergeSettings);
+```
+
+| Method | Description |
+|--------|-------------|
+| `Add(path)` | Append a segment at the end of the sequence. |
+| `Add(path, trimStart, trimEnd, trimDuration)` | Append a trimmed segment. |
+| `Insert(index, path)` | Insert a segment at a specific position. |
+| `Remove(path)` | Remove all segments matching the given path. |
+| `WithTransition(type, duration)` | Set the transition between segments (`None` or `Crossfade`). |
+| `WithReencode(bool)` | Force re-encoding of all segments before concatenation. |
+| `WithTranscodeSettings(settings)` | Provide custom codec/bitrate settings for re-encoding. |
+| `Reset()` | Clear all segments and reset all options. |
+| `Build()` | Produce a `MergeSettings` object ready for `IFFmpegService.MergeAsync`. |
 
 ### ConversionResult
 
