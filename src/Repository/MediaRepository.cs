@@ -4,6 +4,7 @@
 // =============================================================================
 
 using FFmpegDotnetWrapper.Constants;
+using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Models;
 
 namespace FFmpegDotnetWrapper.Repository;
@@ -47,8 +48,11 @@ public class MediaRepository : IMediaRepository
     {
         lock (_lockObject)
         {
+            if (mediaFile == null)
+                throw new ArgumentNullException(nameof(mediaFile));
+
             if (_mediaFiles.ContainsKey(mediaFile.Id))
-                throw new InvalidOperationException($"Media file with ID {mediaFile.Id} already exists");
+                throw new RepositoryException($"Media file with ID {mediaFile.Id} already exists", "MediaRepository");
 
             _mediaFiles[mediaFile.Id] = mediaFile;
             return Task.FromResult(mediaFile);
@@ -59,8 +63,11 @@ public class MediaRepository : IMediaRepository
     {
         lock (_lockObject)
         {
+            if (mediaFile == null)
+                throw new ArgumentNullException(nameof(mediaFile));
+
             if (!_mediaFiles.ContainsKey(mediaFile.Id))
-                throw new InvalidOperationException($"Media file with ID {mediaFile.Id} not found");
+                throw new RepositoryException($"Media file with ID {mediaFile.Id} not found", "MediaRepository");
 
             mediaFile.ModifiedAt = DateTime.UtcNow;
             _mediaFiles[mediaFile.Id] = mediaFile;

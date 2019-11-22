@@ -3,6 +3,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Models;
 
 namespace FFmpegDotnetWrapper.Repository;
@@ -50,8 +51,11 @@ public class OperationRepository : IOperationRepository
     {
         lock (_lockObject)
         {
+            if (operation == null)
+                throw new ArgumentNullException(nameof(operation));
+
             if (!_operations.ContainsKey(operation.Id))
-                throw new InvalidOperationException($"Operation with ID {operation.Id} not found");
+                throw new RepositoryException($"Operation with ID {operation.Id} not found", "OperationRepository");
 
             _operations[operation.Id] = operation;
             return Task.FromResult(operation);
