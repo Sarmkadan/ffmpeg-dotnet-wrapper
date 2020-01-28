@@ -11,7 +11,7 @@
 
     <!-- NuGet Package Info -->
     <PackageId>Zaiets.ffmpeg.dotnet.wrapper</PackageId>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
     <Authors>Vladyslav Zaiets</Authors>
     <Description>Strongly-typed FFmpeg wrapper for .NET - transcode, trim, merge, watermark with fluent API</Description>
     <PackageTags>ffmpeg video transcoding media streaming dotnet wrapper</PackageTags>
