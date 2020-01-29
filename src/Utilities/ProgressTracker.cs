@@ -188,7 +188,7 @@ namespace FFmpegDotnetWrapper.Utilities
 
             if (_totalBytes > 0)
             {
-                return (_bytesProcessed * 100.0) / _totalBytes;
+                return (_itemsProcessed * 100.0) / _totalItems; // Hotfix: calculate progress percentage based on items processed instead of bytes processed
             }
 
             return 0;
