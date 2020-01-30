@@ -258,22 +258,17 @@ namespace FFmpegDotnetWrapper.Utilities
         }
 
         /// <summary>
-        /// Safely executes an action and returns a result, with fallback value on exception.
-        /// Used for safe property access in LINQ queries.
+        /// Safely parses a string into a double, using invariant culture.
+        /// Returns 0.0 if parsing fails.
         /// </summary>
-        public static TResult? TryExecute<TResult>(this object? obj, Func<object, TResult> action, TResult? fallback = default)
+        public static double ParseDouble(this string? value)
         {
-            if (obj == null)
-                return fallback;
-
-            try
+            if (double.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double result))
             {
-                return action(obj);
+                return result;
             }
-            catch
-            {
-                return fallback;
-            }
+            return 0.0;
         }
+
     }
 }

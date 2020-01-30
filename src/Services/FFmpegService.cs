@@ -5,7 +5,7 @@
 
 #nullable enable
 
-using System.Diagnostics;
+using System.Globalization;
 using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Models;
@@ -218,9 +218,61 @@ public class FFmpegService : IFFmpegService
         {
             _logger.LogInformation("Analyzing media file: {File}", filePath);
 
-            // This is a simplified analysis - in production, parse ffprobe JSON output
-            mediaFile.Description = $"Analyzed on {DateTime.UtcNow:O}";
+            var ffprobeArgs = $"-v quiet -print_format json -show_format -show_streams \"{filePath}\"";
 
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = _ffprobePath,
+                    Arguments = ffprobeArgs,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
+            await process.WaitForExitAsync(cancellationToken);
+
+            if (process.ExitCode != 0)
+            {
+                var error = await process.StandardError.ReadToEndAsync(cancellationToken);
+                throw new FFmpegProcessException($"ffprobe failed with exit code {process.ExitCode}. Error: {error}", process.ExitCode);
+            }
+
+            var ffprobeResult = System.Text.Json.JsonDocument.Parse(output);
+            var format = ffprobeResult.RootElement.GetProperty("format");
+
+            mediaFile.FormatName = format.GetProperty("format_name").GetString();
+            mediaFile.Duration = TimeSpan.FromSeconds(format.GetProperty("duration").GetDouble());
+            mediaFile.FileSize = format.GetProperty("size").GetInt64();
+            mediaFile.BitRate = format.GetProperty("bit_rate").GetInt64();
+
+            if (ffprobeResult.RootElement.TryGetProperty("streams", out var streamsElement))
+            {
+                foreach (var streamElement in streamsElement.EnumerateArray())
+                {
+                    var codecType = streamElement.GetProperty("codec_type").GetString();
+                    if (codecType == "video")
+                    {
+                        mediaFile.Width = streamElement.GetProperty("width").GetInt32();
+                        mediaFile.Height = streamElement.GetProperty("height").GetInt32();
+                        mediaFile.FrameRate = (int)Math.Round(streamElement.GetProperty("r_frame_rate").GetString().ParseDouble());
+                        mediaFile.VideoCodec = streamElement.GetProperty("codec_name").GetString();
+                    }
+                    else if (codecType == "audio")
+                    {
+                        mediaFile.AudioCodec = streamElement.GetProperty("codec_name").GetString();
+                        mediaFile.SampleRate = streamElement.GetProperty("sample_rate").GetInt32();
+                        mediaFile.Channels = streamElement.GetProperty("channels").GetInt32();
+                    }
+                }
+            }
+
+            // Save the media file to the repository
             await _mediaRepository.AddAsync(mediaFile, cancellationToken);
             return mediaFile;
         }
@@ -309,7 +361,7 @@ public class FFmpegService : IFFmpegService
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = _ffmpegPath,
-                    Arguments = BuildFFmpegArguments(operation),
+                    Arguments = operation.BuildCommandLine(),
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -359,18 +411,7 @@ public class FFmpegService : IFFmpegService
         }
     }
 
-    private string BuildFFmpegArguments(FFmpegOperation operation)
-    {
-        var args = new List<string> { "-y" }; // Overwrite output files
 
-        foreach (var input in operation.InputFiles)
-            args.Add($"-i \"{input}\"");
-
-        args.AddRange(operation.Arguments);
-        args.Add($"\"{operation.OutputFile}\"");
-
-        return string.Join(" ", args);
-    }
 
     private void BuildTranscodeArguments(FFmpegOperation operation, TranscodeSettings settings)
     {
