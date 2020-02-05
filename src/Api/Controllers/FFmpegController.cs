@@ -184,5 +184,89 @@ namespace FFmpegDotnetWrapper.Api.Controllers
                 return ApiResponse<MediaFile>.Failure(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Embeds a subtitle file into a video either as a selectable stream
+        /// (soft embed) or burned into the video frames (hard embed).
+        /// </summary>
+        public async Task<ApiResponse<ConversionResult>> EmbedSubtitlesAsync(SubtitleRequest request)
+        {
+            try
+            {
+                if (!System.IO.File.Exists(request.InputPath))
+                    return ApiResponse<ConversionResult>.Failure("Input file does not exist");
+
+                if (!System.IO.File.Exists(request.SubtitlePath))
+                    return ApiResponse<ConversionResult>.Failure("Subtitle file does not exist");
+
+                var inputMedia = new MediaFile(request.InputPath);
+
+                var settings = new SubtitleSettings
+                {
+                    SubtitlePath = request.SubtitlePath,
+                    HardEmbed = request.HardEmbed,
+                    Language = request.Language,
+                    FontName = request.FontName,
+                    FontSize = request.FontSize
+                };
+
+                var result = await _ffmpegService.EmbedSubtitlesAsync(inputMedia, request.OutputPath, settings);
+
+                _logger.LogInformation(
+                    "Subtitle embedding completed ({Mode}): {Input} -> {Output}",
+                    request.HardEmbed ? "hard" : "soft",
+                    request.InputPath,
+                    request.OutputPath);
+
+                return ApiResponse<ConversionResult>.Success(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Subtitle embedding failed for {InputPath}", request.InputPath);
+                return ApiResponse<ConversionResult>.Failure(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Extracts thumbnail images from a video file at specified timestamps
+        /// or evenly distributed across its duration.
+        /// </summary>
+        public async Task<ApiResponse<ThumbnailResult>> ExtractThumbnailsAsync(ThumbnailRequest request)
+        {
+            try
+            {
+                if (!System.IO.File.Exists(request.InputPath))
+                    return ApiResponse<ThumbnailResult>.Failure("Input file does not exist");
+
+                var inputMedia = new MediaFile(request.InputPath);
+
+                var settings = new ThumbnailSettings
+                {
+                    Count = request.Count,
+                    Width = request.Width,
+                    Height = request.Height,
+                    Format = string.Equals(request.Format, "png", StringComparison.OrdinalIgnoreCase)
+                        ? ThumbnailFormat.Png
+                        : ThumbnailFormat.Jpeg
+                };
+
+                foreach (var ts in request.TimestampsSeconds)
+                    settings.Times.Add(TimeSpan.FromSeconds(ts));
+
+                var result = await _ffmpegService.ExtractThumbnailsAsync(inputMedia, request.OutputPattern, settings);
+
+                _logger.LogInformation(
+                    "Thumbnail extraction completed: {Count} thumbnails from {Input}",
+                    result.Thumbnails.Count,
+                    request.InputPath);
+
+                return ApiResponse<ThumbnailResult>.Success(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Thumbnail extraction failed for {InputPath}", request.InputPath);
+                return ApiResponse<ThumbnailResult>.Failure(ex.Message);
+            }
+        }
     }
 }
