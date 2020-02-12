@@ -3,6 +3,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Models;
 
 namespace FFmpegDotnetWrapper.Services;
@@ -137,5 +138,37 @@ public interface IFFmpegService
         MediaFile inputMedia,
         string outputPattern,
         ThumbnailSettings settings,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Extracts the audio track from a media file, discarding video, and encodes it
+    /// using the specified audio codec and bitrate.
+    /// </summary>
+    /// <param name="inputMedia">The source media file with pre-analyzed metadata.</param>
+    /// <param name="outputPath">Destination file path for the extracted audio.</param>
+    /// <param name="audioCodec">The audio codec to encode the extracted track with.</param>
+    /// <param name="audioBitrate">The target audio bitrate in kbps.</param>
+    /// <param name="cancellationToken">Token to cancel the FFmpeg process.</param>
+    /// <returns>A <see cref="ConversionResult"/> with the extracted audio file metadata.</returns>
+    Task<ConversionResult> ExtractAudioAsync(
+        MediaFile inputMedia,
+        string outputPath,
+        AudioCodec audioCodec = AudioCodec.MP3,
+        int audioBitrate = 192,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Transcodes multiple media files sequentially into <paramref name="outputDirectory"/>,
+    /// applying the same <see cref="TranscodeSettings"/> to each input.
+    /// </summary>
+    /// <param name="inputFiles">The source media files to transcode.</param>
+    /// <param name="outputDirectory">Directory that will receive the transcoded outputs.</param>
+    /// <param name="settings">Transcoding settings applied to every input file.</param>
+    /// <param name="cancellationToken">Token to cancel the batch operation.</param>
+    /// <returns>A <see cref="ConversionResult"/> for each input file, in input order.</returns>
+    Task<List<ConversionResult>> BatchTranscodeAsync(
+        IEnumerable<MediaFile> inputFiles,
+        string outputDirectory,
+        TranscodeSettings settings,
         CancellationToken cancellationToken = default);
 }
