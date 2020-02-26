@@ -6,10 +6,17 @@ using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;
 
+/// <summary>
+/// Contains unit tests for the <see cref="ConcatenationBuilder"/> class.
+/// </summary>
 public class ConcatenationBuilderTests : IDisposable
 {
     private readonly List<string> _tempFiles = [];
 
+    /// <summary>
+    /// Initializes temporary video files that are used by the tests.
+    /// Each file contains placeholder text and is stored in the system temporary directory.
+    /// </summary>
     public ConcatenationBuilderTests()
     {
         for (var i = 0; i < 4; i++)
@@ -20,12 +27,18 @@ public class ConcatenationBuilderTests : IDisposable
         }
     }
 
+    /// <summary>
+    /// Deletes any temporary files that were created during the test run.
+    /// </summary>
     public void Dispose()
     {
         foreach (var f in _tempFiles.Where(File.Exists))
             File.Delete(f);
     }
 
+    /// <summary>
+    /// Verifies that adding a single file results in one segment with the correct absolute path.
+    /// </summary>
     [Fact]
     public void Add_SingleFile_AddsToSegments()
     {
@@ -36,6 +49,9 @@ public class ConcatenationBuilderTests : IDisposable
         builder.Segments[0].FilePath.Should().Be(Path.GetFullPath(_tempFiles[0]));
     }
 
+    /// <summary>
+    /// Verifies that adding multiple files preserves the order in which they were added.
+    /// </summary>
     [Fact]
     public void Add_MultipleFiles_PreservesOrder()
     {
@@ -50,6 +66,9 @@ public class ConcatenationBuilderTests : IDisposable
         builder.Segments[2].FilePath.Should().Be(Path.GetFullPath(_tempFiles[2]));
     }
 
+    /// <summary>
+    /// Ensures that providing trim start and duration values sets the corresponding segment properties.
+    /// </summary>
     [Fact]
     public void Add_WithTrimParameters_SetsSegmentProperties()
     {
@@ -66,6 +85,9 @@ public class ConcatenationBuilderTests : IDisposable
         segment.HasTrim.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Confirms that specifying both <c>trimEnd</c> and <c>trimDuration</c> throws an <see cref="InvalidOperationConfigurationException"/>.
+    /// </summary>
     [Fact]
     public void Add_WithBothTrimEndAndDuration_ThrowsException()
     {
@@ -80,6 +102,9 @@ public class ConcatenationBuilderTests : IDisposable
            .WithMessage("*TrimEnd*TrimDuration*");
     }
 
+    /// <summary>
+    /// Verifies that attempting to add a non‑existent file results in an <see cref="InvalidOperationConfigurationException"/>.
+    /// </summary>
     [Fact]
     public void Add_WithNonexistentFile_ThrowsException()
     {
@@ -91,6 +116,9 @@ public class ConcatenationBuilderTests : IDisposable
            .WithMessage("*does not exist*");
     }
 
+    /// <summary>
+    /// Checks that inserting a segment at a valid index places it at the correct position.
+    /// </summary>
     [Fact]
     public void Insert_AtValidIndex_InsertsAtPosition()
     {
@@ -104,6 +132,9 @@ public class ConcatenationBuilderTests : IDisposable
         builder.Segments[1].FilePath.Should().Be(Path.GetFullPath(_tempFiles[1]));
     }
 
+    /// <summary>
+    /// Ensures that removing a segment eliminates the matching file from the collection.
+    /// </summary>
     [Fact]
     public void Remove_RemovesMatchingSegment()
     {
@@ -118,6 +149,9 @@ public class ConcatenationBuilderTests : IDisposable
         builder.Segments.Should().NotContain(s => s.FilePath == Path.GetFullPath(_tempFiles[1]));
     }
 
+    /// <summary>
+    /// Validates that configuring a cross‑fade transition updates the resulting <see cref="MergeSettings"/>.
+    /// </summary>
     [Fact]
     public void WithTransition_SetsCrossfade()
     {
@@ -132,6 +166,9 @@ public class ConcatenationBuilderTests : IDisposable
         settings.CrossfadeDuration.Should().Be(0.75);
     }
 
+    /// <summary>
+    /// Confirms that specifying a zero duration for a transition throws an <see cref="InvalidOperationConfigurationException"/>.
+    /// </summary>
     [Fact]
     public void WithTransition_ZeroDuration_ThrowsException()
     {
@@ -143,6 +180,9 @@ public class ConcatenationBuilderTests : IDisposable
            .WithMessage("*duration*greater than zero*");
     }
 
+    /// <summary>
+    /// Checks that enabling re‑encoding sets the appropriate flag on the generated <see cref="MergeSettings"/>.
+    /// </summary>
     [Fact]
     public void WithReencode_SetsTranscodeOnMerge()
     {
@@ -156,6 +196,9 @@ public class ConcatenationBuilderTests : IDisposable
         settings.TranscodeOnMerge.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that building with fewer than two segments throws an <see cref="InvalidOperationConfigurationException"/>.
+    /// </summary>
     [Fact]
     public void Build_WithLessThanTwoSegments_ThrowsException()
     {
@@ -168,6 +211,9 @@ public class ConcatenationBuilderTests : IDisposable
            .WithMessage("*At least two segments*");
     }
 
+    /// <summary>
+    /// Ensures that building with exactly two segments produces a valid <see cref="MergeSettings"/> instance.
+    /// </summary>
     [Fact]
     public void Build_WithTwoSegments_ReturnsValidMergeSettings()
     {
@@ -184,6 +230,9 @@ public class ConcatenationBuilderTests : IDisposable
         settings.PreserveVideo.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Confirms that calling <c>Reset</c> clears all segments and any configured options.
+    /// </summary>
     [Fact]
     public void Reset_ClearsAllSegmentsAndOptions()
     {
@@ -198,6 +247,9 @@ public class ConcatenationBuilderTests : IDisposable
         builder.SegmentCount.Should().Be(0);
     }
 
+    /// <summary>
+    /// Verifies that custom transcode settings are propagated to the resulting <see cref="MergeSettings"/>.
+    /// </summary>
     [Fact]
     public void Build_WithCustomTranscodeSettings_PropagatesSettings()
     {
@@ -218,6 +270,9 @@ public class ConcatenationBuilderTests : IDisposable
         settings.TranscodeSettings!.VideoCodec.Should().Be(VideoCodec.H265);
     }
 
+    /// <summary>
+    /// Ensures that constructing a <see cref="ConcatenationSegment"/> with a null path throws an <see cref="InvalidOperationConfigurationException"/>.
+    /// </summary>
     [Fact]
     public void ConcatenationSegment_WithNullPath_ThrowsException()
     {
@@ -226,6 +281,9 @@ public class ConcatenationBuilderTests : IDisposable
         act.Should().Throw<InvalidOperationConfigurationException>();
     }
 
+    /// <summary>
+    /// Tests that fluent chaining of builder methods produces the expected settings, including a disabled transition.
+    /// </summary>
     [Fact]
     public void FluentChaining_BuildsCorrectly()
     {
