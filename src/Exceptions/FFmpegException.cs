@@ -13,6 +13,10 @@ public class FFmpegException : Exception
     public int? ExitCode { get; set; }
     public string? ErrorOutput { get; set; }
 
+    public FFmpegException()
+    {
+    }
+
     public FFmpegException(string message) : base(message)
     {
     }
@@ -37,6 +41,10 @@ public class InvalidMediaFileException : FFmpegException
 {
     public string? FilePath { get; set; }
 
+    public InvalidMediaFileException()
+    {
+    }
+
     public InvalidMediaFileException(string message) : base(message)
     {
     }
@@ -54,6 +62,10 @@ public class InvalidMediaFileException : FFmpegException
 public class FFmpegProcessException : FFmpegException
 {
     public TimeSpan? Timeout { get; set; }
+
+    public FFmpegProcessException()
+    {
+    }
 
     public FFmpegProcessException(string message) : base(message)
     {
@@ -73,6 +85,10 @@ public class InvalidOperationConfigurationException : FFmpegException
 {
     public string? ConfigurationKey { get; set; }
 
+    public InvalidOperationConfigurationException()
+    {
+    }
+
     public InvalidOperationConfigurationException(string message) : base(message)
     {
     }
@@ -89,6 +105,10 @@ public class InvalidOperationConfigurationException : FFmpegException
 /// </summary>
 public class UnsupportedOperationException : FFmpegException
 {
+    public UnsupportedOperationException()
+    {
+    }
+
     public UnsupportedOperationException(string message) : base(message)
     {
     }
