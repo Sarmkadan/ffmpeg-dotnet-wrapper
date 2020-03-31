@@ -11,12 +11,19 @@ using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;
 
+/// <summary>
+/// Contains unit tests for FFmpeg operations including command line building,
+/// conversion results, and service mocking.
+/// </summary>
 public class FFmpegOperationTests
 {
     // -------------------------------------------------------------------------
     // FFmpegOperation — BuildCommandLine
     // -------------------------------------------------------------------------
 
+    /// <summary>
+    /// Tests that a single input file with additional arguments produces a valid FFmpeg command line.
+    /// </summary>
     [Fact]
     public void BuildCommandLine_SingleInputWithArguments_ProducesValidCommand()
     {
@@ -36,6 +43,9 @@ public class FFmpegOperationTests
         cmd.Should().EndWith("\"/output/result.mp4\"");
     }
 
+    /// <summary>
+    /// Tests that multiple input files result in all input flags being included in the command line.
+    /// </summary>
     [Fact]
     public void BuildCommandLine_MultipleInputFiles_IncludesAllInputFlags()
     {
@@ -49,6 +59,9 @@ public class FFmpegOperationTests
         cmd.Should().Contain("-i \"/input/part2.mp4\"");
     }
 
+    /// <summary>
+    /// Tests that null, whitespace, or empty input file paths are ignored and not added to the operation.
+    /// </summary>
     [Fact]
     public void AddInputFile_NullOrWhitespacePath_IsIgnored()
     {
@@ -60,6 +73,9 @@ public class FFmpegOperationTests
         op.InputFiles.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that whitespace or empty arguments are ignored and not added to the operation.
+    /// </summary>
     [Fact]
     public void AddArgument_WhitespaceArgument_IsIgnored()
     {
@@ -70,6 +86,10 @@ public class FFmpegOperationTests
         op.Arguments.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that cloning an FFmpegOperation produces an independent copy where changes to the clone
+    /// do not affect the original operation.
+    /// </summary>
     [Fact]
     public void Clone_ProducesIndependentCopy_ChangesDontAffectOriginal()
     {
@@ -92,6 +112,10 @@ public class FFmpegOperationTests
     // ConversionResult
     // -------------------------------------------------------------------------
 
+    /// <summary>
+    /// Tests that marking a conversion result as successful sets the IsSuccess flag to true
+    /// and stores the output file path.
+    /// </summary>
     [Fact]
     public void MarkAsSuccess_SetsIsSuccessTrueAndOutputPath()
     {
@@ -104,6 +128,10 @@ public class FFmpegOperationTests
         result.ErrorMessage.Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that marking a conversion result as failed sets the IsSuccess flag to false
+    /// and stores the error message.
+    /// </summary>
     [Fact]
     public void MarkAsFailed_SetsIsSuccessFalseAndErrorMessage()
     {
@@ -115,6 +143,9 @@ public class FFmpegOperationTests
         result.ErrorMessage.Should().Be("FFmpeg exited with code 1");
     }
 
+    /// <summary>
+    /// Tests that GetSizeReductionPercentage returns null when the conversion result is not successful.
+    /// </summary>
     [Fact]
     public void GetSizeReductionPercentage_WhenNotSuccessful_ReturnsNull()
     {
@@ -123,6 +154,9 @@ public class FFmpegOperationTests
         result.GetSizeReductionPercentage(10_000_000).Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that GetSizeReductionPercentage returns null when the conversion is successful but no output media is set.
+    /// </summary>
     [Fact]
     public void GetSizeReductionPercentage_WhenSuccessfulWithSmallerOutput_ReturnsPositivePercentage()
     {
@@ -139,6 +173,9 @@ public class FFmpegOperationTests
         resultNoMedia.GetSizeReductionPercentage(10_000_000).Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that metrics can be set and retrieved, returning the same value in a round-trip operation.
+    /// </summary>
     [Fact]
     public void SetAndGetMetric_RoundTrip_ReturnsSameValue()
     {
@@ -149,6 +186,9 @@ public class FFmpegOperationTests
         result.GetMetric<int>("bitrate").Should().Be(5000);
     }
 
+    /// <summary>
+    /// Tests that retrieving a non-existent metric returns the default value (null for reference types).
+    /// </summary>
     [Fact]
     public void GetMetric_MissingKey_ReturnsDefault()
     {
@@ -157,6 +197,9 @@ public class FFmpegOperationTests
         result.GetMetric<string>("nonexistent").Should().BeNull();
     }
 
+    /// <summary>
+    /// Tests that the summary generated for a failed conversion result includes the error message.
+    /// </summary>
     [Fact]
     public void GenerateSummary_FailedResult_IncludesErrorInOutput()
     {
@@ -173,6 +216,9 @@ public class FFmpegOperationTests
     // IFFmpegService — Moq integration
     // -------------------------------------------------------------------------
 
+    /// <summary>
+    /// Tests that calling TranscodeAsync invokes the service with the correct arguments.
+    /// </summary>
     [Fact]
     public async Task TranscodeAsync_WhenCalled_InvokesServiceWithCorrectArguments()
     {
@@ -198,6 +244,9 @@ public class FFmpegOperationTests
             Times.Once);
     }
 
+    /// <summary>
+    /// Tests that IsFFmpegAvailableAsync returns true when the mock service is configured to return true.
+    /// </summary>
     [Fact]
     public async Task IsFFmpegAvailableAsync_WhenMockedTrue_ReturnsTrue()
     {
