@@ -3,13 +3,17 @@ using FFmpegDotnetWrapper.Models;
 using FluentAssertions;
 using Xunit;
 
-namespace FFmpegDotnetWrapper.Tests;
-
+/// <summary>
+/// Provides unit tests for the <see cref="SubtitleSettings"/> class.
+/// </summary>
 public class SubtitleSettingsTests : IDisposable
 {
     private readonly string _tempSrt;
     private readonly string _tempAss;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SubtitleSettingsTests"/> class.
+    /// </summary>
     public SubtitleSettingsTests()
     {
         _tempSrt = Path.Combine(Path.GetTempPath(), $"test_sub_{Guid.NewGuid()}.srt");
@@ -19,12 +23,18 @@ public class SubtitleSettingsTests : IDisposable
         File.WriteAllText(_tempAss, "[Script Info]\nTitle: Test\n");
     }
 
+    /// <summary>
+    /// Releases all resources used by the <see cref="SubtitleSettingsTests"/> class.
+    /// </summary>
     public void Dispose()
     {
         if (File.Exists(_tempSrt)) File.Delete(_tempSrt);
         if (File.Exists(_tempAss)) File.Delete(_tempAss);
     }
 
+    /// <summary>
+    /// Verifies that the default values of a <see cref="SubtitleSettings"/> instance are correct.
+    /// </summary>
     [Fact]
     public void Constructor_DefaultValues_AreCorrect()
     {
@@ -38,6 +48,9 @@ public class SubtitleSettingsTests : IDisposable
         settings.Language.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that setting the <see cref="SubtitleSettings.SubtitlePath"/> property with an existing .srt file path succeeds.
+    /// </summary>
     [Fact]
     public void SubtitlePath_WithExistingSrtFile_AcceptsPath()
     {
@@ -46,6 +59,9 @@ public class SubtitleSettingsTests : IDisposable
         settings.SubtitlePath.Should().Be(Path.GetFullPath(_tempSrt));
     }
 
+    /// <summary>
+    /// Verifies that setting the <see cref="SubtitleSettings.SubtitlePath"/> property with an existing .ass file path succeeds.
+    /// </summary>
     [Fact]
     public void SubtitlePath_WithExistingAssFile_AcceptsPath()
     {
@@ -54,6 +70,9 @@ public class SubtitleSettingsTests : IDisposable
         settings.SubtitlePath.Should().Be(Path.GetFullPath(_tempAss));
     }
 
+    /// <summary>
+    /// Verifies that setting the <see cref="SubtitleSettings.SubtitlePath"/> property with a non-existent file path throws an exception.
+    /// </summary>
     [Fact]
     public void SubtitlePath_WithNonexistentFile_ThrowsException()
     {
@@ -65,6 +84,9 @@ public class SubtitleSettingsTests : IDisposable
            .WithMessage("*does not exist*");
     }
 
+    /// <summary>
+    /// Verifies that setting the <see cref="SubtitleSettings.SubtitlePath"/> property with a file path having an unsupported extension throws an exception.
+    /// </summary>
     [Fact]
     public void SubtitlePath_WithUnsupportedExtension_ThrowsException()
     {
@@ -85,6 +107,9 @@ public class SubtitleSettingsTests : IDisposable
         }
     }
 
+    /// <summary>
+    /// Verifies that setting the <see cref="SubtitleSettings.SubtitlePath"/> property with an empty string throws an exception.
+    /// </summary>
     [Fact]
     public void SubtitlePath_WithEmptyString_ThrowsException()
     {
@@ -95,6 +120,9 @@ public class SubtitleSettingsTests : IDisposable
         act.Should().Throw<InvalidOperationConfigurationException>();
     }
 
+    /// <summary>
+    /// Verifies that setting the <see cref="SubtitleSettings.CharEncoding"/> property with an empty string throws an exception.
+    /// </summary>
     [Fact]
     public void CharEncoding_WithEmptyValue_ThrowsException()
     {
@@ -105,6 +133,9 @@ public class SubtitleSettingsTests : IDisposable
         act.Should().Throw<InvalidOperationConfigurationException>();
     }
 
+    /// <summary>
+    /// Verifies that setting the <see cref="SubtitleSettings.FontSize"/> property outside the valid range throws an exception during validation.
+    /// </summary>
     [Fact]
     public void FontSize_OutsideValidRange_ThrowsOnValidate()
     {
@@ -119,6 +150,9 @@ public class SubtitleSettingsTests : IDisposable
            .WithMessage("*FontSize*");
     }
 
+    /// <summary>
+    /// Verifies that a <see cref="SubtitleSettings"/> instance with valid settings does not throw an exception during validation.
+    /// </summary>
     [Fact]
     public void Validate_WithValidSettings_DoesNotThrow()
     {
@@ -134,6 +168,9 @@ public class SubtitleSettingsTests : IDisposable
         act.Should().NotThrow();
     }
 
+    /// <summary>
+    /// Verifies that the <see cref="SubtitleSettings.Clone"/> method produces an independent copy of the original instance.
+    /// </summary>
     [Fact]
     public void Clone_ProducesIndependentCopy()
     {
