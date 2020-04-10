@@ -4,6 +4,7 @@
 // =====================================================================
 
 using System;
+using FFmpegDotnetWrapper.Exceptions;
 
 namespace FFmpegDotnetWrapper.Models;
 
@@ -20,10 +21,10 @@ public static class TrimSettingsExtensions
     /// <param name="settings">The original trim settings.</param>
     /// <param name="offset">The time offset to apply to the start time.</param>
     /// <returns>A new <see cref="TrimSettings"/> instance with adjusted start time.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <see langword="null"/>.</exception>
     public static TrimSettings WithStartTimeOffset(this TrimSettings settings, TimeSpan offset)
     {
-        if (settings == null)
-            throw new ArgumentNullException(nameof(settings));
+        ArgumentNullException.ThrowIfNull(settings);
 
         var clone = settings.Clone();
         clone.StartTime += offset;
@@ -37,10 +38,10 @@ public static class TrimSettingsExtensions
     /// <param name="settings">The original trim settings.</param>
     /// <param name="durationAdjustment">The amount to adjust the duration by (can be positive or negative).</param>
     /// <returns>A new <see cref="TrimSettings"/> instance with adjusted duration.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <see langword="null"/>.</exception>
     public static TrimSettings WithDurationAdjustment(this TrimSettings settings, TimeSpan durationAdjustment)
     {
-        if (settings == null)
-            throw new ArgumentNullException(nameof(settings));
+        ArgumentNullException.ThrowIfNull(settings);
 
         var clone = settings.Clone();
         if (clone.Duration.HasValue)
@@ -62,10 +63,10 @@ public static class TrimSettingsExtensions
     /// </summary>
     /// <param name="settings">The trim settings.</param>
     /// <returns>True if both audio and video are preserved; otherwise false.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <see langword="null"/>.</exception>
     public static bool PreservesBothStreams(this TrimSettings settings)
     {
-        if (settings == null)
-            throw new ArgumentNullException(nameof(settings));
+        ArgumentNullException.ThrowIfNull(settings);
 
         return settings.PreserveAudio && settings.PreserveVideo;
     }
@@ -75,10 +76,10 @@ public static class TrimSettingsExtensions
     /// </summary>
     /// <param name="settings">The trim settings.</param>
     /// <returns>True if only audio is preserved; otherwise false.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <see langword="null"/>.</exception>
     public static bool PreservesOnlyAudio(this TrimSettings settings)
     {
-        if (settings == null)
-            throw new ArgumentNullException(nameof(settings));
+        ArgumentNullException.ThrowIfNull(settings);
 
         return settings.PreserveAudio && !settings.PreserveVideo;
     }
@@ -88,43 +89,44 @@ public static class TrimSettingsExtensions
     /// </summary>
     /// <param name="settings">The trim settings.</param>
     /// <returns>True if only video is preserved; otherwise false.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <see langword="null"/>.</exception>
     public static bool PreservesOnlyVideo(this TrimSettings settings)
     {
-        if (settings == null)
-            throw new ArgumentNullException(nameof(settings));
+        ArgumentNullException.ThrowIfNull(settings);
 
         return !settings.PreserveAudio && settings.PreserveVideo;
     }
 
     /// <summary>
-    /// Gets the end time of the trim operation, or throws if neither EndTime nor Duration is set.
+    /// Gets the end time of the trim operation.
     /// </summary>
     /// <param name="settings">The trim settings.</param>
     /// <returns>The calculated end time.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <see langword="null"/>.</exception>
+    /// <exception cref="InvalidOperationConfigurationException">Neither <see cref="TrimSettings.EndTime"/> nor <see cref="TrimSettings.Duration"/> is set.</exception>
     public static TimeSpan GetEndTime(this TrimSettings settings)
     {
-        if (settings == null)
-            throw new ArgumentNullException(nameof(settings));
+        ArgumentNullException.ThrowIfNull(settings);
 
         return settings.CalculateEndTime();
     }
 
     /// <summary>
-    /// Gets the duration of the trimmed segment, or TimeSpan.Zero if the trim would result in no content.
+    /// Gets the duration of the trimmed segment, or <see cref="TimeSpan.Zero"/> if the trim would result in no content.
     /// </summary>
     /// <param name="settings">The trim settings.</param>
-    /// <returns>The duration of the trimmed segment, or TimeSpan.Zero.</returns>
+    /// <returns>The duration of the trimmed segment, or <see cref="TimeSpan.Zero"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <see langword="null"/>.</exception>
     public static TimeSpan GetTrimmedDurationOrZero(this TrimSettings settings)
     {
-        if (settings == null)
-            throw new ArgumentNullException(nameof(settings));
+        ArgumentNullException.ThrowIfNull(settings);
 
         try
         {
             var duration = settings.GetTrimmedDuration();
             return duration > TimeSpan.Zero ? duration : TimeSpan.Zero;
         }
-        catch
+        catch (InvalidOperationConfigurationException)
         {
             return TimeSpan.Zero;
         }
@@ -135,10 +137,10 @@ public static class TrimSettingsExtensions
     /// </summary>
     /// <param name="settings">The original trim settings.</param>
     /// <returns>A new <see cref="TrimSettings"/> instance that trims to the end of the media.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <see langword="null"/>.</exception>
     public static TrimSettings TrimToEnd(this TrimSettings settings)
     {
-        if (settings == null)
-            throw new ArgumentNullException(nameof(settings));
+        ArgumentNullException.ThrowIfNull(settings);
 
         var clone = settings.Clone();
         clone.EndTime = null;
@@ -151,11 +153,10 @@ public static class TrimSettingsExtensions
     /// </summary>
     /// <param name="settings">The trim settings.</param>
     /// <returns>True if keyframes are required; otherwise false.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <see langword="null"/>.</exception>
     public static bool RequiresKeyframes(this TrimSettings settings)
     {
-        if (settings == null)
-            throw new ArgumentNullException(nameof(settings));
-
+        ArgumentNullException.ThrowIfNull(settings);
         return settings.Keyframe;
     }
 }
