@@ -15,9 +15,12 @@ public static class FFmpegProgressUpdateExtensions
     /// Calculates the remaining duration based on the current progress percentage.
     /// </summary>
     /// <param name="update">The progress update instance.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="update"/> is null.</exception>
     /// <returns>The estimated remaining duration as a TimeSpan.</returns>
     public static TimeSpan GetRemainingDuration(this FFmpegProgressUpdate update)
     {
+        ArgumentNullException.ThrowIfNull(update);
+
         if (update.ProgressPercentage >= 100.0)
         {
             return TimeSpan.Zero;
@@ -39,9 +42,11 @@ public static class FFmpegProgressUpdateExtensions
     /// Determines whether the FFmpeg operation has completed based on the progress percentage.
     /// </summary>
     /// <param name="update">The progress update instance.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="update"/> is null.</exception>
     /// <returns>True if the operation has completed (100% or more); otherwise, false.</returns>
     public static bool IsCompleted(this FFmpegProgressUpdate update)
     {
+        ArgumentNullException.ThrowIfNull(update);
         return update.ProgressPercentage >= 100.0;
     }
 
@@ -50,9 +55,14 @@ public static class FFmpegProgressUpdateExtensions
     /// </summary>
     /// <param name="update">The progress update instance.</param>
     /// <param name="decimalPlaces">Number of decimal places to display (default: 1).</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="update"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="decimalPlaces"/> is negative.</exception>
     /// <returns>Formatted percentage string (e.g., "75.5%" or "100%").</returns>
     public static string GetFormattedPercentage(this FFmpegProgressUpdate update, int decimalPlaces = 1)
     {
+        ArgumentNullException.ThrowIfNull(update);
+        ArgumentOutOfRangeException.ThrowIfNegative(decimalPlaces);
+
         return update.ProgressPercentage.ToString($"F{decimalPlaces}%");
     }
 
@@ -60,9 +70,12 @@ public static class FFmpegProgressUpdateExtensions
     /// Calculates the estimated completion time based on the current encoding speed and elapsed time.
     /// </summary>
     /// <param name="update">The progress update instance.</param>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="update"/> is null.</exception>
     /// <returns>The estimated completion DateTime, or DateTime.MinValue if calculation is not possible.</returns>
     public static DateTime GetEstimatedCompletionTime(this FFmpegProgressUpdate update)
     {
+        ArgumentNullException.ThrowIfNull(update);
+
         if (update.EncodingSpeed <= 0 || update.ElapsedWallTime.TotalSeconds <= 0)
         {
             return DateTime.MinValue;
@@ -76,11 +89,8 @@ public static class FFmpegProgressUpdateExtensions
         var totalSecondsNeeded = update.TotalDuration.TotalSeconds / update.EncodingSpeed;
         var secondsRemaining = totalSecondsNeeded - update.ElapsedWallTime.TotalSeconds;
 
-        if (secondsRemaining <= 0)
-        {
-            return DateTime.UtcNow;
-        }
-
-        return DateTime.UtcNow.AddSeconds(secondsRemaining);
+        return secondsRemaining <= 0
+            ? DateTime.UtcNow
+            : DateTime.UtcNow.AddSeconds(secondsRemaining);
     }
 }
