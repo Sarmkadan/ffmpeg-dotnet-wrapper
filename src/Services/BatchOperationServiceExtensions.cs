@@ -3,7 +3,7 @@
 // CTO & Software Architect
 //
 // Extension methods for BatchOperationService providing additional batch operation utilities
-// =============================================================================
+// =====================================================================
 
 using System.Collections.Concurrent;
 using FFmpegDotnetWrapper.Models;
@@ -57,8 +57,12 @@ public class BatchAnalysisResult
 }
 
 /// <summary>
-/// Extension methods for BatchOperationService providing additional batch operation utilities.
+/// Extension methods for <see cref="BatchOperationService"/> providing additional batch operation utilities.
 /// </summary>
+/// <remarks>
+/// This static class provides utility methods for filtering, analyzing, and reporting on batch operation results.
+/// All methods validate their inputs and throw appropriate exceptions for invalid arguments.
+/// </remarks>
 public static class BatchOperationServiceExtensions
 {
     /// <summary>
@@ -67,12 +71,12 @@ public static class BatchOperationServiceExtensions
     /// <param name="service">The batch operation service instance</param>
     /// <param name="result">The batch operation result to filter</param>
     /// <returns>List of successful conversion results</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/></exception>
     public static List<ConversionResult> GetSuccessfulConversions(this BatchOperationService service, BatchOperationResult result)
     {
-        if (result?.Results == null)
-        {
-            return new List<ConversionResult>();
-        }
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(result);
 
         return result.Results.Where(r => r.IsSuccess).ToList();
     }
@@ -83,12 +87,12 @@ public static class BatchOperationServiceExtensions
     /// <param name="service">The batch operation service instance</param>
     /// <param name="result">The batch operation result to filter</param>
     /// <returns>List of failed conversion results</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/></exception>
     public static List<ConversionResult> GetFailedConversions(this BatchOperationService service, BatchOperationResult result)
     {
-        if (result?.Results == null)
-        {
-            return new List<ConversionResult>();
-        }
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(result);
 
         return result.Results.Where(r => !r.IsSuccess).ToList();
     }
@@ -99,9 +103,14 @@ public static class BatchOperationServiceExtensions
     /// <param name="service">The batch operation service instance</param>
     /// <param name="result">The batch operation result</param>
     /// <returns>Total duration of all successful conversions</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/></exception>
     public static TimeSpan GetTotalDuration(this BatchOperationService service, BatchOperationResult result)
     {
-        if (result?.Results == null || !result.Results.Any())
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(result);
+
+        if (!result.Results.Any())
         {
             return TimeSpan.Zero;
         }
@@ -119,12 +128,12 @@ public static class BatchOperationServiceExtensions
     /// <param name="service">The batch operation service instance</param>
     /// <param name="result">The batch operation result</param>
     /// <returns>Average duration of successful conversions, or TimeSpan.Zero if no successful conversions</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/></exception>
     public static TimeSpan GetAverageDuration(this BatchOperationService service, BatchOperationResult result)
     {
-        if (result?.Results == null || !result.Results.Any(r => r.IsSuccess))
-        {
-            return TimeSpan.Zero;
-        }
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(result);
 
         var successfulDurations = result.Results
             .Where(r => r.IsSuccess)
@@ -147,33 +156,32 @@ public static class BatchOperationServiceExtensions
     /// <param name="service">The batch operation service instance</param>
     /// <param name="result">The batch operation result</param>
     /// <returns>Formatted string summary of the batch operation</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/></exception>
     public static string CreateSummaryReport(this BatchOperationService service, BatchOperationResult result)
     {
-        if (result == null)
-        {
-            return "Batch operation result is null";
-        }
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(result);
 
         var duration = result.GetDuration();
         var successRate = result.GetSuccessRate();
         var totalDuration = service.GetTotalDuration(result);
         var averageDuration = service.GetAverageDuration(result);
 
-        return $@"Batch Operation Summary Report
-================================
-Operation Type: {result.OperationType}
-Total Files: {result.TotalFiles}
-Successful: {result.SuccessfulCount}
-Failed: {result.FailedCount}
-Success Rate: {successRate:F2}%
-Duration: {duration}
-Total Processing Time: {totalDuration}
-Average Processing Time: {averageDuration}
-Cancelled: {result.IsCancelled}
-Created: {result.CreatedAt:yyyy-MM-dd HH:mm:ss}
-Completed: {(result.CompletedAt.HasValue ? result.CompletedAt.Value.ToString("yyyy-MM-dd HH:mm:ss") : "N/A")}
-Results Count: {result.Results?.Count ?? 0}
-";
+        return $"Batch Operation Summary Report\n" +
+               "================================\n" +
+               $"Operation Type: {result.OperationType}\n" +
+               $"Total Files: {result.TotalFiles}\n" +
+               $"Successful: {result.SuccessfulCount}\n" +
+               $"Failed: {result.FailedCount}\n" +
+               $"Success Rate: {successRate:F2}%\n" +
+               $"Duration: {duration}\n" +
+               $"Total Processing Time: {totalDuration}\n" +
+               $"Average Processing Time: {averageDuration}\n" +
+               $"Cancelled: {result.IsCancelled}\n" +
+               $"Created: {result.CreatedAt:yyyy-MM-dd HH:mm:ss}\n" +
+               $"Completed: {(result.CompletedAt.HasValue ? result.CompletedAt.Value.ToString("yyyy-MM-dd HH:mm:ss") : "N/A")}\n" +
+               $"Results Count: {result.Results?.Count ?? 0}\n";
     }
 
     /// <summary>
@@ -182,9 +190,14 @@ Results Count: {result.Results?.Count ?? 0}
     /// <param name="service">The batch operation service instance</param>
     /// <param name="result">The batch operation result</param>
     /// <returns>Size in bytes of the largest file, or 0 if no successful conversions</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/></exception>
     public static long GetLargestFileSize(this BatchOperationService service, BatchOperationResult result)
     {
-        if (result?.Results == null || !result.Results.Any(r => r.IsSuccess && r.OutputMedia != null))
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(result);
+
+        if (!result.Results.Any(r => r.IsSuccess && r.OutputMedia != null))
         {
             return 0;
         }
@@ -200,9 +213,14 @@ Results Count: {result.Results?.Count ?? 0}
     /// <param name="service">The batch operation service instance</param>
     /// <param name="result">The batch operation result</param>
     /// <returns>Size in bytes of the smallest file, or 0 if no successful conversions</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/></exception>
     public static long GetSmallestFileSize(this BatchOperationService service, BatchOperationResult result)
     {
-        if (result?.Results == null || !result.Results.Any(r => r.IsSuccess && r.OutputMedia != null))
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(result);
+
+        if (!result.Results.Any(r => r.IsSuccess && r.OutputMedia != null))
         {
             return 0;
         }
@@ -218,19 +236,21 @@ Results Count: {result.Results?.Count ?? 0}
     /// <param name="service">The batch operation service instance</param>
     /// <param name="result">The batch operation result</param>
     /// <returns>Average size in bytes of successful conversions, or 0 if no successful conversions</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/></exception>
     public static long GetAverageFileSize(this BatchOperationService service, BatchOperationResult result)
     {
-        if (result?.Results == null || !result.Results.Any(r => r.IsSuccess && r.OutputMedia != null))
-        {
-            return 0;
-        }
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(result);
 
         var successfulSizes = result.Results
             .Where(r => r.IsSuccess && r.OutputMedia != null)
             .Select(r => r.OutputMedia!.FileSize)
             .ToList();
 
-        return (long)successfulSizes.Average();
+        return successfulSizes.Count == 0
+            ? 0
+            : (long)successfulSizes.Average();
     }
 
     /// <summary>
@@ -239,14 +259,16 @@ Results Count: {result.Results?.Count ?? 0}
     /// <param name="service">The batch operation service instance</param>
     /// <param name="result">The batch operation result</param>
     /// <returns>Completion percentage (0-100)</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/></exception>
     public static double GetCompletionPercentage(this BatchOperationService service, BatchOperationResult result)
     {
-        if (result == null || result.TotalFiles == 0)
-        {
-            return 0;
-        }
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(result);
 
-        return (result.SuccessfulCount + result.FailedCount) / (double)result.TotalFiles * 100;
+        return result.TotalFiles == 0
+            ? 0
+            : (result.SuccessfulCount + result.FailedCount) / (double)result.TotalFiles * 100;
     }
 
     /// <summary>
@@ -255,9 +277,14 @@ Results Count: {result.Results?.Count ?? 0}
     /// <param name="service">The batch operation service instance</param>
     /// <param name="result">The batch operation result</param>
     /// <returns>True if all conversions succeeded, false otherwise</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/></exception>
     public static bool AllSuccessful(this BatchOperationService service, BatchOperationResult result)
     {
-        return result != null && result.TotalFiles > 0 && result.FailedCount == 0;
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(result);
+
+        return result.TotalFiles > 0 && result.FailedCount == 0;
     }
 
     /// <summary>
@@ -266,8 +293,13 @@ Results Count: {result.Results?.Count ?? 0}
     /// <param name="service">The batch operation service instance</param>
     /// <param name="result">The batch operation result</param>
     /// <returns>True if any conversions failed, false otherwise</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="service"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentNullException"><paramref name="result"/> is <see langword="null"/></exception>
     public static bool AnyFailed(this BatchOperationService service, BatchOperationResult result)
     {
-        return result != null && result.FailedCount > 0;
+        ArgumentNullException.ThrowIfNull(service);
+        ArgumentNullException.ThrowIfNull(result);
+
+        return result.FailedCount > 0;
     }
 }
