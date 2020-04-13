@@ -20,16 +20,14 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>The FFmpeg executable path, or null if not available.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static string? GetEffectiveFFmpegPath(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
-            return !string.IsNullOrWhiteSpace(options.FFmpegPath)
-                ? options.FFmpegPath
-                : FindFFmpegInPath();
+            return string.IsNullOrWhiteSpace(options.FFmpegPath)
+                ? FindFFmpegInPath()
+                : options.FFmpegPath;
         }
 
         /// <summary>
@@ -37,16 +35,14 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>The FFprobe executable path, or null if not available.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static string? GetEffectiveFFprobePath(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
-            return !string.IsNullOrWhiteSpace(options.FFprobePath)
-                ? options.FFprobePath
-                : FindFFprobeInPath();
+            return string.IsNullOrWhiteSpace(options.FFprobePath)
+                ? FindFFprobeInPath()
+                : options.FFprobePath;
         }
 
         /// <summary>
@@ -54,12 +50,10 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>True if hardware acceleration is enabled; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static bool IsHardwareAccelerationEnabled(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return options.EnableHardwareAcceleration &&
                    !string.IsNullOrWhiteSpace(options.EncodingPreset) &&
@@ -71,16 +65,14 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>The encoding preset to use, or "medium" as default.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static string GetEffectiveEncodingPreset(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
-            return !string.IsNullOrWhiteSpace(options.EncodingPreset)
-                ? options.EncodingPreset
-                : "medium";
+            return string.IsNullOrWhiteSpace(options.EncodingPreset)
+                ? "medium"
+                : options.EncodingPreset;
         }
 
         /// <summary>
@@ -88,12 +80,10 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>Timeout in milliseconds.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static int GetTimeoutMilliseconds(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return options.OperationTimeoutSeconds * 1000;
         }
@@ -103,16 +93,13 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>True if concurrent operations are allowed; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static bool CanRunConcurrently(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return options.AllowConcurrentOperations &&
-                   (options.MaxConcurrentOperations == 0 ||
-                    options.MaxConcurrentOperations > 0);
+                   options.MaxConcurrentOperations >= 0;
         }
 
         /// <summary>
@@ -120,12 +107,10 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>Maximum concurrent operations allowed, or 0 for unlimited.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static int GetMaxConcurrentOperations(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return options.MaxConcurrentOperations;
         }
@@ -136,19 +121,13 @@ namespace FFmpegDotnetWrapper.Configuration
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <param name="format">The format to check (e.g., "mp4", "webm").</param>
         /// <returns>True if the format is supported; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static bool IsFormatSupported(this FFmpegOptions options, string format)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
-            if (string.IsNullOrWhiteSpace(format))
-            {
-                return false;
-            }
-
-            return options.SupportedFormats.Contains(format.Trim(), StringComparer.OrdinalIgnoreCase);
+            return !string.IsNullOrWhiteSpace(format) &&
+                   options.SupportedFormats.Contains(format.Trim(), StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -156,12 +135,10 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>Comma-separated list of supported formats.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static string GetSupportedFormatsString(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return string.Join(", ", options.SupportedFormats.OrderBy(f => f, StringComparer.OrdinalIgnoreCase));
         }
@@ -171,16 +148,14 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>The temporary directory path.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static string GetEffectiveTemporaryDirectory(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
-            return !string.IsNullOrWhiteSpace(options.TemporaryDirectory)
-                ? options.TemporaryDirectory
-                : System.IO.Path.GetTempPath();
+            return string.IsNullOrWhiteSpace(options.TemporaryDirectory)
+                ? System.IO.Path.GetTempPath()
+                : options.TemporaryDirectory;
         }
 
         /// <summary>
@@ -188,12 +163,10 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>True if temporary files should be kept; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static bool ShouldKeepTemporaryFiles(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return options.KeepTemporaryFiles;
         }
@@ -203,12 +176,10 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>Tuple containing retry attempts and delay in milliseconds.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static (int Attempts, int DelayMs) GetRetryConfiguration(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return (options.RetryAttempts, options.RetryDelayMs);
         }
@@ -218,12 +189,10 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>True if verbose logging is enabled; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static bool IsVerboseLoggingEnabled(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return options.VerboseLogging;
         }
@@ -233,12 +202,10 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>Default audio bitrate in kbps.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static int GetDefaultAudioBitrate(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return options.DefaultAudioBitrate;
         }
@@ -248,12 +215,10 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>Default video bitrate in kbps, or 0 if auto.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static int GetDefaultVideoBitrate(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return options.DefaultVideoBitrate;
         }
@@ -263,12 +228,10 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>Default quality level, or null if not configured.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static int? GetDefaultQuality(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return options.DefaultQuality;
         }
@@ -278,12 +241,10 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>True if path validation is enabled; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static bool IsPathValidationEnabled(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return options.ValidatePaths;
         }
@@ -293,16 +254,13 @@ namespace FFmpegDotnetWrapper.Configuration
         /// </summary>
         /// <param name="options">The FFmpeg configuration options.</param>
         /// <returns>True if output path validation is enabled; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
         public static bool IsOutputPathValidationEnabled(this FFmpegOptions options)
         {
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             return options.ValidateOutputPath;
         }
-
 
         // Helper methods for path detection
         private static string? FindFFmpegInPath()
