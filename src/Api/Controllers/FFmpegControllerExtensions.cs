@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,13 +26,13 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// <param name="controller">The FFmpeg controller instance</param>
         /// <param name="filePath">Path to the media file</param>
         /// <returns>Media file information with metadata</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/></exception>
+        /// <exception cref="ArgumentException"><paramref name="filePath"/> is <see langword="null"/>, empty, or consists only of whitespace</exception>
         public static ApiResponse<MediaFile> ExtractMediaInfo(this FFmpegController controller, string filePath)
         {
-            if (controller == null)
-                throw new ArgumentNullException(nameof(controller));
+            ArgumentNullException.ThrowIfNull(controller);
 
-            if (string.IsNullOrWhiteSpace(filePath))
-                return ApiResponse<MediaFile>.Failure("File path cannot be null or empty");
+            ArgumentException.ThrowIfNullOrWhiteSpace(filePath, nameof(filePath));
 
             if (!File.Exists(filePath))
                 return ApiResponse<MediaFile>.Failure("File does not exist");
@@ -55,6 +56,8 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// <param name="bitrate">Target bitrate in kbps (e.g., 2000 for 2Mbps)</param>
         /// <param name="quality">Quality level (0-100, where higher is better quality)</param>
         /// <returns>Conversion result with output file information</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/></exception>
+        /// <exception cref="ArgumentException"><paramref name="inputPath"/> or <paramref name="outputPath"/> is <see langword="null"/>, empty, or consists only of whitespace</exception>
         public static async Task<ApiResponse<ConversionResult>> TranscodeAsync(
             this FFmpegController controller,
             string inputPath,
@@ -62,14 +65,13 @@ namespace FFmpegDotnetWrapper.Api.Controllers
             int bitrate = 2000,
             int quality = 85)
         {
-            if (controller == null)
-                throw new ArgumentNullException(nameof(controller));
+            ArgumentNullException.ThrowIfNull(controller);
 
-            if (string.IsNullOrWhiteSpace(inputPath) || !File.Exists(inputPath))
+            ArgumentException.ThrowIfNullOrWhiteSpace(inputPath, nameof(inputPath));
+            ArgumentException.ThrowIfNullOrWhiteSpace(outputPath, nameof(outputPath));
+
+            if (!File.Exists(inputPath))
                 return ApiResponse<ConversionResult>.Failure("Input file does not exist");
-
-            if (string.IsNullOrWhiteSpace(outputPath))
-                return ApiResponse<ConversionResult>.Failure("Output path cannot be null or empty");
 
             try
             {
@@ -98,20 +100,21 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// <param name="outputPath">Path to save the trimmed output</param>
         /// <param name="duration">Duration to keep in seconds</param>
         /// <returns>Conversion result with output file information</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/></exception>
+        /// <exception cref="ArgumentException"><paramref name="inputPath"/> or <paramref name="outputPath"/> is <see langword="null"/>, empty, or consists only of whitespace</exception>
         public static async Task<ApiResponse<ConversionResult>> TrimFromStartAsync(
             this FFmpegController controller,
             string inputPath,
             string outputPath,
             double duration)
         {
-            if (controller == null)
-                throw new ArgumentNullException(nameof(controller));
+            ArgumentNullException.ThrowIfNull(controller);
 
-            if (string.IsNullOrWhiteSpace(inputPath) || !File.Exists(inputPath))
+            ArgumentException.ThrowIfNullOrWhiteSpace(inputPath, nameof(inputPath));
+            ArgumentException.ThrowIfNullOrWhiteSpace(outputPath, nameof(outputPath));
+
+            if (!File.Exists(inputPath))
                 return ApiResponse<ConversionResult>.Failure("Input file does not exist");
-
-            if (string.IsNullOrWhiteSpace(outputPath))
-                return ApiResponse<ConversionResult>.Failure("Output path cannot be null or empty");
 
             if (duration <= 0)
                 return ApiResponse<ConversionResult>.Failure("Duration must be positive");
@@ -142,6 +145,8 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// <param name="startTime">Start time in seconds</param>
         /// <param name="endTime">End time in seconds</param>
         /// <returns>Conversion result with output file information</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/></exception>
+        /// <exception cref="ArgumentException"><paramref name="inputPath"/> or <paramref name="outputPath"/> is <see langword="null"/>, empty, or consists only of whitespace</exception>
         public static async Task<ApiResponse<ConversionResult>> TrimAsync(
             this FFmpegController controller,
             string inputPath,
@@ -149,14 +154,13 @@ namespace FFmpegDotnetWrapper.Api.Controllers
             double startTime,
             double endTime)
         {
-            if (controller == null)
-                throw new ArgumentNullException(nameof(controller));
+            ArgumentNullException.ThrowIfNull(controller);
 
-            if (string.IsNullOrWhiteSpace(inputPath) || !File.Exists(inputPath))
+            ArgumentException.ThrowIfNullOrWhiteSpace(inputPath, nameof(inputPath));
+            ArgumentException.ThrowIfNullOrWhiteSpace(outputPath, nameof(outputPath));
+
+            if (!File.Exists(inputPath))
                 return ApiResponse<ConversionResult>.Failure("Input file does not exist");
-
-            if (string.IsNullOrWhiteSpace(outputPath))
-                return ApiResponse<ConversionResult>.Failure("Output path cannot be null or empty");
 
             if (startTime < 0 || endTime <= startTime)
                 return ApiResponse<ConversionResult>.Failure("Invalid time range");
@@ -187,23 +191,23 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// <param name="outputPath">Path to save the merged output</param>
         /// <param name="maintainAspectRatio">Whether to maintain aspect ratio</param>
         /// <returns>Conversion result with output file information</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/></exception>
+        /// <exception cref="ArgumentException"><paramref name="outputPath"/> is <see langword="null"/>, empty, or consists only of whitespace</exception>
         public static async Task<ApiResponse<ConversionResult>> MergeAsync(
             this FFmpegController controller,
             IEnumerable<string> inputPaths,
             string outputPath,
             bool maintainAspectRatio = true)
         {
-            if (controller == null)
-                throw new ArgumentNullException(nameof(controller));
+            ArgumentNullException.ThrowIfNull(controller);
+
+            ArgumentException.ThrowIfNullOrWhiteSpace(outputPath, nameof(outputPath));
 
             if (inputPaths == null || !inputPaths.Any())
                 return ApiResponse<ConversionResult>.Failure("No input files provided");
 
             if (inputPaths.Any(p => !File.Exists(p)))
                 return ApiResponse<ConversionResult>.Failure("One or more input files do not exist");
-
-            if (string.IsNullOrWhiteSpace(outputPath))
-                return ApiResponse<ConversionResult>.Failure("Output path cannot be null or empty");
 
             try
             {
@@ -232,6 +236,8 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// <param name="opacity">Watermark opacity (0-1)</param>
         /// <param name="scale">Watermark scale factor (0.1-1.0)</param>
         /// <returns>Conversion result with output file information</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/></exception>
+        /// <exception cref="ArgumentException"><paramref name="inputPath"/>, <paramref name="outputPath"/>, or <paramref name="watermarkPath"/> is <see langword="null"/>, empty, or consists only of whitespace</exception>
         public static async Task<ApiResponse<ConversionResult>> AddWatermarkAsync(
             this FFmpegController controller,
             string inputPath,
@@ -240,17 +246,17 @@ namespace FFmpegDotnetWrapper.Api.Controllers
             double opacity = 0.5,
             double scale = 0.2)
         {
-            if (controller == null)
-                throw new ArgumentNullException(nameof(controller));
+            ArgumentNullException.ThrowIfNull(controller);
 
-            if (string.IsNullOrWhiteSpace(inputPath) || !File.Exists(inputPath))
+            ArgumentException.ThrowIfNullOrWhiteSpace(inputPath, nameof(inputPath));
+            ArgumentException.ThrowIfNullOrWhiteSpace(outputPath, nameof(outputPath));
+            ArgumentException.ThrowIfNullOrWhiteSpace(watermarkPath, nameof(watermarkPath));
+
+            if (!File.Exists(inputPath))
                 return ApiResponse<ConversionResult>.Failure("Input file does not exist");
 
-            if (string.IsNullOrWhiteSpace(watermarkPath) || !File.Exists(watermarkPath))
+            if (!File.Exists(watermarkPath))
                 return ApiResponse<ConversionResult>.Failure("Watermark file does not exist");
-
-            if (string.IsNullOrWhiteSpace(outputPath))
-                return ApiResponse<ConversionResult>.Failure("Output path cannot be null or empty");
 
             if (opacity < 0 || opacity > 1)
                 return ApiResponse<ConversionResult>.Failure("Opacity must be between 0 and 1");
@@ -290,6 +296,8 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// <param name="height">Thumbnail height in pixels</param>
         /// <param name="format">Thumbnail format (jpg or png)</param>
         /// <returns>Thumbnail extraction result with paths to generated thumbnails</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/></exception>
+        /// <exception cref="ArgumentException"><paramref name="inputPath"/> or <paramref name="outputPattern"/> is <see langword="null"/>, empty, or consists only of whitespace</exception>
         public static async Task<ApiResponse<ThumbnailResult>> ExtractThumbnailsAsync(
             this FFmpegController controller,
             string inputPath,
@@ -299,14 +307,13 @@ namespace FFmpegDotnetWrapper.Api.Controllers
             int height = 240,
             string format = "jpg")
         {
-            if (controller == null)
-                throw new ArgumentNullException(nameof(controller));
+            ArgumentNullException.ThrowIfNull(controller);
 
-            if (string.IsNullOrWhiteSpace(inputPath) || !File.Exists(inputPath))
+            ArgumentException.ThrowIfNullOrWhiteSpace(inputPath, nameof(inputPath));
+            ArgumentException.ThrowIfNullOrWhiteSpace(outputPattern, nameof(outputPattern));
+
+            if (!File.Exists(inputPath))
                 return ApiResponse<ThumbnailResult>.Failure("Input file does not exist");
-
-            if (string.IsNullOrWhiteSpace(outputPattern))
-                return ApiResponse<ThumbnailResult>.Failure("Output pattern cannot be null or empty");
 
             if (count <= 0)
                 return ApiResponse<ThumbnailResult>.Failure("Count must be positive");
@@ -368,6 +375,8 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// <param name="fontName">Font name for subtitle rendering</param>
         /// <param name="fontSize">Font size in pixels</param>
         /// <returns>Conversion result with output file information</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/></exception>
+        /// <exception cref="ArgumentException"><paramref name="inputPath"/>, <paramref name="outputPath"/>, <paramref name="subtitlePath"/>, or <paramref name="language"/> is <see langword="null"/>, empty, or consists only of whitespace</exception>
         public static async Task<ApiResponse<ConversionResult>> EmbedSubtitlesAsync(
             this FFmpegController controller,
             string inputPath,
@@ -377,17 +386,19 @@ namespace FFmpegDotnetWrapper.Api.Controllers
             string fontName = "Arial",
             int fontSize = 24)
         {
-            if (controller == null)
-                throw new ArgumentNullException(nameof(controller));
+            ArgumentNullException.ThrowIfNull(controller);
 
-            if (string.IsNullOrWhiteSpace(inputPath) || !File.Exists(inputPath))
+            ArgumentException.ThrowIfNullOrWhiteSpace(inputPath, nameof(inputPath));
+            ArgumentException.ThrowIfNullOrWhiteSpace(outputPath, nameof(outputPath));
+            ArgumentException.ThrowIfNullOrWhiteSpace(subtitlePath, nameof(subtitlePath));
+            ArgumentException.ThrowIfNullOrWhiteSpace(language, nameof(language));
+            ArgumentException.ThrowIfNullOrWhiteSpace(fontName, nameof(fontName));
+
+            if (!File.Exists(inputPath))
                 return ApiResponse<ConversionResult>.Failure("Input file does not exist");
 
-            if (string.IsNullOrWhiteSpace(subtitlePath) || !File.Exists(subtitlePath))
+            if (!File.Exists(subtitlePath))
                 return ApiResponse<ConversionResult>.Failure("Subtitle file does not exist");
-
-            if (string.IsNullOrWhiteSpace(outputPath))
-                return ApiResponse<ConversionResult>.Failure("Output path cannot be null or empty");
 
             try
             {
@@ -420,6 +431,8 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// <param name="watermarkPath">Path to the watermark image</param>
         /// <param name="targetBitrate">Target bitrate for final transcode</param>
         /// <returns>Final conversion result with all intermediate files cleaned up</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/></exception>
+        /// <exception cref="ArgumentException"><paramref name="inputPath"/>, <paramref name="finalOutputPath"/>, or <paramref name="watermarkPath"/> is <see langword="null"/>, empty, or consists only of whitespace</exception>
         public static async Task<ApiResponse<ConversionResult>> TrimWatermarkTranscodeAsync(
             this FFmpegController controller,
             string inputPath,
@@ -428,19 +441,19 @@ namespace FFmpegDotnetWrapper.Api.Controllers
             string watermarkPath,
             int targetBitrate = 2000)
         {
-            if (controller == null)
-                throw new ArgumentNullException(nameof(controller));
+            ArgumentNullException.ThrowIfNull(controller);
 
-            if (string.IsNullOrWhiteSpace(inputPath) || !File.Exists(inputPath))
+            ArgumentException.ThrowIfNullOrWhiteSpace(inputPath, nameof(inputPath));
+            ArgumentException.ThrowIfNullOrWhiteSpace(finalOutputPath, nameof(finalOutputPath));
+            ArgumentException.ThrowIfNullOrWhiteSpace(watermarkPath, nameof(watermarkPath));
+
+            if (!File.Exists(inputPath))
                 return ApiResponse<ConversionResult>.Failure("Input file does not exist");
-
-            if (string.IsNullOrWhiteSpace(finalOutputPath))
-                return ApiResponse<ConversionResult>.Failure("Output path cannot be null or empty");
 
             if (trimDuration <= 0)
                 return ApiResponse<ConversionResult>.Failure("Duration must be positive");
 
-            if (string.IsNullOrWhiteSpace(watermarkPath) || !File.Exists(watermarkPath))
+            if (!File.Exists(watermarkPath))
                 return ApiResponse<ConversionResult>.Failure("Watermark file does not exist");
 
             try
