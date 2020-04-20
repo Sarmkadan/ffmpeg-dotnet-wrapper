@@ -5,22 +5,38 @@ using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;
 
+/// <summary>
+/// Unit tests for the <see cref="MediaFile"/> class.
+/// Tests various constructors, properties, and validation methods to ensure correct behavior.
+/// </summary>
 public class MediaFileTests
 {
     private string _tempFile = null!;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MediaFileTests"/> class.
+    /// Creates a temporary test media file that is cleaned up after the test run.
+    /// </summary>
     public MediaFileTests()
     {
         _tempFile = Path.Combine(Path.GetTempPath(), $"test_media_{Guid.NewGuid()}.mp4");
         File.WriteAllText(_tempFile, "fake video data");
     }
 
+    /// <summary>
+    /// Finalizes an instance of the <see cref="MediaFileTests"/> class.
+    /// Deletes the temporary test media file created during test initialization.
+    /// </summary>
     ~MediaFileTests()
     {
         if (File.Exists(_tempFile))
             File.Delete(_tempFile);
     }
 
+    /// <summary>
+    /// Tests that the default constructor creates a new <see cref="MediaFile"/> instance
+    /// with empty name, empty metadata, current timestamp for creation, and a generated unique ID.
+    /// </summary>
     [Fact]
     public void Constructor_DefaultValues_CreatesNewInstance()
     {
@@ -32,6 +48,10 @@ public class MediaFileTests
         mediaFile.Metadata.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that the constructor with a file path sets the FilePath, Name, and FileSize properties
+    /// from the actual file information.
+    /// </summary>
     [Fact]
     public void Constructor_WithFilePath_SetsPropertiesFromFile()
     {
@@ -42,6 +62,9 @@ public class MediaFileTests
         mediaFile.FileSize.Should().BeGreaterThan(0);
     }
 
+    /// <summary>
+    /// Tests that setting FilePath to a valid file path accepts the path and validates file existence.
+    /// </summary>
     [Fact]
     public void FilePath_WithValidFile_AcceptsPath()
     {
@@ -51,6 +74,9 @@ public class MediaFileTests
         File.Exists(mediaFile.FilePath).Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that setting FilePath to a nonexistent file path throws <see cref="InvalidMediaFileException"/>.
+    /// </summary>
     [Fact]
     public void FilePath_WithNonexistentFile_ThrowsException()
     {
@@ -61,6 +87,9 @@ public class MediaFileTests
         act.Should().Throw<InvalidMediaFileException>();
     }
 
+    /// <summary>
+    /// Tests that setting FilePath to an empty string throws <see cref="InvalidMediaFileException"/> with appropriate message.
+    /// </summary>
     [Fact]
     public void FilePath_WithEmptyString_ThrowsException()
     {
@@ -72,6 +101,9 @@ public class MediaFileTests
             .WithMessage("*cannot be null or empty*");
     }
 
+    /// <summary>
+    /// Tests that the Extension property returns the correct file extension from the FilePath.
+    /// </summary>
     [Fact]
     public void Extension_ReturnsFileExtension()
     {
@@ -80,6 +112,9 @@ public class MediaFileTests
         mediaFile.Extension.Should().Be(".mp4");
     }
 
+    /// <summary>
+    /// Tests that the Name property returns the filename without the extension.
+    /// </summary>
     [Fact]
     public void Name_ReturnsFileNameWithoutExtension()
     {
@@ -88,6 +123,9 @@ public class MediaFileTests
         mediaFile.Name.Should().Be(Path.GetFileNameWithoutExtension(_tempFile));
     }
 
+    /// <summary>
+    /// Tests that the FileSize property returns the actual file size in bytes.
+    /// </summary>
     [Fact]
     public void FileSize_ReturnsActualFileSize()
     {
@@ -96,6 +134,9 @@ public class MediaFileTests
         mediaFile.FileSize.Should().Be(new FileInfo(_tempFile).Length);
     }
 
+    /// <summary>
+    /// Tests that ValidateAsVideo does not throw when all required video dimensions (Width, Height, Duration) are set.
+    /// </summary>
     [Fact]
     public void ValidateAsVideo_WithValidDimensions_DoesNotThrow()
     {
@@ -112,6 +153,9 @@ public class MediaFileTests
         act.Should().NotThrow();
     }
 
+    /// <summary>
+    /// Tests that ValidateAsVideo throws <see cref="InvalidMediaFileException"/> when Width is not set.
+    /// </summary>
     [Fact]
     public void ValidateAsVideo_WithoutWidth_ThrowsException()
     {
@@ -128,6 +172,9 @@ public class MediaFileTests
             .WithMessage("*missing dimensions*");
     }
 
+    /// <summary>
+    /// Tests that ValidateAsVideo throws <see cref="InvalidMediaFileException"/> when Height is not set.
+    /// </summary>
     [Fact]
     public void ValidateAsVideo_WithoutHeight_ThrowsException()
     {
@@ -144,6 +191,9 @@ public class MediaFileTests
             .WithMessage("*missing dimensions*");
     }
 
+    /// <summary>
+    /// Tests that ValidateAsVideo throws <see cref="InvalidMediaFileException"/> when Duration is not set.
+    /// </summary>
     [Fact]
     public void ValidateAsVideo_WithoutDuration_ThrowsException()
     {
@@ -160,6 +210,9 @@ public class MediaFileTests
             .WithMessage("*invalid duration*");
     }
 
+    /// <summary>
+    /// Tests that ValidateAsVideo throws <see cref="InvalidMediaFileException"/> when Duration is set to TimeSpan.Zero.
+    /// </summary>
     [Fact]
     public void ValidateAsVideo_WithZeroDuration_ThrowsException()
     {
@@ -177,6 +230,9 @@ public class MediaFileTests
             .WithMessage("*invalid duration*");
     }
 
+    /// <summary>
+    /// Tests that the Metadata dictionary can store arbitrary key-value pairs for additional media file properties.
+    /// </summary>
     [Fact]
     public void Metadata_CanStoreArbitraryKeyValuePairs()
     {
@@ -189,6 +245,9 @@ public class MediaFileTests
         mediaFile.Metadata["profile"].Should().Be("Main");
     }
 
+    /// <summary>
+    /// Tests that the Description property can be set and retrieved correctly.
+    /// </summary>
     [Fact]
     public void Description_CanBeSet()
     {
@@ -200,6 +259,9 @@ public class MediaFileTests
         mediaFile.Description.Should().Be(description);
     }
 
+    /// <summary>
+    /// Tests that the ModifiedAt property can be set and retrieved correctly.
+    /// </summary>
     [Fact]
     public void ModifiedAt_CanBeSet()
     {
@@ -211,6 +273,9 @@ public class MediaFileTests
         mediaFile.ModifiedAt.Should().BeCloseTo(now, TimeSpan.FromMilliseconds(100));
     }
 
+    /// <summary>
+    /// Tests that various media properties (VideoCodec, AudioCodec, FrameRate, Bitrate, etc.) can be set independently.
+    /// </summary>
     [Fact]
     public void MediaProperties_CanBeSetIndependently()
     {
@@ -233,6 +298,9 @@ public class MediaFileTests
         mediaFile.Duration.Should().Be(TimeSpan.FromSeconds(120));
     }
 
+    /// <summary>
+    /// Tests that each <see cref="MediaFile"/> instance gets a unique ID.
+    /// </summary>
     [Fact]
     public void Id_IsUniqueForEachInstance()
     {
@@ -242,6 +310,9 @@ public class MediaFileTests
         media1.Id.Should().NotBe(media2.Id);
     }
 
+    /// <summary>
+    /// Tests that the FilePath property normalizes to an absolute path.
+    /// </summary>
     [Fact]
     public void FilePath_NormalizesToAbsolutePath()
     {
