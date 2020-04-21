@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -89,7 +90,7 @@ namespace FFmpegDotnetWrapper.Utilities
                 return null;
 
             // Try parsing as pure seconds
-            if (double.TryParse(timeString.Trim(), out var seconds))
+            if (double.TryParse(timeString.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds))
             {
                 return seconds >= 0 ? seconds : null;
             }
@@ -97,9 +98,9 @@ namespace FFmpegDotnetWrapper.Utilities
             // Try parsing as HH:MM:SS
             var parts = timeString.Split(':');
             if (parts.Length == 3 &&
-                int.TryParse(parts[0], out var hours) &&
-                int.TryParse(parts[1], out var minutes) &&
-                double.TryParse(parts[2], out var secs))
+                int.TryParse(parts[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var hours) &&
+                int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var minutes) &&
+                double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var secs))
             {
                 if (hours >= 0 && minutes >= 0 && minutes < 60 && secs >= 0 && secs < 60)
                 {
@@ -173,8 +174,8 @@ namespace FFmpegDotnetWrapper.Utilities
             if (!match.Success)
                 return false;
 
-            if (int.TryParse(match.Groups[1].Value, out var width) &&
-                int.TryParse(match.Groups[2].Value, out var height))
+            if (int.TryParse(match.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var width) &&
+                int.TryParse(match.Groups[2].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var height))
             {
                 return width > 0 && width <= 7680 && height > 0 && height <= 4320;
             }
@@ -205,8 +206,8 @@ namespace FFmpegDotnetWrapper.Utilities
             if (parts.Length != 2)
                 return false;
 
-            if (decimal.TryParse(parts[0], out var w) &&
-                decimal.TryParse(parts[1], out var h))
+            if (decimal.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var w) &&
+                decimal.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var h))
             {
                 return w > 0 && h > 0;
             }
