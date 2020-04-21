@@ -1,20 +1,21 @@
 // ... (rest of README.md content remains unchanged)
 
-## FFmpegException
+## ValidationException
 
-The `FFmpegException` class represents an exception that occurs when an error occurs during FFmpeg operations. It provides information about the error, including the exit code, error output, and file path where the error occurred.
+The `ValidationException` class represents an exception that occurs when validation fails. It provides information about the validation errors, including a dictionary of validation errors.
 
 ```csharp
 try
 {
-    // FFmpeg operation code
+    // Validation code
 }
-catch (FFmpegException ex)
+catch (ValidationException ex)
 {
-    Console.WriteLine($"Error: {ex.Message}");
-    Console.WriteLine($"Exit Code: {ex.ExitCode}");
-    Console.WriteLine($"Error Output: {ex.ErrorOutput}");
-    Console.WriteLine($"File Path: {ex.FilePath}");
+    Console.WriteLine($"Validation Errors:");
+    foreach (var error in ex.ValidationErrors ?? new Dictionary<string, string[]>())
+    {
+        Console.WriteLine($"  - {error.Key}: {string.Join(", ", error.Value)}");
+    }
 }
 ```
 // ... (rest of README.md content remains unchanged)
