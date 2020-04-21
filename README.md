@@ -1,25 +1,20 @@
 // ... (rest of README.md content remains unchanged)
 
-## FFmpegServiceBenchmarks
+## FFmpegException
 
-The `FFmpegServiceBenchmarks` class provides a set of benchmark tests for the FFmpeg service. These tests measure the performance of various FFmpeg operations, such as transcoding, trimming, and analyzing media metadata.
+The `FFmpegException` class represents an exception that occurs when an error occurs during FFmpeg operations. It provides information about the error, including the exit code, error output, and file path where the error occurred.
 
 ```csharp
-// Example usage:
-var ffmpegService = new FFmpegServiceBenchmarks();
-ffmpegService.GlobalSetup();
-
-await ffmpegService.Transcode_H264_to_H265_MP4();
-await ffmpegService.Transcode_H264_to_VP9_WebM();
-await ffmpegService.Transcode_With_Hardware_Acceleration();
-await ffmpegService.Trim_Video_StreamCopy();
-await ffmpegService.Analyze_Media_Metadata();
-await ffmpegService.Extract_Thumbnails();
-await ffmpegService.Merge_Multiple_Videos();
-await ffmpegService.Extract_Audio_Only();
-await ffmpegService.Add_Watermark();
-await ffmpegService.Batch_Transcode_Multiple_Files();
-
-ffmpegService.GlobalCleanup();
+try
+{
+    // FFmpeg operation code
+}
+catch (FFmpegException ex)
+{
+    Console.WriteLine($"Error: {ex.Message}");
+    Console.WriteLine($"Exit Code: {ex.ExitCode}");
+    Console.WriteLine($"Error Output: {ex.ErrorOutput}");
+    Console.WriteLine($"File Path: {ex.FilePath}");
+}
 ```
 // ... (rest of README.md content remains unchanged)
