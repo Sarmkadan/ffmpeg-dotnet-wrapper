@@ -135,6 +135,89 @@ Console.WriteLine($"Preserves only video: {TrimSettingsExtensions.PreservesOnlyV
 Console.WriteLine($"Requires keyframes: {TrimSettingsExtensions.RequiresKeyframes(trimmedSettings)}");
 ```
 
+## FFmpegControllerExtensions
+
+The `FFmpegControllerExtensions` class provides a collection of extension methods for the `FFmpegController` that simplify common video processing operations such as transcoding, trimming, merging, adding watermarks, extracting thumbnails, and embedding subtitles. These methods handle error checking, provide sensible defaults, and return strongly-typed `ApiResponse<T>` objects for easy integration into applications.
+
+```csharp
+// Example usage:
+var controller = new FFmpegController();
+
+// Extract media information
+var mediaInfo = controller.ExtractMediaInfo("input.mp4");
+if (mediaInfo.Success)
+{
+    Console.WriteLine($"Duration: {mediaInfo.Data?.Duration}");
+    Console.WriteLine($"Resolution: {mediaInfo.Data?.Width}x{mediaInfo.Data?.Height}");
+}
+
+// Transcode video with custom bitrate and quality
+var transcodeResult = await controller.TranscodeAsync(
+    "input.mp4", 
+    "output_h265.mp4",
+    bitrate: 3000,
+    quality: 90
+);
+
+// Trim from start (first 30 seconds)
+var trimResult = await controller.TrimFromStartAsync(
+    "input.mp4",
+    "trimmed.mp4",
+    duration: 30.0
+);
+
+// Trim between specific times (10s to 45s)
+var trimRangeResult = await controller.TrimAsync(
+    "input.mp4",
+    "trimmed_range.mp4",
+    startTime: 10.0,
+    endTime: 45.0
+);
+
+// Merge multiple videos
+var mergeResult = await controller.MergeAsync(
+    new[] { "part1.mp4", "part2.mp4", "part3.mp4" },
+    "merged_output.mp4"
+);
+
+// Add watermark to video
+var watermarkResult = await controller.AddWatermarkAsync(
+    "input.mp4",
+    "watermarked.mp4",
+    "watermark.png",
+    opacity: 0.6,
+    scale: 0.25
+);
+
+// Extract thumbnails at regular intervals
+var thumbnailsResult = await controller.ExtractThumbnailsAsync(
+    "input.mp4",
+    "thumbnails/thumb_{0}.jpg",
+    count: 8,
+    width: 480,
+    height: 360
+);
+
+// Embed subtitles into video (hard-burned)
+var subtitleResult = await controller.EmbedSubtitlesAsync(
+    "input.mp4",
+    "output_with_subs.mp4",
+    "subtitles.srt",
+    language: "eng",
+    fontName: "Arial",
+    fontSize: 28
+);
+
+// Chain multiple operations: trim → watermark → transcode
+var chainResult = await controller.TrimWatermarkTranscodeAsync(
+    "input.mp4",
+    "final_output.mp4",
+    trimDuration: 60.0,
+    watermarkPath: "logo.png",
+    targetBitrate: 2500
+);
+```
+
 ## FFmpegOptionsExtensions
 
 The `FFmpegOptionsExtensions` class provides a collection of helper methods for inspecting and deriving configuration values from an `FFmpegOptions` instance. It simplifies retrieving effective paths, timeout settings, concurrency limits, supported formats, and default encoding parameters.
