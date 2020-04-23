@@ -1,37 +1,26 @@
 // ... (rest of README.md content remains unchanged)
 
-## FileOperationException
+## ProcessExecutionException
 
-The `FileOperationException` class represents an exception that occurs when a file-related error is encountered. It provides information about the file path and the error message.
-
-```csharp
-try
-{
-    // File code
-}
-catch (FileOperationException ex)
-{
-    Console.WriteLine($"File Error: {ex.Message}");
-    Console.WriteLine($"File Path: {ex.FilePath}");
-}
-```
-
-## RepositoryException
-
-The `RepositoryException` class represents an exception thrown when repository operations fail, such as database access, file storage, or cache operations. It provides the repository name where the failure occurred along with the error message.
+The `ProcessExecutionException` class represents an exception that occurs when a process execution fails, including FFmpeg and FFprobe operations. It provides information about the process exit code and error output.
 
 ```csharp
 try
 {
-    // Repository operation code
+    // Process execution code
 }
-catch (RepositoryException ex)
+catch (ProcessExecutionException ex)
 {
-    Console.WriteLine($"Repository Error: {ex.Message}");
-    if (ex.RepositoryName != null)
+    Console.WriteLine($"Process Error: {ex.Message}");
+    if (ex.ExitCode.HasValue)
     {
-        Console.WriteLine($"Repository: {ex.RepositoryName}");
+        Console.WriteLine($"Exit Code: {ex.ExitCode}");
+    }
+    if (ex.ErrorOutput != null)
+    {
+        Console.WriteLine($"Error Output: {ex.ErrorOutput}");
     }
 }
 ```
+
 // ... (rest of README.md content remains unchanged)
