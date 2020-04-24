@@ -23,6 +23,45 @@ catch (ProcessExecutionException ex)
 }
 ```
 
+## WebhookEndpoint
+
+The `WebhookEndpoint` type represents a configurable webhook endpoint used for receiving event notifications from the FFmpeg processing pipeline. It encapsulates webhook registration details including the target URL, event types to subscribe to, authentication settings, and retry behavior.
+
+
+
+```csharp
+using FFmpegDotnetWrapper.Integration;
+
+// Create a new webhook endpoint
+var webhook = new WebhookEndpoint
+{
+    WebhookId = Guid.NewGuid().ToString(),
+    Url = "https://api.example.com/webhooks/ffmpeg-events",
+    EventTypes = new List<string> { "OperationStarted", "OperationCompleted", "OperationFailed", "ProgressReported" },
+    AuthToken = "your-secret-token-here",
+    IsActive = true,
+    MaxRetries = 3,
+    Headers = new Dictionary<string, string>
+    {
+        ["X-Webhook-Secret"] = "webhook-secret-value",
+        ["User-Agent"] = "FFmpegDotnetWrapper/1.0"
+    }
+};
+
+// Register the webhook with the service
+var service = new WebhookService();
+await service.RegisterWebhookAsync(webhook);
+
+// Retrieve an active webhook
+var activeWebhook = await service.GetWebhookAsync(webhook.WebhookId);
+
+// Get all active webhooks
+var activeWebhooks = await service.GetActiveWebhooksAsync();
+
+// Unregister the webhook when no longer needed
+await service.UnregisterWebhookAsync(webhook.WebhookId);
+```
+
 ## FFmpegEvent
 
 The `FFmpegEvent` hierarchy provides a structured way to emit and consume events during FFmpeg operations. Each event carries a unique identifier, a UTC timestamp, and optional correlation and source information, enabling robust tracking and debugging across distributed systems.
