@@ -113,3 +113,63 @@ var progress = new ProgressReportedEvent
     StatusMessage = "Encoding..."
 };
 ```
+
+## HttpClientFactoryExtensions
+
+The `HttpClientFactoryExtensions` class provides extension methods for configuring HTTP clients used by the FFmpeg wrapper for external integrations. It includes methods for registering named HTTP clients with custom timeouts, configuring retry policies, and utility methods for error handling and status code classification.
+
+```csharp
+using FFmpegDotnetWrapper.Integration;
+using Microsoft.Extensions.DependencyInjection;
+
+// Configure HTTP clients with default timeouts
+var services = new ServiceCollection();
+services.AddFFmpegHttpClients();
+
+// Configure HTTP clients with custom timeouts
+services.AddFFmpegHttpClients(config =>
+{
+    config.WebhookTimeoutSeconds = 60;
+    config.ProbeTimeoutSeconds = 120;
+    config.MediaTransferTimeoutMinutes = 60;
+    config.EnableRetries = true;
+    config.MaxRetryAttempts = 5;
+    config.InitialBackoffMs = 200;
+});
+
+// Add a custom HTTP client with specific configuration
+services.AddCustomHttpClient(
+    "custom-api",
+    baseAddress: "https://api.example.com/v1",
+    timeout: TimeSpan.FromSeconds(45),
+    defaultHeaders: new Dictionary<string, string>
+    {
+        ["X-API-Key"] = "your-api-key-here",
+        ["Accept"] = "application/json"
+    }
+);
+
+// Use the registered HTTP clients
+var serviceProvider = services.BuildServiceProvider();
+var webhookClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient("webhook");
+var probeClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient("probe");
+var mediaClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient("media");
+var customClient = serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient("custom-api");
+
+// Check if an HTTP status code is transient (should be retried)
+bool isTransient = HttpClientUtilities.IsTransientError(429);
+
+// Check if an HTTP status code is permanent (should not be retried)
+bool isPermanent = HttpClientUtilities.IsPermanentError(404);
+
+// Determine if an exception should trigger a retry
+bool shouldRetry = HttpClientUtilities.ShouldRetryOnException(new HttpRequestException("Network error"));
+
+// Get a formatted error message from an HTTP response
+var errorMessage = HttpClientUtilities.GetErrorMessage(response);
+
+// Create and use an exponential backoff retry policy
+var retryPolicy = new ExponentialBackoffRetryPolicy(maxRetries: 3, initialDelayMs: 100);
+TimeSpan delay = retryPolicy.GetRetryDelay(2); // 200ms delay
+bool shouldRetryAgain = retryPolicy.ShouldRetry(2); // true
+```
