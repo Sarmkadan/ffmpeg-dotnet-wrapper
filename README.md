@@ -118,6 +118,65 @@ var progress = new ProgressReportedEvent
 
 The `HttpClientFactoryExtensions` class provides extension methods for configuring HTTP clients used by the FFmpeg wrapper for external integrations. It includes methods for registering named HTTP clients with custom timeouts, configuring retry policies, and utility methods for error handling and status code classification.
 
+## CliOutputFormatter
+
+The `CliOutputFormatter` class provides console output formatting utilities for CLI applications. It supports colored and monochrome output, table formatting, progress bars, success/error/warning/info messages, and summary statistics for FFmpeg conversion operations.
+
+```csharp
+using FFmpegDotnetWrapper.Cli;
+using FFmpegDotnetWrapper.Api.DTOs;
+using FFmpegDotnetWrapper.Models;
+
+// Create formatter with colors enabled (default)
+var formatter = new CliOutputFormatter(useColors: true);
+
+// Format different message types
+Console.WriteLine(formatter.FormatSuccess("Conversion completed successfully!"));
+Console.WriteLine(formatter.FormatError("Failed to process input file"));
+Console.WriteLine(formatter.FormatWarning("Unsupported codec detected"));
+Console.WriteLine(formatter.FormatInfo("Processing 10 files..."));
+
+// Format conversion results
+var result = new ConversionResult
+{
+    InputFile = "input.mp4",
+    OutputFile = "output.mp4",
+    Success = true,
+    ExecutionTime = TimeSpan.FromSeconds(45.2),
+    ErrorMessage = null
+};
+Console.WriteLine(formatter.FormatConversionResult(result));
+
+// Format a table of results
+var results = new List<ConversionResult> { result };
+Console.WriteLine(formatter.FormatResultsTable(results));
+
+// Format a progress bar
+Console.WriteLine(formatter.FormatProgressBar(65.5));
+
+// Format operation summary
+Console.WriteLine(formatter.FormatSummary(results));
+
+// Format a help box
+var helpLines = new List<string> { "Usage: ffmpeg-wrapper [options]", "Options:", "  -i, --input    Input file path", "  -o, --output   Output file path" };
+Console.WriteLine(formatter.FormatHelpBox("FFmpeg Wrapper Help", helpLines));
+
+// Format key-value pairs
+Console.WriteLine(formatter.FormatKeyValue("Input File:", "input.mp4"));
+Console.WriteLine(formatter.FormatKeyValue("Output File:", "output.mp4"));
+Console.WriteLine(formatter.FormatKeyValue("Duration:", "45.2s"));
+
+// Format API response
+var apiResponse = new ApiResponse<string>
+{
+    Success = true,
+    StatusCode = 200,
+    Message = "Operation completed",
+    Data = "result-data"
+};
+Console.WriteLine(formatter.FormatApiResponse(apiResponse));
+```
+
 ```csharp
 using FFmpegDotnetWrapper.Integration;
 using Microsoft.Extensions.DependencyInjection;
