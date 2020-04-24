@@ -23,4 +23,54 @@ catch (ProcessExecutionException ex)
 }
 ```
 
-// ... (rest of README.md content remains unchanged)
+## FFmpegEvent
+
+The `FFmpegEvent` hierarchy provides a structured way to emit and consume events during FFmpeg operations. Each event carries a unique identifier, a UTC timestamp, and optional correlation and source information, enabling robust tracking and debugging across distributed systems.
+
+```csharp
+using FFmpegDotnetWrapper.Events;
+
+// Create a started event
+var started = new OperationStartedEvent
+{
+    InputFile = "input.mp4",
+    OutputFile = "output.mp4",
+    OperationType = "Transcode",
+    Metadata = new Dictionary<string, object>
+    {
+        ["Resolution"] = "1920x1080",
+        ["Bitrate"] = 4000
+    },
+    CorrelationId = Guid.NewGuid().ToString(),
+    Source = "TranscodeService"
+};
+
+// Create a completed event
+var completed = new OperationCompletedEvent
+{
+    InputFile = "input.mp4",
+    OutputFile = "output.mp4",
+    OperationType = "Transcode",
+    Duration = TimeSpan.FromSeconds(12.5),
+    OutputFileSize = 10485760
+};
+
+// Create a failed event
+var failed = new OperationFailedEvent
+{
+    InputFile = "input.mp4",
+    OperationType = "Transcode",
+    ErrorMessage = "Unsupported codec",
+    ErrorCode = "E_UNSUPPORTED_CODEC",
+    StackTrace = Environment.StackTrace
+};
+
+// Create a progress event
+var progress = new ProgressReportedEvent
+{
+    OperationType = "Transcode",
+    ProgressPercentage = 45.3,
+    ElapsedTime = TimeSpan.FromSeconds(5),
+    StatusMessage = "Encoding..."
+};
+```
