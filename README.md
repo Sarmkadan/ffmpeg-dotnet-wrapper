@@ -26,6 +26,45 @@ Console.WriteLine($"Payload: {job.Payload}");
 Console.WriteLine($"Tags: {string.Join(", ", job.Tags.Select(x => $"{x.Key}={x.Value}"))}");
 ```
 
+## ConversionResult
+
+Represents the result of a media file conversion operation. This class captures comprehensive conversion metadata including success status, output file information, timing metrics, error details, and custom metrics collection. It provides methods to calculate performance metrics, mark operations as successful or failed, and generate detailed summary reports.
+
+```csharp
+// Create a conversion result for a successful conversion
+var result = new ConversionResult
+{
+    Id = Guid.NewGuid().ToString(),
+    Duration = TimeSpan.FromSeconds(45.2),
+    CreatedAt = DateTime.UtcNow,
+    OutputFilePath = "/output/processed-video.mp4",
+    OutputMedia = new MediaFile { FileSize = 15728640 } // 15 MB
+};
+
+// Mark as successful and set metrics
+result.MarkAsSuccess("/output/processed-video.mp4");
+result.SetMetric("frames_per_second", 30.0);
+result.SetMetric("bitrate_kbps", 5000);
+result.SetMetric("codec_used", "h264");
+
+// Calculate size reduction
+var originalSize = 25165824L; // 24 MB
+var reductionPercent = result.GetSizeReductionPercentage(originalSize);
+Console.WriteLine($"Size reduction: {reductionPercent:F1}%");
+
+// Get elapsed time
+var elapsed = result.GetElapsedTime();
+Console.WriteLine($"Conversion took: {elapsed.TotalSeconds:F2} seconds");
+
+// Generate summary report
+var summary = result.GenerateSummary();
+Console.WriteLine(summary);
+
+// Access metrics
+var codec = result.GetMetric<string>("codec_used");
+var fps = result.GetMetric<double>("frames_per_second");
+```
+
 ## BackgroundJob
 
 Represents an asynchronous background job with progress tracking and status monitoring capabilities. The `BackgroundJob` type provides comprehensive job lifecycle management through properties like `JobId`, `JobName`, state tracking via `State`, progress reporting with `ProgressPercentage`, and detailed status information including `StatusMessage`, timestamps (`CreatedAt`, `StartedAt`, `CompletedAt`), error handling via `ErrorMessage` and `StackTrace`, and extensible metadata storage in `Metadata`.
