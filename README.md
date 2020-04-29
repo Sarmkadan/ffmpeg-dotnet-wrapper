@@ -1,5 +1,35 @@
 // ... (rest of README.md content remains unchanged)
 
+## TrimSettings
+
+Represents settings for trimming media files while preserving audio/video streams and controlling keyframe behavior. The `TrimSettings` class provides methods to calculate trimmed durations, validate settings, and clone configurations.
+
+```csharp
+// Create trim settings for a 30-second video, preserving both audio and video streams
+var trimSettings = new TrimSettings
+{
+    EndTime = TimeSpan.FromSeconds(30),
+    PreserveAudio = true,
+    PreserveVideo = true,
+    Keyframe = false
+};
+
+// Validate the settings before use
+trimSettings.Validate();
+
+// Calculate the end time (handles null EndTime by using media duration)
+var actualEndTime = trimSettings.CalculateEndTime(TimeSpan.FromSeconds(60));
+Console.WriteLine($"Trimming from 00:00:00 to {actualEndTime.TotalSeconds} seconds");
+
+// Get the duration of the trimmed segment
+var trimmedDuration = trimSettings.GetTrimmedDuration(TimeSpan.FromSeconds(60));
+Console.WriteLine($"Trimmed duration: {trimmedDuration.TotalSeconds} seconds");
+
+// Clone settings for reuse
+var clonedSettings = trimSettings.Clone();
+clonedSettings.EndTime = TimeSpan.FromSeconds(45);
+```
+
 ## QueuedJob
 
 Represents a queued job with priority and execution metadata. It provides properties to access the job's ID, priority, enqueued time, due time, retry count, maximum retries, payload, tags, and more.
