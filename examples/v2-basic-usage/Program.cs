@@ -1,0 +1,1 @@
+using FFmpegDotnetWrapper; using System; using System.Threading.Tasks; class Program { static async Task Main(string[] args) { var inputFile = "input.mp4"; var outputFile = "output.mp4"; var transcodeSettings = new TranscodeSettings { AdaptiveBitrate = true }; await FFmpegService.TranscodeAsync(inputFile, outputFile, transcodeSettings); } }
