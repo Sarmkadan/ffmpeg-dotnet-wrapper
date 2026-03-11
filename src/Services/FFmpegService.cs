@@ -3,6 +3,8 @@
 // CTO & Software Architect
 // =============================================================================
 
+#nullable enable
+
 using System.Diagnostics;
 using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Exceptions;
