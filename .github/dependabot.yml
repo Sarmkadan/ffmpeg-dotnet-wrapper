@@ -5,8 +5,30 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    allow:
+      - dependency-type: "direct"
+    commit-message:
+      prefix: "chore"
+    ignore:
+      - dependency-name: "*"
+        versions: ["*"]
+    pull-request-branch-name:
+      separator: "-"
+    automerge: true
+    automerge-type: "merge"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    allow:
+      - dependency-type: "direct"
+    commit-message:
+      prefix: "chore"
+    ignore:
+      - dependency-name: "*"
+        versions: ["*"]
+    pull-request-branch-name:
+      separator: "-"
+    automerge: true
+    automerge-type: "merge"
