@@ -5,6 +5,23 @@ All notable changes to FFmpeg .NET Wrapper are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-07-18
+
+### Added
+- Add real-time streaming pipeline with adaptive bitrate switching
+- Docker support with multi-stage builds
+- Health check endpoints (/health, /health/ready)
+- Integration test suite with xUnit
+- Migration guide from v1.x
+
+### Changed
+- Upgraded to .NET 10.0
+- Modern C# features (records, primary constructors)
+- Improved API consistency
+
+### Fixed
+- Various edge cases found through testing
+
 ## [1.0.0] - 2025-09-22
 
 ### Added
