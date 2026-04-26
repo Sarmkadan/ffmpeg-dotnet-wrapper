@@ -216,7 +216,7 @@ namespace FFmpegDotnetWrapper.Utilities
 
         /// <summary>
         /// Validates that trim times are logically consistent.
-        /// Ensures start < end, and start is not negative.
+        /// Ensures start &lt; end, and start is not negative.
         /// </summary>
         public static bool ValidateTrimTimes(double? startSeconds, double? endSeconds, double? durationSeconds)
         {

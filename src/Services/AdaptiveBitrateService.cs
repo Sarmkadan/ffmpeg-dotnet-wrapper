@@ -82,6 +82,23 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
 
         _activePipelines[pipelineId] = new PipelineContext(result, linkedCts);
 
+        var channel = Channel.CreateUnbounded<StreamingSegment>();
+        var pipelineTask = ExecutePipelineAsync(settings, pipelineId, result, linkedCts, channel, cancellationToken);
+
+        await foreach (var segment in channel.Reader.ReadAllAsync(cancellationToken))
+            yield return segment;
+
+        await pipelineTask;
+    }
+
+    private async Task ExecutePipelineAsync(
+        StreamingPipelineSettings settings,
+        string pipelineId,
+        StreamingPipelineResult result,
+        CancellationTokenSource linkedCts,
+        Channel<StreamingSegment> channel,
+        CancellationToken cancellationToken)
+    {
         try
         {
             settings.Validate();
@@ -109,24 +126,11 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
 
             if (settings.EncodeProfilesConcurrently)
             {
-                var channel = Channel.CreateUnbounded<StreamingSegment>();
                 var tasks = orderedProfiles
                     .Select(p => DrainRenditionToChannelAsync(settings, p, pipelineId, channel.Writer, linkedCts.Token))
                     .ToList();
 
-                _ = Task.WhenAll(tasks).ContinueWith(
-                    _ => channel.Writer.TryComplete(),
-                    CancellationToken.None,
-                    TaskContinuationOptions.None,
-                    TaskScheduler.Default);
-
-                await foreach (var segment in channel.Reader.ReadAllAsync(linkedCts.Token))
-                {
-                    result.AddSegment(segment);
-                    EvaluateBitrateSwitch(result, segment, settings, speedHistory);
-                    _metrics.RecordSegmentProduced(segment.Profile, segment.FileSizeBytes);
-                    yield return segment;
-                }
+                await Task.WhenAll(tasks);
             }
             else
             {
@@ -137,7 +141,7 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
                         result.AddSegment(segment);
                         EvaluateBitrateSwitch(result, segment, settings, speedHistory);
                         _metrics.RecordSegmentProduced(segment.Profile, segment.FileSizeBytes);
-                        yield return segment;
+                        await channel.Writer.WriteAsync(segment, linkedCts.Token);
                     }
                 }
             }
@@ -188,6 +192,7 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
         }
         finally
         {
+            channel.Writer.TryComplete();
             _activePipelines.TryRemove(pipelineId, out _);
         }
     }
