@@ -71,13 +71,20 @@ public class TranscodeSettings
     public string? CustomFFmpegArgs { get; set; }
 
     /// <summary>
+    /// Hardware acceleration backend to use for encoding.
+    /// Set to <see cref="HwAccel.None"/> (default) for software encoding.
+    /// <see cref="HwAccel.Auto"/> lets FFmpeg probe and select the best available accelerator.
+    /// </summary>
+    public HwAccel HardwareAcceleration { get; set; } = HwAccel.None;
+
+    /// <summary>
     /// Known-good video codec / container combinations. Entries not listed here
     /// will be rejected during validation to prevent silent FFmpeg failures.
     /// </summary>
     private static readonly Dictionary<ContainerFormat, HashSet<VideoCodec>> ContainerVideoCodecMap = new()
     {
         [ContainerFormat.MP4]  = [VideoCodec.H264, VideoCodec.H265, VideoCodec.AV1],
-        [ContainerFormat.MKV]  = [VideoCodec.H264, VideoCodec.H265, VideoCodec.VP8, VideoCodec.VP9, VideoCodec.AV1],
+        [ContainerFormat.Matroska] = [VideoCodec.H264, VideoCodec.H265, VideoCodec.VP8, VideoCodec.VP9, VideoCodec.AV1],
         [ContainerFormat.WebM] = [VideoCodec.VP8, VideoCodec.VP9, VideoCodec.AV1],
     };
 
@@ -152,7 +159,8 @@ public class TranscodeSettings
             EnableAudioNormalization = EnableAudioNormalization,
             TargetLoudness = TargetLoudness,
             TwoPass = TwoPass,
-            CustomFFmpegArgs = CustomFFmpegArgs
+            CustomFFmpegArgs = CustomFFmpegArgs,
+            HardwareAcceleration = HardwareAcceleration
         };
     }
 }
