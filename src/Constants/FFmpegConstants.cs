@@ -117,7 +117,9 @@ public enum ContainerFormat
     WAV,
     MP3,
     AAC,
-    FLAC
+    FLAC,
+    /// <summary>HLS (HTTP Live Streaming) — produces a <c>.m3u8</c> playlist and <c>.ts</c> segments.</summary>
+    HLS
 }
 
 /// <summary>
@@ -173,4 +175,24 @@ public enum AudioChannels
     Surround51 = 6,
     Surround7 = 7,
     Surround71 = 8
+}
+
+/// <summary>
+/// Hardware acceleration backend enumeration for video encoding.
+/// </summary>
+public enum HwAccel
+{
+    /// <summary>No hardware acceleration; use CPU-based encoding.</summary>
+    None,
+    /// <summary>NVIDIA NVENC hardware encoder (requires NVIDIA GPU and drivers).</summary>
+    NVENC,
+    /// <summary>Intel/AMD VAAPI hardware encoder (Linux only).</summary>
+    VAAPI,
+    /// <summary>Intel Quick Sync Video encoder (Intel iGPU/dGPU required).</summary>
+    QSV,
+    /// <summary>
+    /// Let FFmpeg select the best available hardware accelerator automatically
+    /// (<c>-hwaccel auto</c>). Falls back to software if none is available.
+    /// </summary>
+    Auto
 }

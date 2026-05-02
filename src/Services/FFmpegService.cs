@@ -338,6 +338,123 @@ public class FFmpegService : IFFmpegService
         return Task.FromResult(available);
     }
 
+    public async Task<ConversionResult> ExtractAudioAsync(
+        MediaFile inputMedia,
+        string outputPath,
+        AudioCodec audioCodec = AudioCodec.MP3,
+        int audioBitrate = 192,
+        CancellationToken cancellationToken = default)
+    {
+        var operation = new FFmpegOperation
+        {
+            Name = $"Extract audio from {inputMedia.Name}",
+            Type = FFmpegOperationType.Demux,
+            OutputFile = outputPath,
+            Timeout = _defaultTimeout
+        };
+
+        operation.AddInputFile(inputMedia.FilePath);
+
+        try
+        {
+            _logger.LogInformation(
+                "Extracting audio from {File} as {Codec} at {Bitrate}kbps",
+                inputMedia.Name, audioCodec, audioBitrate);
+
+            var audioCodecName = GetAudioCodecName(audioCodec);
+            operation.AddArgument("-vn"); // discard video stream
+            operation.AddArgument($"-c:a {audioCodecName}");
+            operation.AddArgument($"-b:a {audioBitrate}k");
+
+            var result = await ExecuteFFmpegAsync(operation, cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken);
+                result.OutputMedia = outputMedia;
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Audio extraction failed for {File}", inputMedia.Name);
+            throw;
+        }
+    }
+
+    public async Task<ConversionResult> CreateHlsAsync(
+        MediaFile inputMedia,
+        string playlistPath,
+        HlsSettings settings,
+        CancellationToken cancellationToken = default)
+    {
+        var playlistDir = Path.GetDirectoryName(playlistPath);
+        if (!string.IsNullOrEmpty(playlistDir))
+            Directory.CreateDirectory(playlistDir);
+
+        // Segment files live alongside the playlist
+        var segmentPattern = string.IsNullOrEmpty(playlistDir)
+            ? settings.SegmentFilePattern
+            : Path.Combine(playlistDir, settings.SegmentFilePattern);
+
+        var operation = new FFmpegOperation
+        {
+            Name = $"HLS encode {inputMedia.Name}",
+            Type = FFmpegOperationType.Transcode,
+            OutputFile = playlistPath,
+            Timeout = TimeSpan.FromSeconds(FFmpegConstants.DefaultTimeoutSeconds * 2)
+        };
+
+        operation.AddInputFile(inputMedia.FilePath);
+
+        try
+        {
+            settings.Validate();
+
+            var videoCodecName = GetVideoCodecName(settings.VideoCodec);
+            var audioCodecName = GetAudioCodecName(settings.AudioCodec);
+
+            operation.AddArgument($"-c:v {videoCodecName}");
+            operation.AddArgument($"-b:v {settings.VideoBitrate}k");
+            operation.AddArgument($"-c:a {audioCodecName}");
+            operation.AddArgument($"-b:a {settings.AudioBitrate}k");
+
+            if (settings.Width.HasValue || settings.Height.HasValue)
+            {
+                var w = settings.Width ?? -1;
+                var h = settings.Height ?? -1;
+                operation.AddArgument($"-vf \"scale={w}:{h}\"");
+            }
+
+            operation.AddArgument("-f hls");
+            operation.AddArgument($"-hls_time {settings.SegmentDuration}");
+
+            var playlistTypeArg = settings.PlaylistType == HlsPlaylistType.Vod ? "vod" : "event";
+            operation.AddArgument($"-hls_playlist_type {playlistTypeArg}");
+
+            if (settings.MaxSegments > 0)
+                operation.AddArgument($"-hls_list_size {settings.MaxSegments}");
+
+            if (settings.IndependentSegments)
+                operation.AddArgument("-hls_flags independent_segments");
+
+            operation.AddArgument($"-hls_segment_filename \"{segmentPattern}\"");
+
+            _logger.LogInformation(
+                "Starting HLS encode for {File} -> {Playlist} ({SegDur}s segments, {Type})",
+                inputMedia.Name, playlistPath, settings.SegmentDuration, settings.PlaylistType);
+
+            var result = await ExecuteFFmpegAsync(operation, cancellationToken);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "HLS encode failed for {File}", inputMedia.Name);
+            throw;
+        }
+    }
+
     private async Task<ConversionResult> ExecuteFFmpegAsync(
         FFmpegOperation operation,
         CancellationToken cancellationToken)
@@ -415,7 +532,14 @@ public class FFmpegService : IFFmpegService
 
     private void BuildTranscodeArguments(FFmpegOperation operation, TranscodeSettings settings)
     {
-        var videoCodec = GetVideoCodecName(settings.VideoCodec);
+        // Hardware acceleration must be specified before codec selection
+        if (settings.HardwareAcceleration != HwAccel.None)
+        {
+            var hwAccelName = GetHwAccelName(settings.HardwareAcceleration);
+            operation.Arguments.Insert(0, $"-hwaccel {hwAccelName}");
+        }
+
+        var videoCodec = GetVideoCodecName(settings.VideoCodec, settings.HardwareAcceleration);
         var audioCodec = GetAudioCodecName(settings.AudioCodec);
 
         operation.AddArgument($"-c:v {videoCodec}");
@@ -463,13 +587,53 @@ public class FFmpegService : IFFmpegService
     }
 
     private string GetVideoCodecName(VideoCodec codec) =>
-        codec switch
+        GetVideoCodecName(codec, HwAccel.None);
+
+    private string GetVideoCodecName(VideoCodec codec, HwAccel hwAccel) =>
+        hwAccel switch
         {
-            VideoCodec.H264 => FFmpegConstants.VideoCodecNames.H264,
-            VideoCodec.H265 => FFmpegConstants.VideoCodecNames.H265,
-            VideoCodec.VP9 => FFmpegConstants.VideoCodecNames.VP9,
-            VideoCodec.AV1 => FFmpegConstants.VideoCodecNames.AV1,
-            _ => FFmpegConstants.VideoCodecNames.H264
+            HwAccel.NVENC => codec switch
+            {
+                VideoCodec.H264 => "h264_nvenc",
+                VideoCodec.H265 => "hevc_nvenc",
+                VideoCodec.AV1  => "av1_nvenc",
+                _               => GetVideoCodecName(codec, HwAccel.None)
+            },
+            HwAccel.VAAPI => codec switch
+            {
+                VideoCodec.H264 => "h264_vaapi",
+                VideoCodec.H265 => "hevc_vaapi",
+                VideoCodec.VP9  => "vp9_vaapi",
+                VideoCodec.AV1  => "av1_vaapi",
+                _               => GetVideoCodecName(codec, HwAccel.None)
+            },
+            HwAccel.QSV => codec switch
+            {
+                VideoCodec.H264 => "h264_qsv",
+                VideoCodec.H265 => "hevc_qsv",
+                VideoCodec.VP9  => "vp9_qsv",
+                VideoCodec.AV1  => "av1_qsv",
+                _               => GetVideoCodecName(codec, HwAccel.None)
+            },
+            // Auto and None fall through to software codec names
+            _ => codec switch
+            {
+                VideoCodec.H264 => FFmpegConstants.VideoCodecNames.H264,
+                VideoCodec.H265 => FFmpegConstants.VideoCodecNames.H265,
+                VideoCodec.VP9  => FFmpegConstants.VideoCodecNames.VP9,
+                VideoCodec.AV1  => FFmpegConstants.VideoCodecNames.AV1,
+                _               => FFmpegConstants.VideoCodecNames.H264
+            }
+        };
+
+    private static string GetHwAccelName(HwAccel hwAccel) =>
+        hwAccel switch
+        {
+            HwAccel.NVENC => "cuda",
+            HwAccel.VAAPI => "vaapi",
+            HwAccel.QSV   => "qsv",
+            HwAccel.Auto  => "auto",
+            _             => "none"
         };
 
     private string GetAudioCodecName(AudioCodec codec) =>
