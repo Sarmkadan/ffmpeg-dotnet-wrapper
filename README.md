@@ -138,4 +138,56 @@ if (job != null)
 await jobService.UpdateJobProgressAsync(jobId, 100, "Job completed successfully");
 ```
 
+## ConcatenationSegment
+
+Represents a segment of media files to be concatenated into a single output. The `ConcatenationSegment` class provides properties for file paths, time trimming options, labels, and builder methods for constructing concatenation pipelines with transitions, re-encoding, and transcode settings.
+
+```csharp
+// Create a concatenation builder
+var builder = new ConcatenationBuilder();
+
+// Add segments with optional trimming and labels
+builder.Add(new ConcatenationSegment
+{
+    FilePath = "/videos/intro.mp4",
+    TrimStart = TimeSpan.FromSeconds(2.5),
+    TrimEnd = TimeSpan.FromSeconds(15),
+    Label = "Intro"
+});
+
+builder.Add(new ConcatenationSegment
+{
+    FilePath = "/videos/main-content.mp4",
+    TrimStart = TimeSpan.FromSeconds(1),
+    Label = "Main Content"
+});
+
+builder.Add(new ConcatenationSegment
+{
+    FilePath = "/videos/outro.mp4",
+    TrimDuration = TimeSpan.FromSeconds(8),
+    Label = "Outro"
+});
+
+// Configure transitions between segments
+builder.WithTransition(TimeSpan.FromSeconds(1.5));
+
+// Configure re-encoding settings
+builder.WithReencode(new ReencodeSettings
+{
+    VideoCodec = "libx264",
+    AudioCodec = "aac",
+    Bitrate = "5000k"
+});
+
+// Build the concatenation pipeline
+var mergeSettings = builder.Build();
+
+// Execute the concatenation
+var result = await mergeSettings.ExecuteAsync("/output/final-video.mp4");
+
+Console.WriteLine($"Concatenation completed: {result.IsSuccess}");
+Console.WriteLine($"Output file: {result.OutputFilePath}");
+```
+
 ## ... (rest of README.md content remains unchanged)
