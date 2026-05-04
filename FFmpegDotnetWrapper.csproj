@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>FFmpegDotnetWrapper</RootNamespace>
+    <AssemblyName>FFmpegDotnetWrapper</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+
+    <!-- NuGet Package Info -->
+    <PackageId>FFmpegDotnetWrapper</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Vladyslav Zaiets</Authors>
+    <Description>Strongly-typed FFmpeg wrapper for .NET - transcode, trim, merge, watermark with fluent API</Description>
+    <RepositoryUrl>https://github.com/vladyslav-zaiets/ffmpeg-dotnet-wrapper</RepositoryUrl>
+    <PackageProjectUrl>https://sarmkadan.com</PackageProjectUrl>
+    <License>MIT</License>
+    <PackageTags>ffmpeg;video;transcoding;media;streaming</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>
