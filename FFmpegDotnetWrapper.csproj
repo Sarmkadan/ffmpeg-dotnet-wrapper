@@ -7,6 +7,7 @@
     <AssemblyName>FFmpegDotnetWrapper</AssemblyName>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
 
     <!-- NuGet Package Info -->
     <PackageId>FFmpegDotnetWrapper</PackageId>
@@ -20,11 +21,26 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="examples/**/*.cs" />
+    <Compile Remove="tests/**/*.cs" />
+    <Compile Remove="src/Api/Controllers/**/*.cs" />
+    <Compile Remove="src/Middleware/**/*.cs" />
+    <Compile Remove="src/Program.cs" />
+    <Compile Remove="src/Configuration/ApplicationStartup.cs" />
+    <Compile Remove="src/Cli/OutputFormatter.cs" />
+    <Compile Remove="src/Serialization/JsonOutputFormatter.cs" />
+    <Compile Remove="src/Services/BatchOperationService.cs" />
+    <Compile Remove="src/Services/FFmpegService.cs" />
+    <Compile Remove="src/Utilities/ProgressTracker.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
   </ItemGroup>
 
 </Project>

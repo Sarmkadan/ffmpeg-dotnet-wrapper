@@ -133,10 +133,10 @@ namespace FFmpegDotnetWrapper.Cli
 
             foreach (var result in results)
             {
-                if (result.Success)
+                if (result.IsSuccess)
                 {
                     successful++;
-                    totalTime += result.ExecutionTime;
+                    totalTime += result.Duration;
                 }
                 else
                 {
@@ -180,7 +180,7 @@ namespace FFmpegDotnetWrapper.Cli
                 var wrappedLines = WrapText(line, width);
                 foreach (var wrappedLine in wrappedLines)
                 {
-                    box.AppendLine($"║ {wrappedLine,-{width}} ║");
+                    box.AppendLine($"║ {wrappedLine.PadRight(width)} ║");
                 }
             }
 
@@ -195,7 +195,7 @@ namespace FFmpegDotnetWrapper.Cli
         /// </summary>
         public string FormatKeyValue(string key, string value, int keyWidth = 20)
         {
-            return $"{key,-{keyWidth}} {value}";
+            return $"{key.PadRight(keyWidth)} {value}";
         }
 
         /// <summary>

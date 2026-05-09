@@ -91,10 +91,10 @@ namespace FFmpegDotnetWrapper.Serialization
         }
 
         /// <summary>
-        /// Deserializes JSON string to an API response object.
+        /// Deserializes JSON string to an API response envelope object.
         /// Handles type conversion and validation.
         /// </summary>
-        public ApiResponse<T>? Deserialize<T>(string json)
+        public ApiResponse<T>? DeserializeApiResponse<T>(string json)
         {
             try
             {
