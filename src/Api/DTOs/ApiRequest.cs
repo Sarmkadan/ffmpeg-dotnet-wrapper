@@ -163,4 +163,95 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         [Range(0.01, 1.0)]
         public double Scale { get; set; } = 0.15;
     }
+
+    /// <summary>
+    /// Request DTO for subtitle embedding operations.
+    /// Supports both soft embedding (as a selectable stream) and hard embedding (burned into frames).
+    /// </summary>
+    public class SubtitleRequest : ApiRequest
+    {
+        [Required(ErrorMessage = "Input path is required")]
+        [StringLength(500)]
+        public string InputPath { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Output path is required")]
+        [StringLength(500)]
+        public string OutputPath { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Subtitle path is required")]
+        [StringLength(500)]
+        public string SubtitlePath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// When <c>true</c>, subtitles are burned directly into the video frames.
+        /// When <c>false</c> (default), subtitles are added as a selectable stream.
+        /// </summary>
+        public bool HardEmbed { get; set; } = false;
+
+        /// <summary>
+        /// ISO 639-1 language code stored in the subtitle stream metadata (e.g. <c>en</c>, <c>fr</c>).
+        /// </summary>
+        [StringLength(10)]
+        public string? Language { get; set; }
+
+        /// <summary>
+        /// Font name used when hard-embedding subtitles. Defaults to <c>Arial</c>.
+        /// </summary>
+        [StringLength(100)]
+        public string FontName { get; set; } = "Arial";
+
+        /// <summary>
+        /// Font size in points when hard-embedding subtitles.
+        /// </summary>
+        [Range(6, 120)]
+        public int FontSize { get; set; } = 24;
+    }
+
+    /// <summary>
+    /// Request DTO for thumbnail extraction operations.
+    /// Extracts one or more frames from a video as image files.
+    /// </summary>
+    public class ThumbnailRequest : ApiRequest
+    {
+        [Required(ErrorMessage = "Input path is required")]
+        [StringLength(500)]
+        public string InputPath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Output file path or pattern for the extracted thumbnail(s).
+        /// Use <c>%03d</c> when extracting multiple thumbnails (e.g. <c>/out/thumb_%03d.jpg</c>).
+        /// </summary>
+        [Required(ErrorMessage = "Output pattern is required")]
+        [StringLength(500)]
+        public string OutputPattern { get; set; } = string.Empty;
+
+        /// <summary>
+        /// List of specific timestamps (in seconds) at which to capture thumbnails.
+        /// When empty, thumbnails are evenly distributed across the video duration.
+        /// </summary>
+        public List<double> TimestampsSeconds { get; set; } = [];
+
+        /// <summary>
+        /// Number of evenly-spaced thumbnails to extract. Used when <see cref="TimestampsSeconds"/> is empty.
+        /// </summary>
+        [Range(1, 100)]
+        public int Count { get; set; } = 1;
+
+        /// <summary>
+        /// Output width in pixels. Set to -1 to preserve aspect ratio relative to <see cref="Height"/>.
+        /// </summary>
+        [Range(-1, 7680)]
+        public int? Width { get; set; }
+
+        /// <summary>
+        /// Output height in pixels. Set to -1 to preserve aspect ratio relative to <see cref="Width"/>.
+        /// </summary>
+        [Range(-1, 4320)]
+        public int? Height { get; set; }
+
+        /// <summary>
+        /// Output image format. Defaults to <c>jpeg</c>.
+        /// </summary>
+        public string Format { get; set; } = "jpeg";
+    }
 }
