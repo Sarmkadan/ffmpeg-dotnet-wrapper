@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 namespace FFmpegDotnetWrapper.Services;
 
 /// <summary>
-/// Main implementation of FFmpeg service orchestrating all media operations.
+/// Main implementation of <see cref="IFFmpegService"/> orchestrating all media operations.
 /// </summary>
 public class FFmpegService : IFFmpegService
 {
