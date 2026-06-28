@@ -50,4 +50,16 @@ await ffmpeg.TranscodeAsync("input.mp4", "output.webm", new TranscodeSettings
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
+## Usage Examples
+
+Comprehensive usage examples are available in the [`/examples`](examples/) directory:
+
+- **BasicUsage.cs** – Minimal setup and first call to the FFmpeg wrapper
+- **AdvancedUsage.cs** – Configuration options, custom settings, error handling, and progress monitoring  
+- **IntegrationExample.cs** – ASP.NET Core dependency injection setup and web application integration
+
+See the [examples/README.md](examples/README.md) for detailed documentation and usage instructions.
+
+Copyright © 2025 Vladyslav Zaiets
+
 Copyright © 2025 Vladyslav Zaiets
