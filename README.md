@@ -46,9 +46,31 @@ await ffmpeg.TranscodeAsync("input.mp4", "output.webm", new TranscodeSettings
 });
 ```
 
-## License
+## Docker Usage
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+The project supports running as a service using Docker.
+
+### Running with Docker Compose
+
+1. **Build and start the container:**
+
+```bash
+docker-compose up -d --build
+```
+
+2. **Access the API:**
+
+The API will be available at `http://localhost:8080`.
+
+### Data Volumes
+
+The service expects input files to be placed in `./data/input` and will output files to `./data/output`.
+
+```bash
+mkdir -p data/input data/output data/temp
+```
+
+See `docker-compose.yml` for more configuration options.
 
 ## Usage Examples
 
