@@ -1,4 +1,5 @@
 <Solution>
-  <Project Path="FFmpegDotnetWrapper.csproj" />
-  <Project Path="tests/ffmpeg-dotnet-wrapper.Tests/ffmpeg-dotnet-wrapper.Tests.csproj" />
+<Project Path="FFmpegDotnetWrapper.csproj" />
+<Project Path="tests/ffmpeg-dotnet-wrapper.Tests/ffmpeg-dotnet-wrapper.Tests.csproj" />
+<Project Path="benchmarks/ffmpeg-dotnet-wrapper.Benchmarks/ffmpeg-dotnet-wrapper.Benchmarks.csproj" />
 </Solution>
