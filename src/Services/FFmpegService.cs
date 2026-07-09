@@ -383,6 +383,41 @@ public class FFmpegService : IFFmpegService
         }
     }
 
+    public async Task<List<ConversionResult>> BatchTranscodeAsync(
+        IEnumerable<MediaFile> inputFiles,
+        string outputDirectory,
+        TranscodeSettings settings,
+        CancellationToken cancellationToken = default)
+    {
+        if (inputFiles == null)
+            throw new ArgumentNullException(nameof(inputFiles));
+
+        Directory.CreateDirectory(outputDirectory);
+
+        var extension = settings.Container switch
+        {
+            ContainerFormat.MP4 => ".mp4",
+            ContainerFormat.WebM => ".webm",
+            ContainerFormat.Matroska => ".mkv",
+            _ => ".mp4"
+        };
+
+        var results = new List<ConversionResult>();
+
+        foreach (var inputMedia in inputFiles)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var fileName = Path.GetFileNameWithoutExtension(inputMedia.FilePath) + extension;
+            var outputPath = Path.Combine(outputDirectory, fileName);
+
+            var result = await TranscodeAsync(inputMedia, outputPath, settings, cancellationToken);
+            results.Add(result);
+        }
+
+        return results;
+    }
+
     public async Task<ConversionResult> CreateHlsAsync(
         MediaFile inputMedia,
         string playlistPath,
