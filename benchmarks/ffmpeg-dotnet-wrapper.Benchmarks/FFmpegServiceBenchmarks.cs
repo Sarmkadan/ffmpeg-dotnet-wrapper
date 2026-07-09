@@ -1,5 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
+using FFmpegDotnetWrapper.Configuration;
+using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Models;
 using FFmpegDotnetWrapper.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,7 +27,7 @@ public class FFmpegServiceBenchmarks
     {
         // Setup dependency injection
         var services = new ServiceCollection();
-        services.AddLogging(configure => configure.AddConsole().SetMinimumLevel(LogLevel.Warning));
+        services.AddLogging(configure => configure.AddConsole().SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Warning));
         services.AddFFmpegWrapper(options =>
         {
             options.DefaultTimeout = TimeSpan.FromSeconds(30);
@@ -78,7 +80,7 @@ public class FFmpegServiceBenchmarks
         var result = await _ffmpegService!.TranscodeAsync(_sampleMedia!, _outputPath, settings);
         if (!result.IsSuccess)
         {
-            throw new InvalidOperationException("Transcode failed: " + result.Error);
+            throw new InvalidOperationException("Transcode failed: " + result.ErrorMessage);
         }
     }
 
@@ -89,7 +91,7 @@ public class FFmpegServiceBenchmarks
         var settings = new TranscodeSettings
         {
             VideoCodec = VideoCodec.VP9,
-            AudioCodec = AudioCodec.Opus,
+            AudioCodec = AudioCodec.OPUS,
             Container = ContainerFormat.WebM,
             VideoBitrate = 1500,
             Quality = QualityPreset.Medium,
@@ -99,7 +101,7 @@ public class FFmpegServiceBenchmarks
         var result = await _ffmpegService!.TranscodeAsync(_sampleMedia!, _outputPath, settings);
         if (!result.IsSuccess)
         {
-            throw new InvalidOperationException("Transcode failed: " + result.Error);
+            throw new InvalidOperationException("Transcode failed: " + result.ErrorMessage);
         }
     }
 
@@ -120,7 +122,7 @@ public class FFmpegServiceBenchmarks
         var result = await _ffmpegService!.TranscodeAsync(_sampleMedia!, _outputPath, settings);
         if (!result.IsSuccess)
         {
-            throw new InvalidOperationException("Hardware accelerated transcode failed: " + result.Error);
+            throw new InvalidOperationException("Hardware accelerated transcode failed: " + result.ErrorMessage);
         }
     }
 
@@ -131,14 +133,13 @@ public class FFmpegServiceBenchmarks
         var settings = new TrimSettings
         {
             StartTime = TimeSpan.FromSeconds(2),
-            EndTime = TimeSpan.FromSeconds(8),
-            UseStreamCopy = true
+            EndTime = TimeSpan.FromSeconds(8)
         };
 
         var result = await _ffmpegService!.TrimAsync(_sampleMedia!, _outputPath, settings);
         if (!result.IsSuccess)
         {
-            throw new InvalidOperationException("Trim failed: " + result.Error);
+            throw new InvalidOperationException("Trim failed: " + result.ErrorMessage);
         }
     }
 
@@ -149,7 +150,7 @@ public class FFmpegServiceBenchmarks
             "../../benchmarks/SampleMedia/sample_1280x720_30fps_10s.mp4"
         );
 
-        if (mediaFile.Duration.TotalSeconds < 1)
+        if (!mediaFile.Duration.HasValue || mediaFile.Duration.Value.TotalSeconds < 1)
         {
             throw new InvalidOperationException("Media analysis returned invalid duration");
         }
@@ -161,10 +162,10 @@ public class FFmpegServiceBenchmarks
         var outputPattern = Path.Combine(_tempDir!, "thumbnail_%03d.jpg");
         var settings = new ThumbnailSettings
         {
-            Timestamps = [TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(9)],
+            Times = [TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(9)],
             Width = 320,
             Height = 240,
-            Format = "image2"
+            Format = ThumbnailFormat.Jpeg
         };
 
         var result = await _ffmpegService!.ExtractThumbnailsAsync(_sampleMedia!, outputPattern, settings);
@@ -178,24 +179,28 @@ public class FFmpegServiceBenchmarks
     public async Task Merge_Multiple_Videos()
     {
         _outputPath = Path.Combine(_tempDir!, "merge_output.mp4");
-        var inputFiles = new List<MediaFile>
+        var inputFiles = new List<string>
         {
-            _sampleMedia!,
-            _sampleMedia!,
-            _sampleMedia!
+            _sampleMedia!.FilePath,
+            _sampleMedia!.FilePath,
+            _sampleMedia!.FilePath
         };
 
         var settings = new MergeSettings
         {
-            Container = ContainerFormat.MP4,
-            VideoCodec = VideoCodec.H264,
-            AudioCodec = AudioCodec.AAC
+            TranscodeOnMerge = true,
+            TranscodeSettings = new TranscodeSettings
+            {
+                VideoCodec = VideoCodec.H264,
+                AudioCodec = AudioCodec.AAC,
+                Container = ContainerFormat.MP4
+            }
         };
 
         var result = await _ffmpegService!.MergeAsync(inputFiles, _outputPath, settings);
         if (!result.IsSuccess)
         {
-            throw new InvalidOperationException("Merge failed: " + result.Error);
+            throw new InvalidOperationException("Merge failed: " + result.ErrorMessage);
         }
     }
 
@@ -203,16 +208,11 @@ public class FFmpegServiceBenchmarks
     public async Task Extract_Audio_Only()
     {
         _outputPath = Path.Combine(_tempDir!, "audio_extract_output.mp3");
-        var settings = new ExtractAudioSettings
-        {
-            AudioCodec = AudioCodec.MP3,
-            Bitrate = 192
-        };
 
-        var result = await _ffmpegService!.ExtractAudioAsync(_sampleMedia!, _outputPath, settings);
+        var result = await _ffmpegService!.ExtractAudioAsync(_sampleMedia!, _outputPath, AudioCodec.MP3, 192);
         if (!result.IsSuccess)
         {
-            throw new InvalidOperationException("Audio extraction failed: " + result.Error);
+            throw new InvalidOperationException("Audio extraction failed: " + result.ErrorMessage);
         }
     }
 
@@ -222,16 +222,16 @@ public class FFmpegServiceBenchmarks
         _outputPath = Path.Combine(_tempDir!, "watermark_output.mp4");
         var settings = new WatermarkSettings
         {
-            WatermarkImagePath = "../../benchmarks/SampleMedia/watermark.png",
+            WatermarkPath = "../../benchmarks/SampleMedia/watermark.png",
             Position = WatermarkPosition.BottomRight,
-            Opacity = 0.5f,
-            Size = 0.2f
+            Opacity = 0.5,
+            Scale = 0.2
         };
 
         var result = await _ffmpegService!.AddWatermarkAsync(_sampleMedia!, _outputPath, settings);
         if (!result.IsSuccess)
         {
-            throw new InvalidOperationException("Watermark addition failed: " + result.Error);
+            throw new InvalidOperationException("Watermark addition failed: " + result.ErrorMessage);
         }
     }
 
@@ -262,7 +262,7 @@ public class FFmpegServiceBenchmarks
         var results = await _ffmpegService!.BatchTranscodeAsync(inputFiles, outputDir, settings);
         if (results.Any(r => !r.IsSuccess))
         {
-            throw new InvalidOperationException("Batch transcode failed: " + string.Join(", ", results.Where(r => !r.IsSuccess).Select(r => r.Error)));
+            throw new InvalidOperationException("Batch transcode failed: " + string.Join(", ", results.Where(r => !r.IsSuccess).Select(r => r.ErrorMessage)));
         }
     }
 }
