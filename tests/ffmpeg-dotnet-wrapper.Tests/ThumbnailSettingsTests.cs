@@ -3,23 +3,36 @@ using FFmpegDotnetWrapper.Models;
 using FluentAssertions;
 using Xunit;
 
-namespace FFmpegDotnetWrapper.Tests;
-
+/// <summary>
+/// Tests for the ThumbnailSettings class.
+/// </summary>
 public class ThumbnailSettingsTests : IDisposable
 {
     private readonly string _tempVideo;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ThumbnailSettingsTests"/> class.
+    /// </summary>
     public ThumbnailSettingsTests()
     {
         _tempVideo = Path.Combine(Path.GetTempPath(), $"test_video_{Guid.NewGuid()}.mp4");
         File.WriteAllText(_tempVideo, "fake video data");
     }
 
+    /// <summary>
+    /// Releases unmanaged resources and performs other cleanup operations before the
+    /// <see cref="ThumbnailSettingsTests"/> is reclaimed by garbage collection.
+    /// </summary>
     public void Dispose()
     {
         if (File.Exists(_tempVideo)) File.Delete(_tempVideo);
     }
 
+    /// <summary>
+    /// Creates a new MediaFile instance with the specified duration.
+    /// </summary>
+    /// <param name="duration">The duration of the media file.</param>
+    /// <returns>A new MediaFile instance.</returns>
     private MediaFile CreateMediaFileWithDuration(TimeSpan duration)
     {
         var media = new MediaFile(_tempVideo);
@@ -29,6 +42,9 @@ public class ThumbnailSettingsTests : IDisposable
         return media;
     }
 
+    /// <summary>
+    /// Verifies that the default values of the ThumbnailSettings instance are correct.
+    /// </summary>
     [Fact]
     public void Constructor_DefaultValues_AreCorrect()
     {
@@ -42,6 +58,10 @@ public class ThumbnailSettingsTests : IDisposable
         settings.JpegQuality.Should().Be(2);
     }
 
+    /// <summary>
+    /// Verifies that the Count property can be set to a valid value.
+    /// </summary>
+    /// <param name="count">The value to set the Count property to.</param>
     [Theory]
     [InlineData(1)]
     [InlineData(100)]
@@ -53,6 +73,10 @@ public class ThumbnailSettingsTests : IDisposable
         settings.Count.Should().Be(count);
     }
 
+    /// <summary>
+    /// Verifies that setting the Count property to an invalid value throws an exception.
+    /// </summary>
+    /// <param name="count">The value to set the Count property to.</param>
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -66,6 +90,10 @@ public class ThumbnailSettingsTests : IDisposable
         act.Should().Throw<InvalidOperationConfigurationException>();
     }
 
+    /// <summary>
+    /// Verifies that the JpegQuality property can be set to a valid value.
+    /// </summary>
+    /// <param name="quality">The value to set the JpegQuality property to.</param>
     [Theory]
     [InlineData(1)]
     [InlineData(2)]
@@ -77,6 +105,10 @@ public class ThumbnailSettingsTests : IDisposable
         settings.JpegQuality.Should().Be(quality);
     }
 
+    /// <summary>
+    /// Verifies that setting the JpegQuality property to an invalid value throws an exception.
+    /// </summary>
+    /// <param name="quality">The value to set the JpegQuality property to.</param>
     [Theory]
     [InlineData(0)]
     [InlineData(32)]
@@ -89,6 +121,9 @@ public class ThumbnailSettingsTests : IDisposable
         act.Should().Throw<InvalidOperationConfigurationException>();
     }
 
+    /// <summary>
+    /// Verifies that the Validate method throws an exception when a timestamp beyond the video duration is specified.
+    /// </summary>
     [Fact]
     public void Validate_WithTimestampBeyondDuration_ThrowsException()
     {
@@ -102,6 +137,9 @@ public class ThumbnailSettingsTests : IDisposable
            .WithMessage("*exceeds video duration*");
     }
 
+    /// <summary>
+    /// Verifies that the Validate method throws an exception when a negative timestamp is specified.
+    /// </summary>
     [Fact]
     public void Validate_WithNegativeTimestamp_ThrowsException()
     {
@@ -115,6 +153,9 @@ public class ThumbnailSettingsTests : IDisposable
            .WithMessage("*cannot be negative*");
     }
 
+    /// <summary>
+    /// Verifies that the Validate method does not throw an exception when valid explicit timestamps are specified.
+    /// </summary>
     [Fact]
     public void Validate_WithValidExplicitTimestamps_DoesNotThrow()
     {
@@ -129,6 +170,9 @@ public class ThumbnailSettingsTests : IDisposable
         act.Should().NotThrow();
     }
 
+    /// <summary>
+    /// Verifies that the Validate method throws an exception when an invalid width is specified.
+    /// </summary>
     [Fact]
     public void Validate_WithInvalidWidth_ThrowsException()
     {
@@ -141,6 +185,9 @@ public class ThumbnailSettingsTests : IDisposable
            .WithMessage("*Width*");
     }
 
+    /// <summary>
+    /// Verifies that the Validate method does not throw an exception when an auto width is specified.
+    /// </summary>
     [Fact]
     public void Validate_WithAutoWidth_DoesNotThrow()
     {
@@ -152,6 +199,9 @@ public class ThumbnailSettingsTests : IDisposable
         act.Should().NotThrow();
     }
 
+    /// <summary>
+    /// Verifies that the Clone method produces an independent copy of the ThumbnailSettings instance.
+    /// </summary>
     [Fact]
     public void Clone_ProducesIndependentCopy()
     {
