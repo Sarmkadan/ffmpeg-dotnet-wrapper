@@ -1,21 +1,25 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+using System.IO;
 
 namespace FFmpegDotnetWrapper.Configuration
 {
+    /// <summary>
+    /// Provides validation methods for <see cref="StreamingPipelineOptions"/> instances.
+    /// </summary>
     public static class StreamingPipelineOptionsValidation
     {
+        /// <summary>
+        /// Validates the specified <see cref="StreamingPipelineOptions"/> instance.
+        /// </summary>
+        /// <param name="value">The options to validate.</param>
+        /// <returns>A read-only list of validation error messages. Empty if validation succeeds.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
         public static IReadOnlyList<string> Validate(this StreamingPipelineOptions value)
         {
-            var errors = new List<string>();
+            ArgumentNullException.ThrowIfNull(value);
 
-            if (value == null)
-            {
-                errors.Add("StreamingPipelineOptions cannot be null.");
-                return errors.AsReadOnly();
-            }
+            var errors = new List<string>();
 
             if (value.DefaultSegmentDurationSeconds <= 0)
             {
@@ -52,7 +56,7 @@ namespace FFmpegDotnetWrapper.Configuration
                 errors.Add($"UpgradeSpeedThreshold must be a positive number, but was {value.UpgradeSpeedThreshold}.");
             }
 
-            if (value.DefaultProfiles == null)
+            if (value.DefaultProfiles is null)
             {
                 errors.Add("DefaultProfiles cannot be null.");
             }
@@ -62,7 +66,7 @@ namespace FFmpegDotnetWrapper.Configuration
                 for (int i = 0; i < value.DefaultProfiles.Count; i++)
                 {
                     var profile = value.DefaultProfiles[i];
-                    if (profile == null)
+                    if (profile is null)
                     {
                         errors.Add($"DefaultProfiles[{i}] cannot be null.");
                         continue;
@@ -110,8 +114,12 @@ namespace FFmpegDotnetWrapper.Configuration
                     {
                         errors.Add("DefaultOutputBaseDirectory path exceeds maximum length of 260 characters.");
                     }
+                    else if (!Path.IsPathRooted(path))
+                    {
+                        errors.Add("DefaultOutputBaseDirectory must be an absolute path.");
+                    }
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is ArgumentException or PathTooLongException or NotSupportedException)
                 {
                     errors.Add($"DefaultOutputBaseDirectory is invalid: {ex.Message}");
                 }
@@ -120,11 +128,22 @@ namespace FFmpegDotnetWrapper.Configuration
             return errors.AsReadOnly();
         }
 
+        /// <summary>
+        /// Determines whether the specified <see cref="StreamingPipelineOptions"/> is valid.
+        /// </summary>
+        /// <param name="value">The options to check.</param>
+        /// <returns><see langword="true"/> if the options are valid; otherwise, <see langword="false"/>.</returns>
         public static bool IsValid(this StreamingPipelineOptions value)
         {
             return Validate(value).Count == 0;
         }
 
+        /// <summary>
+        /// Validates the specified <see cref="StreamingPipelineOptions"/> and throws an exception if invalid.
+        /// </summary>
+        /// <param name="value">The options to validate.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when validation fails.</exception>
         public static void EnsureValid(this StreamingPipelineOptions value)
         {
             var errors = Validate(value);
