@@ -1,26 +1,27 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =====================================================================
+// ===================================================================
 
 using FFmpegDotnetWrapper.Models;
 
 namespace FFmpegDotnetWrapper.Models;
 
 /// <summary>
-/// Extension methods for MediaFile providing additional functionality and convenience methods.
+/// Extension methods for <see cref="MediaFile"/> providing additional functionality and convenience methods
+/// for analyzing media files, calculating properties, and formatting metadata.
 /// </summary>
 public static class MediaFileExtensions
 {
     /// <summary>
-    /// Determines if the media file is a high definition video (1080p or higher).
+    /// Determines if the media file is a high definition video (720p or higher).
     /// </summary>
-    /// <param name="mediaFile">The media file to check</param>
-    /// <returns>True if the video is HD or higher, false otherwise</returns>
+    /// <param name="mediaFile">The media file to check.</param>
+    /// <returns>True if the video is HD or higher (720p+), false otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="mediaFile"/> is null.</exception>
     public static bool IsHighDefinition(this MediaFile mediaFile)
     {
-        if (mediaFile == null)
-            throw new ArgumentNullException(nameof(mediaFile));
+        ArgumentNullException.ThrowIfNull(mediaFile);
 
         if (!mediaFile.IsVideo())
             return false;
@@ -31,12 +32,12 @@ public static class MediaFileExtensions
     /// <summary>
     /// Determines if the media file is a 4K video (2160p or higher).
     /// </summary>
-    /// <param name="mediaFile">The media file to check</param>
-    /// <returns>True if the video is 4K or higher, false otherwise</returns>
+    /// <param name="mediaFile">The media file to check.</param>
+    /// <returns>True if the video is 4K or higher (2160p+), false otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="mediaFile"/> is null.</exception>
     public static bool Is4K(this MediaFile mediaFile)
     {
-        if (mediaFile == null)
-            throw new ArgumentNullException(nameof(mediaFile));
+        ArgumentNullException.ThrowIfNull(mediaFile);
 
         if (!mediaFile.IsVideo())
             return false;
@@ -47,12 +48,12 @@ public static class MediaFileExtensions
     /// <summary>
     /// Gets the aspect ratio of the video as a formatted string (e.g., "16:9", "4:3").
     /// </summary>
-    /// <param name="mediaFile">The media file to analyze</param>
-    /// <returns>Aspect ratio string or null if width/height are not available</returns>
+    /// <param name="mediaFile">The media file to analyze.</param>
+    /// <returns>Aspect ratio string or null if width/height are not available.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="mediaFile"/> is null.</exception>
     public static string? GetAspectRatio(this MediaFile mediaFile)
     {
-        if (mediaFile == null)
-            throw new ArgumentNullException(nameof(mediaFile));
+        ArgumentNullException.ThrowIfNull(mediaFile);
 
         if (!mediaFile.Width.HasValue || !mediaFile.Height.HasValue || mediaFile.Height.Value == 0)
             return null;
@@ -68,12 +69,12 @@ public static class MediaFileExtensions
     /// <summary>
     /// Gets the duration in a human-readable format (e.g., "2:30", "1:15:45").
     /// </summary>
-    /// <param name="mediaFile">The media file to format</param>
-    /// <returns>Human-readable duration string</returns>
+    /// <param name="mediaFile">The media file to format.</param>
+    /// <returns>Human-readable duration string.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="mediaFile"/> is null.</exception>
     public static string GetFormattedDuration(this MediaFile mediaFile)
     {
-        if (mediaFile == null)
-            throw new ArgumentNullException(nameof(mediaFile));
+        ArgumentNullException.ThrowIfNull(mediaFile);
 
         if (!mediaFile.Duration.HasValue || mediaFile.Duration.Value.TotalSeconds <= 0)
             return "0:00";
@@ -92,12 +93,12 @@ public static class MediaFileExtensions
     /// <summary>
     /// Gets the file size in a human-readable format (e.g., "2.5 MB", "1.2 GB").
     /// </summary>
-    /// <param name="mediaFile">The media file to format</param>
-    /// <returns>Human-readable file size string</returns>
+    /// <param name="mediaFile">The media file to format.</param>
+    /// <returns>Human-readable file size string.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="mediaFile"/> is null.</exception>
     public static string GetFormattedFileSize(this MediaFile mediaFile)
     {
-        if (mediaFile == null)
-            throw new ArgumentNullException(nameof(mediaFile));
+        ArgumentNullException.ThrowIfNull(mediaFile);
 
         double sizeInMB = mediaFile.GetFileSizeInMegabytes();
 
@@ -115,12 +116,12 @@ public static class MediaFileExtensions
     /// <summary>
     /// Gets the video quality description based on resolution and bitrate.
     /// </summary>
-    /// <param name="mediaFile">The media file to analyze</param>
-    /// <returns>Quality description string</returns>
+    /// <param name="mediaFile">The media file to analyze.</param>
+    /// <returns>Quality description string.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="mediaFile"/> is null.</exception>
     public static string GetVideoQualityDescription(this MediaFile mediaFile)
     {
-        if (mediaFile == null)
-            throw new ArgumentNullException(nameof(mediaFile));
+        ArgumentNullException.ThrowIfNull(mediaFile);
 
         if (!mediaFile.IsVideo())
             return "Audio only";
@@ -152,12 +153,12 @@ public static class MediaFileExtensions
     /// <summary>
     /// Gets the audio quality description based on sample rate and channels.
     /// </summary>
-    /// <param name="mediaFile">The media file to analyze</param>
-    /// <returns>Audio quality description string</returns>
+    /// <param name="mediaFile">The media file to analyze.</param>
+    /// <returns>Audio quality description string.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="mediaFile"/> is null.</exception>
     public static string GetAudioQualityDescription(this MediaFile mediaFile)
     {
-        if (mediaFile == null)
-            throw new ArgumentNullException(nameof(mediaFile));
+        ArgumentNullException.ThrowIfNull(mediaFile);
 
         if (!mediaFile.IsAudio())
             return "Not an audio file";
@@ -177,7 +178,7 @@ public static class MediaFileExtensions
             6 => "5.1 Surround",
             2 => "Stereo",
             1 => "Mono",
-            _ => $"Multi-channel ({mediaFile.AudioChannels})"
+            _ => mediaFile.AudioChannels.HasValue ? $"Multi-channel ({mediaFile.AudioChannels})" : "Unknown channels"
         };
 
         return $"{sampleRateQuality}, {channelsDescription}";
@@ -186,12 +187,12 @@ public static class MediaFileExtensions
     /// <summary>
     /// Calculates the frame count based on duration and frame rate.
     /// </summary>
-    /// <param name="mediaFile">The media file to analyze</param>
-    /// <returns>Estimated frame count or null if calculation is not possible</returns>
+    /// <param name="mediaFile">The media file to analyze.</param>
+    /// <returns>Estimated frame count or null if calculation is not possible.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="mediaFile"/> is null.</exception>
     public static long? GetFrameCount(this MediaFile mediaFile)
     {
-        if (mediaFile == null)
-            throw new ArgumentNullException(nameof(mediaFile));
+        ArgumentNullException.ThrowIfNull(mediaFile);
 
         if (!mediaFile.Duration.HasValue || !mediaFile.FrameRate.HasValue || mediaFile.FrameRate.Value <= 0)
             return null;
@@ -203,12 +204,12 @@ public static class MediaFileExtensions
     /// <summary>
     /// Gets the estimated file size based on duration and bitrate.
     /// </summary>
-    /// <param name="mediaFile">The media file to analyze</param>
-    /// <returns>Estimated file size in bytes or null if calculation is not possible</returns>
+    /// <param name="mediaFile">The media file to analyze.</param>
+    /// <returns>Estimated file size in bytes or null if calculation is not possible.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="mediaFile"/> is null.</exception>
     public static long? GetEstimatedFileSize(this MediaFile mediaFile)
     {
-        if (mediaFile == null)
-            throw new ArgumentNullException(nameof(mediaFile));
+        ArgumentNullException.ThrowIfNull(mediaFile);
 
         if (!mediaFile.Duration.HasValue || !mediaFile.Bitrate.HasValue || mediaFile.Bitrate.Value <= 0)
             return null;
@@ -220,12 +221,12 @@ public static class MediaFileExtensions
     /// <summary>
     /// Checks if the media file has HDR metadata.
     /// </summary>
-    /// <param name="mediaFile">The media file to check</param>
-    /// <returns>True if HDR metadata is present, false otherwise</returns>
+    /// <param name="mediaFile">The media file to check.</param>
+    /// <returns>True if HDR metadata is present, false otherwise.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="mediaFile"/> is null.</exception>
     public static bool HasHDRMetadata(this MediaFile mediaFile)
     {
-        if (mediaFile == null)
-            throw new ArgumentNullException(nameof(mediaFile));
+        ArgumentNullException.ThrowIfNull(mediaFile);
 
         if (mediaFile.Metadata == null || mediaFile.Metadata.Count == 0)
             return false;
@@ -239,19 +240,24 @@ public static class MediaFileExtensions
     /// <summary>
     /// Gets the creation date in a localized format.
     /// </summary>
-    /// <param name="mediaFile">The media file to format</param>
-    /// <returns>Localized date string</returns>
+    /// <param name="mediaFile">The media file to format.</param>
+    /// <returns>Localized date string in yyyy-MM-dd HH:mm:ss format.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="mediaFile"/> is null.</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="mediaFile"/>.CreatedAt is not a valid DateTime.</exception>
     public static string GetLocalizedCreationDate(this MediaFile mediaFile)
     {
-        if (mediaFile == null)
-            throw new ArgumentNullException(nameof(mediaFile));
+        ArgumentNullException.ThrowIfNull(mediaFile);
 
         return mediaFile.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
     }
 
     /// <summary>
     /// Helper method to calculate greatest common divisor for aspect ratio simplification.
+    /// Uses Euclidean algorithm to find GCD of two integers.
     /// </summary>
+    /// <param name="a">First integer.</param>
+    /// <param name="b">Second integer.</param>
+    /// <returns>Greatest common divisor of a and b.</returns>
     private static int GCD(int a, int b)
     {
         while (b != 0)
