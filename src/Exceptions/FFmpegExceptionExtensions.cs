@@ -14,12 +14,10 @@ public static class FFmpegExceptionExtensions
     /// </summary>
     /// <param name="exception">The FFmpeg exception to format.</param>
     /// <returns>A formatted error message string.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
     public static string ToDetailedErrorMessage(this FFmpegException exception)
     {
-        if (exception == null)
-        {
-            throw new ArgumentNullException(nameof(exception));
-        }
+        ArgumentNullException.ThrowIfNull(exception);
 
         var sb = new StringBuilder();
         sb.AppendLine($"FFmpeg Error: {exception.GetType().Name}");
@@ -58,8 +56,10 @@ public static class FFmpegExceptionExtensions
     /// </summary>
     /// <param name="exception">The FFmpeg exception to check.</param>
     /// <returns>True if the exception is a process-related failure; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
     public static bool IsProcessFailure(this FFmpegException exception)
     {
+        ArgumentNullException.ThrowIfNull(exception);
         return exception is FFmpegProcessException;
     }
 
@@ -68,8 +68,10 @@ public static class FFmpegExceptionExtensions
     /// </summary>
     /// <param name="exception">The FFmpeg exception to check.</param>
     /// <returns>True if the exception is an invalid media file error; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
     public static bool IsInvalidMediaFileError(this FFmpegException exception)
     {
+        ArgumentNullException.ThrowIfNull(exception);
         return exception is InvalidMediaFileException;
     }
 
@@ -78,8 +80,10 @@ public static class FFmpegExceptionExtensions
     /// </summary>
     /// <param name="exception">The FFmpeg exception to check.</param>
     /// <returns>True if the exception is an invalid configuration error; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
     public static bool IsInvalidConfigurationError(this FFmpegException exception)
     {
+        ArgumentNullException.ThrowIfNull(exception);
         return exception is InvalidOperationConfigurationException;
     }
 
@@ -88,8 +92,10 @@ public static class FFmpegExceptionExtensions
     /// </summary>
     /// <param name="exception">The FFmpeg exception to check.</param>
     /// <returns>True if the exception is an unsupported operation error; otherwise, false.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
     public static bool IsUnsupportedOperationError(this FFmpegException exception)
     {
+        ArgumentNullException.ThrowIfNull(exception);
         return exception is UnsupportedOperationException;
     }
 }
