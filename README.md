@@ -79,3 +79,36 @@ if (hasWarnings) Console.WriteLine("Warnings detected in conversion.");
 Console.WriteLine($"CPU: {cpuUsage}%, Memory: {memoryUsage} MB, Threshold: {completedOnTime}");
 Console.WriteLine($"Summary: {summary}");
 ```
+
+## MediaFileExtensions
+
+The `MediaFileExtensions` class provides metadata analysis for media files, including resolution checks, aspect ratio, duration formatting, file size formatting, quality descriptions, frame count, HDR metadata, and localized creation date.
+
+```csharp
+// Example usage:
+string mediaFilePath = "example.mp4";
+
+var isHD = MediaFileExtensions.IsHighDefinition(mediaFilePath);
+var is4K = MediaFileExtensions.Is4K(mediaFilePath);
+var aspectRatio = MediaFileExtensions.GetAspectRatio(mediaFilePath);
+var duration = MediaFileExtensions.GetFormattedDuration(mediaFilePath);
+var fileSize = MediaFileExtensions.GetFormattedFileSize(mediaFilePath);
+var videoQuality = MediaFileExtensions.GetVideoQualityDescription(mediaFilePath);
+var audioQuality = MediaFileExtensions.GetAudioQualityDescription(mediaFilePath);
+var frameCount = MediaFileExtensions.GetFrameCount(mediaFilePath);
+var estimatedFileSize = MediaFileExtensions.GetEstimatedFileSize(mediaFilePath);
+var hasHDR = MediaFileExtensions.HasHDRMetadata(mediaFilePath);
+var creationDate = MediaFileExtensions.GetLocalizedCreationDate(mediaFilePath);
+
+Console.WriteLine($"Media Info:\n" +
+                  $"  HD: {isHD}, 4K: {is4K}\n" +
+                  $"  Aspect Ratio: {aspectRatio}\n" +
+                  $"  Duration: {duration}\n" +
+                  $"  File Size: {fileSize}\n" +
+                  $"  Video Quality: {videoQuality}\n" +
+                  $"  Audio Quality: {audioQuality}\n" +
+                  $"  Frame Count: {frameCount}\n" +
+                  $"  Estimated File Size: {estimatedFileSize}\n" +
+                  $"  HDR: {hasHDR}\n" +
+                  $"  Created: {creationDate}");
+```
