@@ -56,3 +56,26 @@ var watermarkSettings = WatermarkSettingsExtensions.WithTopLeftPosition()
     .WithAnimation(TimeSpan.FromSeconds(1), EasingType.EaseInOut)
     .WithTimeConstraints(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30));
 ```
+
+## ConversionResultExtensions
+
+The `ConversionResultExtensions` class provides methods to analyze and summarize conversion results, including performance metrics, file size, warnings, and resource usage statistics. It enables developers to extract detailed insights about the conversion process.
+
+```csharp
+// Example usage:
+var result = GetConversionResult(); // Assume this is obtained from a conversion operation
+double? fps = ConversionResultExtensions.GetProcessingSpeedFps(result);
+double? fileSize = ConversionResultExtensions.GetOutputFileSizeMb(result);
+bool hasWarnings = ConversionResultExtensions.HasWarnings(result);
+string duration = ConversionResultExtensions.GetFormattedDuration(result);
+ConversionResultExtensions.AddPerformanceMetrics(result, metrics);
+double? cpuUsage = ConversionResultExtensions.GetCpuUsage(result);
+double? memoryUsage = ConversionResultExtensions.GetMemoryUsageMb(result);
+bool completedOnTime = ConversionResultExtensions.CompletedWithinThreshold(result);
+string summary = ConversionResultExtensions.GetMetricsSummary(result);
+
+Console.WriteLine($"Conversion completed with {fps} FPS, {fileSize} MB output, {duration} duration.");
+if (hasWarnings) Console.WriteLine("Warnings detected in conversion.");
+Console.WriteLine($"CPU: {cpuUsage}%, Memory: {memoryUsage} MB, Threshold: {completedOnTime}");
+Console.WriteLine($"Summary: {summary}");
+```
