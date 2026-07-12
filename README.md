@@ -43,3 +43,16 @@ void MonitorJob(BackgroundJob job)
     }
 }
 ```
+
+## WatermarkSettingsExtensions
+
+The `WatermarkSettingsExtensions` class provides a fluent API for configuring watermark settings, enabling developers to define positions, scaling, animation, time constraints, and opacity in a declarative way.
+
+```csharp
+// Example usage:
+var watermarkSettings = WatermarkSettingsExtensions.WithTopLeftPosition()
+    .WithScale(0.5f)
+    .WithOpacity(0.7f)
+    .WithAnimation(TimeSpan.FromSeconds(1), EasingType.EaseInOut)
+    .WithTimeConstraints(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30));
+```
