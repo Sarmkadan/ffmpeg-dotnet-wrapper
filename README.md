@@ -112,3 +112,25 @@ Console.WriteLine($"Media Info:\n" +
                   $"  HDR: {hasHDR}\n" +
                   $"  Created: {creationDate}");
 ```
+
+## TrimSettingsExtensions
+
+The `TrimSettingsExtensions` class provides a set of extension methods for configuring trim settings. It enables developers to define start time offsets, duration adjustments, and other trim-related settings.
+
+```csharp
+// Example usage:
+var trimSettings = TrimSettingsExtensions.WithStartTimeOffset(TimeSpan.FromSeconds(10))
+    .WithDurationAdjustment(TimeSpan.FromSeconds(20));
+
+var endTime = TrimSettingsExtensions.GetEndTime(trimSettings);
+var trimmedDuration = TrimSettingsExtensions.GetTrimmedDurationOrZero(trimSettings);
+
+Console.WriteLine($"Trimmed duration: {trimmedDuration}");
+Console.WriteLine($"End time: {endTime}");
+
+var trimmedSettings = TrimSettingsExtensions.TrimToEnd(trimSettings);
+Console.WriteLine($"Preserves both streams: {TrimSettingsExtensions.PreservesBothStreams(trimmedSettings)}");
+Console.WriteLine($"Preserves only audio: {TrimSettingsExtensions.PreservesOnlyAudio(trimmedSettings)}");
+Console.WriteLine($"Preserves only video: {TrimSettingsExtensions.PreservesOnlyVideo(trimmedSettings)}");
+Console.WriteLine($"Requires keyframes: {TrimSettingsExtensions.RequiresKeyframes(trimmedSettings)}");
+```
