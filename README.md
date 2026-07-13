@@ -134,3 +134,44 @@ Console.WriteLine($"Preserves only audio: {TrimSettingsExtensions.PreservesOnlyA
 Console.WriteLine($"Preserves only video: {TrimSettingsExtensions.PreservesOnlyVideo(trimmedSettings)}");
 Console.WriteLine($"Requires keyframes: {TrimSettingsExtensions.RequiresKeyframes(trimmedSettings)}");
 ```
+
+## FFmpegOptionsExtensions
+
+The `FFmpegOptionsExtensions` class provides a collection of helper methods for inspecting and deriving configuration values from an `FFmpegOptions` instance. It simplifies retrieving effective paths, timeout settings, concurrency limits, supported formats, and default encoding parameters.
+
+```csharp
+// Example usage:
+var options = new FFmpegOptions
+{
+    // assume properties are set as needed
+};
+
+string? ffmpegPath = FFmpegOptionsExtensions.GetEffectiveFFmpegPath(options);
+string? ffprobePath = FFmpegOptionsExtensions.GetEffectiveFFprobePath(options);
+bool hwAccel = FFmpegOptionsExtensions.IsHardwareAccelerationEnabled(options);
+string preset = FFmpegOptionsExtensions.GetEffectiveEncodingPreset(options);
+int timeoutMs = FFmpegOptionsExtensions.GetTimeoutMilliseconds(options);
+bool canRunConcurrently = FFmpegOptionsExtensions.CanRunConcurrently(options);
+int maxConcurrent = FFmpegOptionsExtensions.GetMaxConcurrentOperations(options);
+bool formatSupported = FFmpegOptionsExtensions.IsFormatSupported(options, "mp4");
+string supportedFormats = FFmpegOptionsExtensions.GetSupportedFormatsString(options);
+string tempDir = FFmpegOptionsExtensions.GetEffectiveTemporaryDirectory(options);
+bool keepTemp = FFmpegOptionsExtensions.ShouldKeepTemporaryFiles(options);
+var (attempts, delayMs) = FFmpegOptionsExtensions.GetRetryConfiguration(options);
+bool verbose = FFmpegOptionsExtensions.IsVerboseLoggingEnabled(options);
+int defaultAudioBitrate = FFmpegOptionsExtensions.GetDefaultAudioBitrate(options);
+int defaultVideoBitrate = FFmpegOptionsExtensions.GetDefaultVideoBitrate(options);
+int? defaultQuality = FFmpegOptionsExtensions.GetDefaultQuality(options);
+bool pathValidation = FFmpegOptionsExtensions.IsPathValidationEnabled(options);
+bool outputPathValidation = FFmpegOptionsExtensions.IsOutputPathValidationEnabled(options);
+
+Console.WriteLine($"FFmpeg: {ffmpegPath}, FFprobe: {ffprobePath}");
+Console.WriteLine($"Hardware Acceleration: {hwAccel}, Preset: {preset}");
+Console.WriteLine($"Timeout: {timeoutMs}ms, Max Concurrent: {maxConcurrent}");
+Console.WriteLine($"Supported Formats: {supportedFormats}");
+Console.WriteLine($"Temp Dir: {tempDir}, Keep Temp Files: {keepTemp}");
+Console.WriteLine($"Retry: {attempts} attempts, {delayMs}ms delay");
+Console.WriteLine($"Verbose Logging: {verbose}");
+Console.WriteLine($"Default Audio Bitrate: {defaultAudioBitrate} kbps, Video Bitrate: {defaultVideoBitrate} kbps, Quality: {defaultQuality}");
+Console.WriteLine($"Path Validation: {pathValidation}, Output Path Validation: {outputPathValidation}");
+```
