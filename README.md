@@ -1,18 +1,18 @@
 // ... (rest of README.md content remains unchanged)
 
-## ConfigurationException
+## ServiceException
 
-The `ConfigurationException` class represents an exception that occurs when a configuration error is encountered. It provides information about the configuration key that caused the error.
+The `ServiceException` class represents an exception that occurs when a service-related error is encountered. It provides information about the service name and the error message.
 
 ```csharp
 try
 {
-    // Configuration code
+    // Service code
 }
-catch (ConfigurationException ex)
+catch (ServiceException ex)
 {
-    Console.WriteLine($"Configuration Error: {ex.Message}");
-    Console.WriteLine($"Configuration Key: {ex.ConfigurationKey}");
+    Console.WriteLine($"Service Error: {ex.Message}");
+    Console.WriteLine($"Service Name: {ex.ServiceName}");
 }
 ```
 // ... (rest of README.md content remains unchanged)
