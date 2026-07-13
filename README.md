@@ -1,21 +1,18 @@
 // ... (rest of README.md content remains unchanged)
 
-## ValidationException
+## ConfigurationException
 
-The `ValidationException` class represents an exception that occurs when validation fails. It provides information about the validation errors, including a dictionary of validation errors.
+The `ConfigurationException` class represents an exception that occurs when a configuration error is encountered. It provides information about the configuration key that caused the error.
 
 ```csharp
 try
 {
-    // Validation code
+    // Configuration code
 }
-catch (ValidationException ex)
+catch (ConfigurationException ex)
 {
-    Console.WriteLine($"Validation Errors:");
-    foreach (var error in ex.ValidationErrors ?? new Dictionary<string, string[]>())
-    {
-        Console.WriteLine($"  - {error.Key}: {string.Join(", ", error.Value)}");
-    }
+    Console.WriteLine($"Configuration Error: {ex.Message}");
+    Console.WriteLine($"Configuration Key: {ex.ConfigurationKey}");
 }
 ```
 // ... (rest of README.md content remains unchanged)
