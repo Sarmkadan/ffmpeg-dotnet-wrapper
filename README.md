@@ -1,18 +1,18 @@
 // ... (rest of README.md content remains unchanged)
 
-## ServiceException
+## FileOperationException
 
-The `ServiceException` class represents an exception that occurs when a service-related error is encountered. It provides information about the service name and the error message.
+The `FileOperationException` class represents an exception that occurs when a file-related error is encountered. It provides information about the file path and the error message.
 
 ```csharp
 try
 {
-    // Service code
+    // File code
 }
-catch (ServiceException ex)
+catch (FileOperationException ex)
 {
-    Console.WriteLine($"Service Error: {ex.Message}");
-    Console.WriteLine($"Service Name: {ex.ServiceName}");
+    Console.WriteLine($"File Error: {ex.Message}");
+    Console.WriteLine($"File Path: {ex.FilePath}");
 }
 ```
 // ... (rest of README.md content remains unchanged)
