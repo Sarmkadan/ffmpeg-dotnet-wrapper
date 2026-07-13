@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -113,12 +114,13 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
                     if (value is int intValue)
                         return (T)(object)intValue;
 
-                    if (value is string stringValue && double.TryParse(stringValue, out var parsedDouble))
+                    if (value is string stringValue &&
+                        double.TryParse(stringValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedDouble))
                         return (T)(object)parsedDouble;
                 }
 
                 if (typeof(T) == typeof(string))
-                    return (T)(object)(value?.ToString() ?? string.Empty);
+                    return (T)(object)(Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty);
 
                 return defaultValue;
             }

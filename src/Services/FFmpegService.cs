@@ -523,14 +523,23 @@ public class FFmpegService : IFFmpegService
 
             process.Start();
 
+            // Drain stdout/stderr concurrently while waiting for exit; FFmpeg writes
+            // progress information to stderr continuously, and letting the pipe buffer
+            // fill up while nobody reads it would deadlock the process.
+            var stdOutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+            var stdErrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+
             var timeout = operation.Timeout ?? _defaultTimeout;
             if (!await process.WaitForExitAsync(timeout, cancellationToken))
             {
-                process.Kill();
+                process.Kill(entireProcessTree: true);
                 throw new FFmpegProcessException(
                     $"FFmpeg process timed out after {timeout.TotalSeconds} seconds",
                     timeout);
             }
+
+            var errorOutput = await stdErrTask;
+            await stdOutTask;
 
             sw.Stop();
             result.Duration = sw.Elapsed;
@@ -542,7 +551,6 @@ public class FFmpegService : IFFmpegService
             }
             else
             {
-                var errorOutput = process.StandardError.ReadToEnd();
                 result.MarkAsFailed($"FFmpeg exited with code {process.ExitCode}");
                 result.FFmpegOutput = errorOutput;
                 _logger.LogError("FFmpeg operation failed: {Error}", errorOutput);
@@ -597,12 +605,12 @@ public class FFmpegService : IFFmpegService
 
     private void BuildTrimArguments(FFmpegOperation operation, TrimSettings settings)
     {
-        operation.AddArgument($"-ss {settings.StartTime.TotalSeconds}");
+        operation.AddArgument($"-ss {settings.StartTime.TotalSeconds.ToString(CultureInfo.InvariantCulture)}");
 
         if (settings.Duration.HasValue)
-            operation.AddArgument($"-t {settings.Duration.Value.TotalSeconds}");
+            operation.AddArgument($"-t {settings.Duration.Value.TotalSeconds.ToString(CultureInfo.InvariantCulture)}");
         else if (settings.EndTime.HasValue)
-            operation.AddArgument($"-to {settings.EndTime.Value.TotalSeconds}");
+            operation.AddArgument($"-to {settings.EndTime.Value.TotalSeconds.ToString(CultureInfo.InvariantCulture)}");
 
         operation.AddArgument("-c copy"); // Copy without re-encoding
     }
@@ -845,7 +853,7 @@ public class FFmpegService : IFFmpegService
         operation.AddInputFile(inputMedia.FilePath);
 
         if (timestamp.HasValue)
-            operation.AddArgument($"-ss {timestamp.Value.TotalSeconds:F3}");
+            operation.AddArgument($"-ss {timestamp.Value.TotalSeconds.ToString("F3", CultureInfo.InvariantCulture)}");
 
         var filters = new List<string>();
 

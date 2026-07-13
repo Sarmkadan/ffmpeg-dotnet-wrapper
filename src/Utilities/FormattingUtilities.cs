@@ -4,6 +4,7 @@
 // =============================================================================
 
 using System;
+using System.Globalization;
 using System.Text;
 
 namespace FFmpegDotnetWrapper.Utilities
@@ -51,7 +52,7 @@ namespace FFmpegDotnetWrapper.Utilities
                 len = len / 1024;
             }
 
-            return $"{len:0.##} {sizes[order]}";
+            return $"{len.ToString("0.##", CultureInfo.InvariantCulture)} {sizes[order]}";
         }
 
         /// <summary>
@@ -62,11 +63,11 @@ namespace FFmpegDotnetWrapper.Utilities
         {
             if (kbps >= 1000000)
             {
-                return $"{(double)kbps / 1000000:0.##} Gbps";
+                return $"{((double)kbps / 1000000).ToString("0.##", CultureInfo.InvariantCulture)} Gbps";
             }
             else if (kbps >= 1000)
             {
-                return $"{(double)kbps / 1000:0.##} Mbps";
+                return $"{((double)kbps / 1000).ToString("0.##", CultureInfo.InvariantCulture)} Mbps";
             }
             else
             {
@@ -209,7 +210,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static string FormatPercentage(double percentage)
         {
-            return $"{percentage:0.0}%";
+            return $"{percentage.ToString("0.0", CultureInfo.InvariantCulture)}%";
         }
 
         /// <summary>
@@ -259,7 +260,7 @@ namespace FFmpegDotnetWrapper.Utilities
         {
             var parts = input.Split('-', '_');
             var titleParts = parts.Select(p =>
-                p.Length > 0 ? char.ToUpper(p[0]) + (p.Length > 1 ? p.Substring(1) : "") : ""
+                p.Length > 0 ? char.ToUpperInvariant(p[0]) + (p.Length > 1 ? p.Substring(1) : "") : ""
             );
             return string.Join(" ", titleParts);
         }
