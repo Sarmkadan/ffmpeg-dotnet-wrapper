@@ -76,6 +76,61 @@ var rateLimiter = serviceProvider.GetRateLimiter();
 serviceProvider.RegisterEventHandler<OperationCompletedEvent, CustomOperationHandler>();
 ```
 
+## StreamingPipelineOptions
+
+`StreamingPipelineOptions` provides application-level configuration for the adaptive bitrate streaming pipeline. It controls global settings such as segment duration, concurrent pipeline limits, quality thresholds, and default output directories. These options can be bound from the `FFmpeg:Streaming` section of `appsettings.json` or configured programmatically.
+
+```csharp
+using FFmpegDotnetWrapper.Configuration;
+using FFmpegDotnetWrapper.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
+// Configure streaming pipeline options
+var services = new ServiceCollection();
+
+services.Configure<StreamingPipelineOptions>(options =>
+{
+    options.Enabled = true;
+    options.DefaultSegmentDurationSeconds = 6;
+    options.DefaultPlaylistWindowSize = 5;
+    options.DefaultFormat = StreamingFormat.Hls;
+    options.DefaultEncodeProfilesConcurrently = true;
+    options.MaxConcurrentPipelines = 3;
+    options.MaxConcurrentRenditionsPerPipeline = 2;
+    options.DowngradeSpeedThreshold = 0.9;
+    options.UpgradeSpeedThreshold = 1.5;
+    options.BitrateDecisionWindowSegments = 3;
+    options.DefaultOutputBaseDirectory = "/var/www/streaming";
+    options.DefaultEnableHardwareAcceleration = true;
+    
+    options.DefaultProfiles = new List<StreamingProfileOptions>
+    {
+        new StreamingProfileOptions
+        {
+            Name = "720p",
+            Width = 1280,
+            Height = 720,
+            VideoBitrateKbps = 2500,
+            AudioBitrateKbps = 128,
+            FrameRate = 30
+        },
+        new StreamingProfileOptions
+        {
+            Name = "480p",
+            Width = 854,
+            Height = 480,
+            VideoBitrateKbps = 1000,
+            AudioBitrateKbps = 96,
+            FrameRate = 30
+        }
+    };
+});
+
+var serviceProvider = services.BuildServiceProvider();
+var streamingOptions = serviceProvider.GetRequiredService<IOptions<StreamingPipelineOptions>>().Value;
+```
+
 ## JsonOutputFormatter
 
 `JsonOutputFormatter` centralises JSON serialization and deserialization for API responses, offering pretty‑printed output and custom converters for `TimeSpan` and `DateTime`. It also bundles CSV and plain‑text formatters for batch operation results, giving a consistent way to produce machine‑readable and human‑readable output.
