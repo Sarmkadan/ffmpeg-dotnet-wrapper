@@ -1297,13 +1297,175 @@ Console.WriteLine(FormattingUtilities.TitleCase("output-format")); // Output: Ou
 Console.WriteLine(FormattingUtilities.TitleCase("input_file-path")); // Output: Input File Path
 ```
 
-## FFmpegController
+## FormattingUtilitiesTests
 
-The `FFmpegController` class provides a REST API for FFmpeg transcoding, trimming, merging, and watermarking operations. It offers a fluent API for video transformation workflows with request validation and error handling.
+The `FormattingUtilitiesTests` class provides unit tests for the `FormattingUtilities` class, verifying that formatting methods work correctly with various FFmpeg-related data types. It includes tests for duration formatting, byte size formatting, bitrate formatting, resolution formatting, string truncation, title casing, percentage formatting, ETA calculation, and string sanitization scenarios.
 
-Here is an example usage of the `FFmpegController` class with its public members:
+Here is an example usage of the `FormattingUtilitiesTests` class with its public members:
 
 ```csharp
+using FFmpegDotnetWrapper.Utilities;
+using Xunit;
+
+// Test duration formatting for various time spans
+[Fact]
+public void FormatDuration_LessThanOneMinute_ReturnsZeroHoursAndMinutes()
+{
+    var duration = TimeSpan.FromSeconds(45);
+    var result = FormattingUtilities.FormatDuration(duration);
+    Assert.Equal("00:00:45", result);
+}
+
+[Fact]
+public void FormatDuration_BetweenOneAndSixtyMinutes_ReturnsZeroHours()
+{
+    var duration = TimeSpan.FromMinutes(35);
+    var result = FormattingUtilities.FormatDuration(duration);
+    Assert.Equal("00:35:00", result);
+}
+
+[Fact]
+public void FormatDuration_MoreThanOneHour_IncludesHours()
+{
+    var duration = TimeSpan.FromHours(2) + TimeSpan.FromMinutes(15) + TimeSpan.FromSeconds(30);
+    var result = FormattingUtilities.FormatDuration(duration);
+    Assert.Equal("02:15:30", result);
+}
+
+// Test byte size formatting
+[Fact]
+public void FormatBytes_LessThanOneKilobyte_ReturnsByteSuffix()
+{
+    var result = FormattingUtilities.FormatBytes(512);
+    Assert.Equal("512 B", result);
+}
+
+[Fact]
+public void FormatBytes_ExactMegabyte_ReturnsMbSuffix()
+{
+    var result = FormattingUtilities.FormatBytes(1048576);
+    Assert.Equal("1.00 MB", result);
+}
+
+[Fact]
+public void FormatBytes_LargeGigabyteValue_ReturnsGbSuffix()
+{
+    var result = FormattingUtilities.FormatBytes(5368709120); // 5 GB
+    Assert.Equal("5.00 GB", result);
+}
+
+// Test bitrate formatting
+[Fact]
+public void FormatBitrate_BelowOneThousand_ReturnsKbps()
+{
+    var result = FormattingUtilities.FormatBitrate(500);
+    Assert.Equal("500 Kbps", result);
+}
+
+[Fact]
+public void FormatBitrate_Thousands_ReturnsMbps()
+{
+    var result = FormattingUtilities.FormatBitrate(3000);
+    Assert.Equal("3 Mbps", result);
+}
+
+[Fact]
+public void FormatBitrate_Millions_ReturnsGbps()
+{
+    var result = FormattingUtilities.FormatBitrate(2500000);
+    Assert.Equal("2.5 Gbps", result);
+}
+
+// Test string truncation
+[Fact]
+public void TruncateString_BelowMaxLength_ReturnsUnchanged()
+{
+    var result = FormattingUtilities.TruncateString("short text", 20);
+    Assert.Equal("short text", result);
+}
+
+[Fact]
+public void TruncateString_ExceedsMaxLength_AppendsEllipsis()
+{
+    var longText = "This is a very long string that definitely exceeds the maximum length";
+    var result = FormattingUtilities.TruncateString(longText, 30);
+    Assert.Equal("This is a very long string th...", result);
+}
+
+[Fact]
+public void TruncateString_NullOrEmpty_ReturnsEmptyString()
+{
+    var result1 = FormattingUtilities.TruncateString(null, 20);
+    var result2 = FormattingUtilities.TruncateString(string.Empty, 20);
+    Assert.Equal(string.Empty, result1);
+    Assert.Equal(string.Empty, result2);
+}
+
+// Test title case conversion
+[Fact]
+public void TitleCase_KebabOrSnakeCase_ReturnsTitleCase()
+{
+    var result1 = FormattingUtilities.TitleCase("output-format");
+    var result2 = FormattingUtilities.TitleCase("input_file-path");
+    Assert.Equal("Output Format", result1);
+    Assert.Equal("Input File Path", result2);
+}
+
+// Test percentage formatting
+[Fact]
+public void FormatPercentage_VariousValues_ReturnsOneDecimalPlace()
+{
+    var result1 = FormattingUtilities.FormatPercentage(25.5);
+    var result2 = FormattingUtilities.FormatPercentage(99.99);
+    var result3 = FormattingUtilities.FormatPercentage(0);
+    Assert.Equal("25.5%", result1);
+    Assert.Equal("100.0%", result2);
+    Assert.Equal("0.0%", result3);
+}
+
+// Test ETA formatting
+[Fact]
+public void FormatETA_ZeroProgress_ReturnsCalculatingMessage()
+{
+    var result = FormattingUtilities.FormatETA(TimeSpan.Zero, 0);
+    Assert.Equal("Calculating...", result);
+}
+
+[Fact]
+public void FormatETA_HalfwayThrough_ReturnsRemainingTimeEstimate()
+{
+    var elapsed = TimeSpan.FromSeconds(125);
+    var result = FormattingUtilities.FormatETA(elapsed, 50.0);
+    Assert.Contains("remaining", result);
+}
+
+// Test string sanitization
+[Fact]
+public void SanitizeForDisplay_StringWithControlChars_RemovesThem()
+{
+    var unsafeString = "Hello World\tLine1\nLine2";
+    var result = FormattingUtilities.SanitizeForDisplay(unsafeString);
+    Assert.DoesNotContain(" ", result);
+    Assert.Contains("Line1", result);
+    Assert.Contains("Line2", result);
+}
+
+[Fact]
+public void SanitizeForDisplay_StringWithNewline_PreservesNewline()
+{
+    var result = FormattingUtilities.SanitizeForDisplay("Line1\nLine2");
+    Assert.Contains("Line1", result);
+    Assert.Contains("Line2", result);
+}
+
+// Test resolution formatting
+[Fact]
+public void FormatResolution_StandardHd_ReturnsWidthXHeight()
+{
+    var result = FormattingUtilities.FormatResolution(1920, 1080);
+    Assert.Equal("1920x1080", result);
+}
+```
 using FFmpegDotnetWrapper.Api.Controllers;
 using FFmpegDotnetWrapper.Api.DTOs;
 using FFmpegDotnetWrapper.Models;
