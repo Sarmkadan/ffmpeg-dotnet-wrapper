@@ -1,5 +1,56 @@
 // ... (rest of README.md content remains unchanged)
 
+## ICacheService
+
+The `ICacheService` interface provides an in-memory caching mechanism for storing frequently accessed data like media metadata and operation results. It supports time-based expiration, automatic cleanup of expired entries, and size-based eviction using an LRU (Least Recently Used) policy. This helps reduce unnecessary file system access and expensive FFmpeg probing operations.
+
+
+Here is an example usage of the `ICacheService` interface with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Caching;
+using Microsoft.Extensions.Logging;
+
+// Create a cache service instance with default settings (max 1000 entries, 1 hour expiration)
+var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+var cacheService = new CacheService(loggerFactory.CreateLogger<CacheService>());
+
+// Store a value in the cache with default expiration (1 hour)
+cacheService.Set("media-info-123", mediaMetadata);
+
+// Store a value with custom expiration (5 minutes)
+cacheService.Set("thumbnail-urls", thumbnailUrls, TimeSpan.FromMinutes(5));
+
+// Retrieve a cached value
+var cachedMediaInfo = cacheService.Get<MediaMetadata>("media-info-123");
+if (cachedMediaInfo != null)
+{
+    Console.WriteLine($"Retrieved cached media info: {cachedMediaInfo.Duration}");
+}
+
+// Check if a key exists by attempting to retrieve it
+var thumbnailUrls = cacheService.Get<List<string>>("thumbnail-urls");
+if (thumbnailUrls != null)
+{
+    Console.WriteLine($"Found {thumbnailUrls.Count} cached thumbnails");
+}
+
+// Remove a specific cache entry
+var wasRemoved = cacheService.Remove("media-info-123");
+Console.WriteLine($"Entry removed: {wasRemoved}");
+
+// Get current cache statistics
+var stats = cacheService.GetStats();
+Console.WriteLine($"Cache stats - Count: {stats.Count}, MaxSize: {stats.MaxSize}, Utilization: {stats.Utilization:F2}%");
+
+// Clear the entire cache (useful during application shutdown or cache invalidation)
+cacheService.Clear();
+
+// The Count property allows checking cache size without retrieving statistics
+var currentCount = cacheService.Count;
+Console.WriteLine($"Current cache entries: {currentCount}");
+```
+
 ## FFmpegController
 
 The `FFmpegController` class provides a REST API for FFmpeg transcoding, trimming, merging, and watermarking operations. It offers a fluent API for video transformation workflows with request validation and error handling.
