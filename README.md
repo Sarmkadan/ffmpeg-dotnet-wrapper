@@ -815,6 +815,79 @@ clonedSettings.Times.Add(TimeSpan.FromSeconds(20));
 originalSettings.Times.Should().HaveCount(1);
 ```
 
+## FileUtilitiesTests
+
+The `FileUtilitiesTests` class provides unit tests for the `FileUtilities` class, verifying that file path validation, file operations, and utility methods work correctly. It includes tests for validating absolute and relative paths, handling edge cases like null/empty strings, directory traversal attempts, and environment variable expansion, as well as testing file existence checks and extension extraction.
+
+Here is an example usage of the `FileUtilitiesTests` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Utilities;
+using FluentAssertions;
+using Xunit;
+
+// Test that absolute file paths are considered valid
+var absolutePath = Path.GetFullPath(@"/home/user/videos/input.mp4");
+Assert.True(FileUtilities.IsValidFilePath(absolutePath));
+
+// Test that relative paths are rejected for security
+Assert.False(FileUtilities.IsValidFilePath("relative/path/file.mp4"));
+Assert.False(FileUtilities.IsValidFilePath("../file.mp4"));
+
+// Test that null and empty strings are handled gracefully
+Assert.False(FileUtilities.IsValidFilePath(null));
+Assert.False(FileUtilities.IsValidFilePath(string.Empty));
+Assert.False(FileUtilities.IsValidFilePath(" "));
+
+// Test that environment variables and tilde expansion are rejected
+Assert.False(FileUtilities.IsValidFilePath("$HOME/file.mp4"));
+Assert.False(FileUtilities.IsValidFilePath("~/file.mp4"));
+
+// Test input file validation - must exist and be accessible
+var testFile = @"/home/user/videos/input.mp4";
+Assert.True(FileUtilities.IsValidInputFile(testFile));
+Assert.False(FileUtilities.IsValidInputFile("/nonexistent/file.mp4"));
+Assert.False(FileUtilities.IsValidInputFile("relative/path/file.mp4"));
+
+// Test output path validation - must be absolute and in writable directory
+var outputPath = @"/home/user/videos/output/processed.mp4";
+Assert.True(FileUtilities.IsValidOutputPath(outputPath));
+
+// Test output path with directory creation
+var newOutputPath = @"/home/user/videos/newdir/output.mp4";
+Assert.True(FileUtilities.IsValidOutputPath(newOutputPath, createDirectoryIfNeeded: true));
+Assert.False(FileUtilities.IsValidOutputPath(newOutputPath, createDirectoryIfNeeded: false));
+
+// Test file extension extraction
+var extension = FileUtilities.GetFileExtension(@"/home/user/videos/input.mp4");
+Assert.Equal("mp4", extension);
+
+var mkvExtension = FileUtilities.GetFileExtension(@"/home/user/videos/input.mkv");
+Assert.Equal("mkv", mkvExtension);
+
+// Test file size utilities
+var fileSize = FileUtilities.GetFileSize(@"/home/user/videos/input.mp4");
+Assert.Greater(fileSize, 0);
+
+var humanReadable = FileUtilities.GetHumanReadableFileSize(1572864); // 1.5 MB
+Assert.Equal("1.5 MB", humanReadable);
+
+// Test file operations
+var tempFile = FileUtilities.GetTempFilePath(".tmp");
+Assert.True(File.Exists(Path.GetDirectoryName(tempFile)));
+Assert.Equal(".tmp", Path.GetExtension(tempFile));
+
+// Test file sanitization
+var unsafeFileName = "video\0copy.mp4";
+var safeFileName = FileUtilities.SanitizeFileName(unsafeFileName);
+Assert.DoesNotContain("\0", safeFileName);
+Assert.Equal(".mp4", Path.GetExtension(safeFileName));
+
+// Test format compatibility
+Assert.True(FileUtilities.AreFormatsCompatible(@"/video1.mp4", @"/video2.mp4"));
+Assert.False(FileUtilities.AreFormatsCompatible(@"/video.mp4", @"/video.mkv"));
+```
+
 ## FormattingUtilities
 
 The `FormattingUtilities` class provides a collection of static formatting methods for consistent string representation of FFmpeg-related data types. It handles time formatting, byte size formatting, bitrate formatting, resolution formatting, and various string sanitization utilities used throughout the library for logging, CLI output, and API responses.
