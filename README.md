@@ -234,3 +234,108 @@ if (result != null)
 // Cancel a running pipeline if needed
 await service.CancelPipelineAsync(pipelineId);
 ```
+
+## FFmpegService
+
+The `FFmpegService` class provides comprehensive FFmpeg media processing capabilities through a clean, asynchronous API. It handles video transcoding, trimming, merging, watermarking, audio extraction, HLS creation, subtitle embedding, thumbnail generation, and custom FFmpeg operations with robust error handling and progress tracking.
+
+
+
+
+```csharp
+using FFmpegDotnetWrapper.Services;
+using FFmpegDotnetWrapper.Models;
+
+// Create FFmpeg service instance
+var ffmpegService = new FFmpegService();
+
+// Check if FFmpeg is available
+var isAvailable = await ffmpegService.IsFFmpegAvailableAsync();
+if (isAvailable)
+{
+    Console.WriteLine("FFmpeg is available and ready to use");
+}
+
+// Get installed FFmpeg version
+var version = await ffmpegService.GetFFmpegVersionAsync();
+Console.WriteLine($"FFmpeg version: {version}");
+
+// Analyze media file to get metadata
+var mediaInfo = await ffmpegService.AnalyzeMediaAsync("/path/to/input/video.mp4");
+Console.WriteLine($"Duration: {mediaInfo.Duration}, Format: {mediaInfo.Format}, Resolution: {mediaInfo.Width}x{mediaInfo.Height}");
+
+// Transcode video to different format
+var transcodeResult = await ffmpegService.TranscodeAsync(
+    "/path/to/input/video.mp4",
+    "/path/to/output/video_converted.mp4",
+    new TranscodeOptions
+    {
+        VideoCodec = "libx264",
+        AudioCodec = "aac",
+        VideoBitrate = "4000k",
+        AudioBitrate = "192k",
+        FrameRate = 30,
+        Preset = "fast"
+    });
+
+if (transcodeResult.Success)
+{
+    Console.WriteLine($"Transcoded successfully in {transcodeResult.Duration.TotalSeconds}s");
+}
+
+// Trim video to specific time range
+var trimResult = await ffmpegService.TrimAsync(
+    "/path/to/input/video.mp4",
+    "/path/to/output/video_trimmed.mp4",
+    TimeSpan.FromSeconds(30),
+    TimeSpan.FromSeconds(90));
+
+// Merge multiple video files
+var mergeResult = await ffmpegService.MergeAsync(
+    new[] { "/path/to/video1.mp4", "/path/to/video2.mp4" },
+    "/path/to/output/video_merged.mp4");
+
+// Add watermark to video
+var watermarkResult = await ffmpegService.AddWatermarkAsync(
+    "/path/to/input/video.mp4",
+    "/path/to/output/video_with_watermark.mp4",
+    "/path/to/watermark.png",
+    position: "top-right",
+    opacity: 0.5);
+
+// Extract audio from video
+var audioResult = await ffmpegService.ExtractAudioAsync(
+    "/path/to/input/video.mp4",
+    "/path/to/output/audio_only.mp3");
+
+// Create HLS streaming format
+var hlsResult = await ffmpegService.CreateHlsAsync(
+    "/path/to/input/video.mp4",
+    "/path/to/output/hls/",
+    segmentDuration: 10);
+
+// Extract thumbnails from video
+var thumbnailsResult = await ffmpegService.ExtractThumbnailsAsync(
+    "/path/to/input/video.mp4",
+    "/path/to/output/thumbnails/",
+    count: 10,
+    width: 320);
+
+// Execute custom FFmpeg command
+var customResult = await ffmpegService.ExecuteCustomOperationAsync(
+    "-i /path/to/input.mp4 -vf scale=1280:720 -c:v libx264 -crf 23 /path/to/output.mp4");
+
+// Process multiple files in batch
+var batchResults = await ffmpegService.BatchTranscodeAsync(
+    new[] { "/path/to/video1.mp4", "/path/to/video2.mp4" },
+    outputDirectory: "/path/to/output/",
+    format: "mp4");
+
+foreach (var result in batchResults)
+{
+    if (result.Success)
+    {
+        Console.WriteLine($"Processed {result.InputFile} -> {result.OutputFile}");
+    }
+}
+```
