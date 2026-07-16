@@ -740,6 +740,81 @@ public void IsValidWatermarkScale_OutsideRange_ReturnsFalse()
 }
 ```
 
+## TranscodeServiceTests
+
+The `TranscodeServiceTests` class provides unit tests for the `TranscodeService` class, verifying that video transcoding operations work correctly with various configurations including web transcoding presets, bitrate adjustments, resolution changes, and error handling scenarios.
+
+Here is an example usage of the `TranscodeServiceTests` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Services;
+using FFmpegDotnetWrapper.Models;
+using Xunit;
+
+// Test web transcoding with standard HLS settings
+var transcodeService = new TranscodeService();
+var webResult = await transcodeService.TranscodeToWebAsync(
+    inputPath: "/input/video.mp4",
+    outputDirectory: "/output/hls",
+    preset: WebPreset.Hls_720p
+);
+Assert.True(webResult.Success);
+
+// Test bitrate adjustment with validation
+var bitrateResult = await transcodeService.TranscodeWithBitrateAsync(
+    inputPath: "/input/video.mp4",
+    outputPath: "/output/bitrate.mp4",
+    bitrateKbps: 3000,
+    videoCodec: "libx264"
+);
+Assert.True(bitrateResult.Success);
+
+// Test video resizing with validation
+var resizeResult = await transcodeService.ResizeVideoAsync(
+    inputPath: "/input/video.mp4",
+    outputPath: "/output/resized.mp4",
+    width: 1280,
+    height: 720,
+    keepAspectRatio: true
+);
+Assert.True(resizeResult.Success);
+
+// Test audio extraction
+var audioResult = await transcodeService.ExtractAudioAsync(
+    inputPath: "/input/video.mp4",
+    outputPath: "/output/audio.mp3"
+);
+Assert.True(audioResult.Success);
+
+// Test error handling for invalid bitrate
+await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+    transcodeService.TranscodeWithBitrateAsync(
+        inputPath: "/input/video.mp4",
+        outputPath: "/output/invalid.mp4",
+        bitrateKbps: 50,
+        videoCodec: "libx264"
+    )
+);
+
+// Test error handling for zero dimensions
+await Assert.ThrowsAsync<ArgumentException>(() =>
+    transcodeService.ResizeVideoAsync(
+        inputPath: "/input/video.mp4",
+        outputPath: "/output/invalid.mp4",
+        width: 0,
+        height: 0
+    )
+);
+
+// Test error handling for non-video input in audio extraction
+await Assert.ThrowsAsync<ArgumentException>(() =>
+    transcodeService.ExtractAudioAsync(
+        inputPath: "/input/audio.mp3",
+        outputPath: "/output/audio.mp3"
+    )
+);
+```
+
 ## ThumbnailSettingsTests
 
 The `ThumbnailSettingsTests` class provides unit tests for the `ThumbnailSettings` class, verifying that thumbnail extraction configurations work correctly with various settings including count, quality, dimensions, timestamps, and validation scenarios.
