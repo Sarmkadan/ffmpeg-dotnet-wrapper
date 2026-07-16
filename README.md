@@ -252,6 +252,75 @@ long fileSize = 157286400; // 150MB
 Console.WriteLine($"File size: {FileUtilities.GetHumanReadableFileSize(fileSize)}"); // Output: 150 MB
 ```
 
+## ProcessUtilities
+
+The `ProcessUtilities` class provides static methods for executing external processes with comprehensive output capture, timeout management, and error handling. It's designed for running command-line tools like FFmpeg and FFprobe safely, with support for both synchronous and asynchronous execution, progress tracking, and argument escaping to prevent command injection.
+
+Here is an example usage of the `ProcessUtilities` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Utilities;
+using System;
+using System.Threading.Tasks;
+
+// Check if FFmpeg is available in the system PATH
+bool ffmpegAvailable = ProcessUtilities.IsExecutableAvailable("ffmpeg");
+Console.WriteLine($"FFmpeg available: {ffmpegAvailable}");
+
+// Execute FFmpeg synchronously to get media information
+var mediaInfoResult = ProcessUtilities.ExecuteProcess(
+    "ffmpeg",
+    "-i input.mp4 -hide_banner -f null -",
+    timeout: TimeSpan.FromSeconds(30)
+);
+
+Console.WriteLine($"Exit code: {mediaInfoResult.ExitCode}");
+Console.WriteLine($"Execution time: {mediaInfoResult.ExecutionTime}");
+Console.WriteLine($"Timed out: {mediaInfoResult.TimedOut}");
+
+if (mediaInfoResult.Success)
+{
+    // Process succeeded
+    Console.WriteLine("FFmpeg executed successfully");
+    if (!string.IsNullOrEmpty(mediaInfoResult.StandardOutput))
+    {
+        // Parse output for media info
+        Console.WriteLine(mediaInfoResult.StandardOutput);
+    }
+}
+else
+{
+    // Process failed or timed out
+    Console.WriteLine("FFmpeg failed:");
+    Console.WriteLine(mediaInfoResult.StandardError);
+}
+
+// Execute FFmpeg asynchronously with cancellation support
+var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+var asyncResult = await ProcessUtilities.ExecuteProcessAsync(
+    "ffmpeg",
+    "-i input.mp4 -c:v libx264 -preset fast -b:v 5000k output.mp4",
+    workingDirectory: "/output",
+    timeout: TimeSpan.FromMinutes(10),
+    cancellationToken: cts.Token
+);
+
+Console.WriteLine($"Async execution completed in: {asyncResult.ExecutionTime}");
+Console.WriteLine($"Frames processed: {asyncResult.StandardOutput.Split('\n').Count(line => line.Contains("frame="))}");
+
+// Extract progress percentage from FFmpeg output (requires estimated total frames)
+string ffmpegOutput = asyncResult.StandardOutput;
+long estimatedFrames = 1000; // Would typically be calculated from input file
+double progressPercentage = ProcessUtilities.ExtractProgressPercentage(ffmpegOutput, estimatedFrames);
+Console.WriteLine($"Progress: {progressPercentage:F1}%");
+
+// Safely escape command-line arguments to prevent injection
+string inputFile = "/path with spaces/input.mp4";
+string outputFile = "/output/result.mp4";
+string escapedCommand = $"-i {ProcessUtilities.EscapeArgument(inputFile)} -o {ProcessUtilities.EscapeArgument(outputFile)}";
+Console.WriteLine($"Safe command: {escapedCommand}");
+```
+
 ## ExtensionMethods
 
 The `ExtensionMethods` class provides a collection of extension methods that enhance standard .NET types with additional functionality. These methods improve code readability, reduce boilerplate, and provide convenient utilities for string manipulation, collection operations, time formatting, and file path handling throughout the FFmpeg wrapper library.
