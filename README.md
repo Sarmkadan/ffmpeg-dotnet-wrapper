@@ -60,3 +60,30 @@ Console.WriteLine($"Total media files: {totalCount}");
 ```
 
 // ... (rest of README.md content remains unchanged)
+
+## RequestLoggingOptions
+
+The `RequestLoggingOptions` class provides configuration for controlling what information is logged by the `RequestLoggingMiddleware`. It allows you to customize logging behavior based on your requirements for detail level, performance, and security constraints.
+
+
+
+```csharp
+using FFmpegDotnetWrapper.Middleware;
+
+// Create default options (logs arguments and stack traces, includes performance metrics)
+var defaultOptions = new RequestLoggingOptions();
+
+// Create custom options for production (disable sensitive data logging)
+var productionOptions = new RequestLoggingOptions
+{
+    LogArguments = true,           // Log request parameters
+    LogResponseData = false,       // Don't log response payloads in production
+    LogStackTrace = true,          // Include stack traces for errors
+    MaxLogValueLength = 500,      // Truncate long values
+    LogPerformanceMetrics = true   // Track execution time and resource usage
+};
+
+// Example usage with middleware
+services.AddSingleton(productionOptions);
+services.AddScoped<RequestLoggingMiddleware>();
+```
