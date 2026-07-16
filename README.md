@@ -32,6 +32,63 @@ clonedSettings.XOffset = 20;
 clonedSettings.YOffset = 20;
 ```
 
+## MediaFile
+
+Represents a media file with metadata and validation capabilities. This class encapsulates essential properties for video and audio files including duration, resolution, codec information, and timestamps.
+
+
+
+
+```csharp
+// Create a media file representing a video file
+var videoFile = new MediaFile
+{
+    Id = Guid.NewGuid().ToString(),
+    Name = "sample_video.mp4",
+    Duration = TimeSpan.FromSeconds(183.45),
+    Width = 1920,
+    Height = 1080,
+    FrameRate = 30.0,
+    Bitrate = 8500000,
+    VideoCodec = "h264",
+    AudioCodec = "aac",
+    AudioSampleRate = 48000,
+    AudioChannels = 2,
+    CreatedAt = DateTime.UtcNow.AddDays(-7),
+    ModifiedAt = DateTime.UtcNow,
+    Description = "Sample video for testing",
+    Metadata = new Dictionary<string, string>
+    {
+        { "title", "Sample Video" },
+        { "author", "Test User" },
+        { "copyright", "© 2026" }
+    }
+};
+
+// Calculate file size in megabytes
+double fileSizeMB = videoFile.GetFileSizeInMegabytes();
+Console.WriteLine($"File size: {fileSizeMB:F2} MB");
+
+// Validate as video file
+videoFile.ValidateAsVideo();
+
+// Create a media file representing an audio file
+var audioFile = new MediaFile
+{
+    Id = Guid.NewGuid().ToString(),
+    Name = "background_music.mp3",
+    Duration = TimeSpan.FromSeconds(245.5),
+    Bitrate = 320000,
+    AudioCodec = "mp3",
+    AudioSampleRate = 44100,
+    AudioChannels = 2,
+    CreatedAt = DateTime.UtcNow.AddDays(-3)
+};
+
+// Validate as audio file
+audioFile.ValidateAsAudio();
+```
+
 ## FFmpegOperation
 
 Represents a single FFmpeg command operation with configurable inputs, outputs, arguments, and execution parameters. This class provides a fluent interface for building FFmpeg commands programmatically with validation and cloning capabilities.
