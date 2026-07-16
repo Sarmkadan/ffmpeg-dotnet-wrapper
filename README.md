@@ -1,5 +1,109 @@
 // ... (rest of README.md content remains unchanged)
 
+## IntegrationExample
+
+The `IntegrationExample` class demonstrates how to integrate the FFmpeg .NET Wrapper into ASP.NET Core applications. It shows dependency injection setup, service registration, and usage patterns in controllers and services. This example serves as a starting point for building web applications that leverage FFmpeg capabilities.
+
+Here is an example usage of the `IntegrationExample` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Configuration;
+using FFmpegDotnetWrapper.Models;
+using FFmpegDotnetWrapper.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+// Create and configure the web host
+var builder = WebApplication.CreateBuilder(args);
+
+// Configure services
+ConfigureServices(builder.Services);
+
+// Build the application
+var app = builder.Build();
+
+// Configure the HTTP request pipeline
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+
+// Map minimal API endpoints for video processing
+MapEndpoints(app);
+
+app.Run("http://localhost:5000");
+
+// Configure services including FFmpeg wrapper in the DI container
+private static void ConfigureServices(IServiceCollection services)
+{
+    // Add controllers (if using MVC)
+    services.AddControllers();
+
+    // Add logging
+    services.AddLogging(builder =>
+    {
+        builder.AddConsole();
+        builder.AddDebug();
+    });
+
+    // Configure FFmpeg wrapper with application-specific settings
+    services.AddFFmpegWrapper(options =>
+    {
+        // Set appropriate timeout for web operations (10 minutes)
+        options.DefaultTimeout = TimeSpan.FromMinutes(10);
+
+        // Enable detailed logging for debugging
+        options.EnableDetailedLogging = false;
+
+        // Configure operation caching for better performance
+        options.EnableOperationCaching = true;
+        options.MaxCachedOperations = 1000;
+    });
+
+    // Register additional services
+    services.AddSingleton<VideoProcessingService>();
+    services.AddSingleton<MediaAnalysisService>();
+}
+
+// Video trimming example using the service
+var videoProcessingService = new VideoProcessingService(ffmpegService, logger);
+var result = await videoProcessingService.ConvertForWebOptimizationAsync(
+    inputFile: @"/videos/input.mp4",
+    outputFile: @"/videos/web-optimized.mp4"
+);
+
+if (result.IsSuccess)
+{
+    Console.WriteLine($"Web optimization completed: {result.OutputMedia?.FileSize} bytes");
+}
+
+// Create thumbnail example
+var thumbnailResult = await videoProcessingService.CreateThumbnailAsync(
+    inputFile: @"/videos/input.mp4",
+    outputFile: @"/thumbnails/preview.jpg",
+    timestamp: TimeSpan.FromSeconds(30)
+);
+
+if (thumbnailResult.IsSuccess)
+{
+    Console.WriteLine("Thumbnail created successfully");
+}
+
+// Media analysis example
+var mediaAnalysisService = new MediaAnalysisService(ffmpegService, logger);
+var mediaInfo = await mediaAnalysisService.GetMediaInfoAsync(@"/videos/input.mp4");
+
+Console.WriteLine($"Duration: {mediaInfo.Duration.TotalSeconds}s");
+Console.WriteLine($"Resolution: {mediaInfo.Width}x{mediaInfo.Height}");
+Console.WriteLine($"Video codec: {mediaInfo.VideoCodec}");
+```
+
 ## ICacheService
 
 The `ICacheService` interface provides an in-memory caching mechanism for storing frequently accessed data like media metadata and operation results. It supports time-based expiration, automatic cleanup of expired entries, and size-based eviction using an LRU (Least Recently Used) policy. This helps reduce unnecessary file system access and expensive FFmpeg probing operations.
