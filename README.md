@@ -963,6 +963,87 @@ Assert.True(FileUtilities.AreFormatsCompatible(@"/video1.mp4", @"/video2.mp4"));
 Assert.False(FileUtilities.AreFormatsCompatible(@"/video.mp4", @"/video.mkv"));
 ```
 
+## SubtitleSettingsTests
+
+The `SubtitleSettingsTests` class provides unit tests for the `SubtitleSettings` class, verifying that subtitle configuration validation works correctly with various settings including file paths, character encoding, font properties, language specification, and validation scenarios.
+
+Here is an example usage of the `SubtitleSettingsTests` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Models;
+using FFmpegDotnetWrapper.Exceptions;
+using FluentAssertions;
+
+// Create a new SubtitleSettings instance with default values
+var settings = new SubtitleSettings();
+
+// Verify default values
+settings.HardEmbed.Should().BeFalse();
+settings.CharEncoding.Should().Be("UTF-8");
+settings.FontName.Should().Be("Arial");
+settings.FontSize.Should().Be(24);
+settings.SubtitleStreamIndex.Should().Be(0);
+settings.Language.Should().BeNull();
+
+// Set subtitle file path (must exist and have supported extension like .srt or .ass)
+var subtitlePath = @"/subtitles/english.srt";
+settings.SubtitlePath = subtitlePath;
+settings.SubtitlePath.Should().Be(Path.GetFullPath(subtitlePath));
+
+// Configure subtitle embedding settings
+var settingsWithEmbedding = new SubtitleSettings
+{
+    SubtitlePath = subtitlePath,
+    HardEmbed = true,           // Embed subtitles directly into video stream
+    CharEncoding = "UTF-8",      // Character encoding for subtitle file
+    FontName = "Arial",          // Font family to use
+    FontSize = 24,              // Font size in pixels
+    Language = "en",             // Language code
+    SubtitleStreamIndex = 0      // Stream index for embedded subtitles
+};
+
+// Validate settings before use (throws if invalid)
+settingsWithEmbedding.Validate(); // No exception thrown for valid settings
+
+// Test validation with invalid font size (too small)
+var invalidSettings = new SubtitleSettings
+{
+    SubtitlePath = subtitlePath,
+    FontSize = 5  // Below minimum of 8
+};
+
+var act = () => invalidSettings.Validate();
+act.Should().Throw<InvalidOperationConfigurationException>()
+    .WithMessage("*FontSize*");
+
+// Test validation with non-existent file
+var nonexistentSettings = new SubtitleSettings();
+var fileAct = () => nonexistentSettings.SubtitlePath = @"/nonexistent/subtitles.srt";
+fileAct.Should().Throw<InvalidOperationConfigurationException>()
+    .WithMessage("*does not exist*");
+
+// Clone settings to create an independent copy
+var originalSettings = new SubtitleSettings
+{
+    SubtitlePath = subtitlePath,
+    HardEmbed = true,
+    FontSize = 30,
+    Language = "fr"
+};
+
+var clonedSettings = originalSettings.Clone();
+
+// Verify clone has same values
+clonedSettings.SubtitlePath.Should().Be(originalSettings.SubtitlePath);
+clonedSettings.HardEmbed.Should().Be(originalSettings.HardEmbed);
+clonedSettings.FontSize.Should().Be(originalSettings.FontSize);
+clonedSettings.Language.Should().Be(originalSettings.Language);
+
+// Mutations on clone should not affect original
+clonedSettings.FontSize = 20;
+originalSettings.FontSize.Should().Be(30);
+```
+
 ## FFmpegOperationTests
 
 The `FFmpegOperationTests` class provides unit tests for FFmpeg operations including command line building, conversion results, and service mocking. It verifies that FFmpeg operations can be constructed with input files and arguments, cloned independently, and that conversion results can be marked as successful or failed with appropriate metrics and error messages.
