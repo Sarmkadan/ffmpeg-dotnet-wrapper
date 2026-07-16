@@ -963,6 +963,78 @@ Assert.True(FileUtilities.AreFormatsCompatible(@"/video1.mp4", @"/video2.mp4"));
 Assert.False(FileUtilities.AreFormatsCompatible(@"/video.mp4", @"/video.mkv"));
 ```
 
+## FFmpegOperationTests
+
+The `FFmpegOperationTests` class provides unit tests for FFmpeg operations including command line building, conversion results, and service mocking. It verifies that FFmpeg operations can be constructed with input files and arguments, cloned independently, and that conversion results can be marked as successful or failed with appropriate metrics and error messages.
+
+Here is an example usage of the `FFmpegOperationTests` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Models;
+using FFmpegDotnetWrapper.Services;
+using FluentAssertions;
+
+// Create an FFmpeg operation for transcoding
+var operation = new FFmpegOperation
+{
+    Name = "Video transcoding",
+    OutputFile = "/output/transcoded.mp4",
+    Type = FFmpegOperationType.Transcode
+};
+
+// Add input files to the operation
+operation.AddInputFile("/input/video1.mp4");
+operation.AddInputFile("/input/video2.mp4");
+
+// Add additional FFmpeg arguments
+operation.AddArguments("-c:v", "libx264");
+operation.AddArguments("-crf", "23");
+operation.AddArguments("-preset", "fast");
+
+// Build the complete FFmpeg command line
+var commandLine = operation.BuildCommandLine();
+Console.WriteLine(commandLine);
+/* Output:
+ffmpeg -i "/input/video1.mp4" -i "/input/video2.mp4" -c:v libx264 -crf 23 -preset fast "/output/transcoded.mp4"
+*/
+
+// Clone the operation to create an independent copy
+var clonedOperation = operation.Clone();
+clonedOperation.AddInputFile("/input/video3.mp4");
+
+// Verify original operation is unchanged
+Console.WriteLine($"Original inputs: {operation.InputFiles.Count}"); // Output: Original inputs: 2
+Console.WriteLine($"Cloned inputs: {clonedOperation.InputFiles.Count}"); // Output: Cloned inputs: 3
+
+// Create a conversion result and mark it as successful
+var result = new ConversionResult();
+result.MarkAsSuccess("/output/result.mp4");
+
+// Set metrics on the result
+result.SetMetric("bitrate", 5000);
+result.SetMetric("fps", 30);
+
+// Retrieve metrics
+var bitrate = result.GetMetric<int>("bitrate");
+var fps = result.GetMetric<int>("fps");
+Console.WriteLine($"Bitrate: {bitrate} kbps, FPS: {fps}"); // Output: Bitrate: 5000 kbps, FPS: 30
+
+// Mark a result as failed with an error message
+var failedResult = new ConversionResult();
+failedResult.MarkAsFailed("FFmpeg exited with code 1: invalid codec");
+
+// Generate a summary for logging
+var summary = failedResult.GenerateSummary();
+Console.WriteLine(summary);
+/* Output:
+[Failed] FFmpeg exited with code 1: invalid codec
+*/
+
+// Calculate size reduction percentage (returns null if not successful)
+var sizeReduction = result.GetSizeReductionPercentage(10_000_000); // 10MB input
+Console.WriteLine($"Size reduction: {sizeReduction}%"); // Output depends on actual file sizes
+```
+
 ## FormattingUtilities
 
 The `FormattingUtilities` class provides a collection of static formatting methods for consistent string representation of FFmpeg-related data types. It handles time formatting, byte size formatting, bitrate formatting, resolution formatting, and various string sanitization utilities used throughout the library for logging, CLI output, and API responses.
