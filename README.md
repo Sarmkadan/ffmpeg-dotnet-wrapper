@@ -339,3 +339,122 @@ foreach (var result in batchResults)
     }
 }
 ```
+
+## BatchOperationService
+
+The `BatchOperationService` class provides batch processing capabilities for handling multiple media files concurrently. It supports transcoding multiple files, analyzing batches of media files, and executing custom processing functions across multiple files with configurable concurrency levels. The service tracks operation progress, success rates, and provides detailed results for each processed file.
+
+```csharp
+using FFmpegDotnetWrapper.Services;
+using FFmpegDotnetWrapper.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+// Configure dependency injection
+services.AddLogging(configure => configure.AddConsole());
+services.AddSingleton<IFFmpegService, FFmpegService>();
+services.AddSingleton<BatchOperationService>();
+
+// Resolve the service
+var batchService = services.BuildServiceProvider().GetRequiredService<BatchOperationService>();
+
+// Example 1: Batch transcode multiple video files
+var inputFiles = new[] {
+    "/path/to/video1.mp4",
+    "/path/to/video2.mp4",
+    "/path/to/video3.mp4"
+};
+
+var transcodeSettings = new TranscodeSettings
+{
+    VideoCodec = "libx264",
+    AudioCodec = "aac",
+    VideoBitrate = "4000k",
+    AudioBitrate = "192k",
+    FrameRate = 30,
+    Preset = "fast"
+};
+
+var transcodeResult = await batchService.TranscodeMultipleAsync(
+    inputFiles,
+    outputDirectory: "/path/to/output/transcoded/",
+    settings: transcodeSettings,
+    maxConcurrency: 3
+);
+
+Console.WriteLine($"Transcode batch completed: {transcodeResult.SuccessfulCount}/{transcodeResult.TotalFiles} successful");
+Console.WriteLine($"Success rate: {transcodeResult.GetSuccessRate():F2}%");
+Console.WriteLine($"Duration: {transcodeResult.GetDuration().TotalSeconds}s");
+
+if (transcodeResult.FailedCount > 0)
+{
+    Console.WriteLine($"Failed files:");
+    foreach (var failedResult in transcodeResult.Results.Where(r => !r.IsSuccess))
+    {
+        Console.WriteLine($"  - {failedResult.InputFile}: {failedResult.ErrorMessage}");
+    }
+}
+
+// Example 2: Batch analyze multiple media files
+var analyzeResult = await batchService.AnalyzeMultipleAsync(
+    new[] {
+        "/path/to/video1.mp4",
+        "/path/to/audio1.mp3",
+        "/path/to/video2.mp4"
+    },
+    maxConcurrency: 4
+);
+
+Console.WriteLine($"Analysis batch completed: {analyzeResult.AnalyzedFiles.Count}/{analyzeResult.TotalFiles} files analyzed");
+Console.WriteLine($"Duration: {analyzeResult.GetDuration().TotalSeconds}s");
+
+foreach (var mediaFile in analyzeResult.AnalyzedFiles)
+{
+    Console.WriteLine($"File: {mediaFile.Name}");
+    Console.WriteLine($"  Duration: {mediaFile.Duration}");
+    Console.WriteLine($"  Format: {mediaFile.Format}");
+    Console.WriteLine($"  Resolution: {mediaFile.Width}x{mediaFile.Height}");
+}
+
+// Example 3: Batch processing with custom function
+var customResult = await batchService.ProcessWithCustomFunctionAsync(
+    inputFiles,
+    outputDirectory: "/path/to/output/custom/",
+    processFunc: async (inputFile, outputFile, cancellationToken) =>
+    {
+        // Custom processing logic
+        var mediaInfo = await ffmpegService.AnalyzeMediaAsync(inputFile, cancellationToken);
+        
+        if (mediaInfo.Duration.TotalMinutes > 5)
+        {
+            return new ConversionResult
+            {
+                InputFile = inputFile,
+                OutputFile = outputFile,
+                IsSuccess = true,
+                Message = "File processed successfully"
+            };
+        }
+        
+        return new ConversionResult
+        {
+            InputFile = inputFile,
+            OutputFile = outputFile,
+            IsSuccess = false,
+            ErrorMessage = "Video too long for custom processing"
+        };
+    },
+    maxConcurrency: 2
+);
+
+Console.WriteLine($"Custom batch completed: {customResult.SuccessfulCount}/{customResult.TotalFiles} successful");
+
+// Access batch operation properties
+Console.WriteLine($"Operation type: {transcodeResult.OperationType}");
+Console.WriteLine($"Total files: {transcodeResult.TotalFiles}");
+Console.WriteLine($"Successful: {transcodeResult.SuccessfulCount}");
+Console.WriteLine($"Failed: {transcodeResult.FailedCount}");
+Console.WriteLine($"Cancelled: {transcodeResult.IsCancelled}");
+Console.WriteLine($"Created at: {transcodeResult.CreatedAt}");
+Console.WriteLine($"Completed at: {transcodeResult.CompletedAt}");
+```
