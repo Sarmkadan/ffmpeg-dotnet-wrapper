@@ -504,6 +504,71 @@ if (ValidationUtilities.IsValidOpacity(0.75))
 }
 ```
 
+## ConcatenationBuilderTests
+
+The `ConcatenationBuilderTests` class provides unit tests for the `ConcatenationBuilder` class, verifying that video concatenation operations work correctly with various configurations including segment management, transitions, trimming, and error handling scenarios.
+
+Here is an example usage of the `ConcatenationBuilderTests` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Builders;
+using FFmpegDotnetWrapper.Models;
+using Xunit;
+
+// Test basic segment addition and ordering
+var builder = new ConcatenationBuilder();
+builder.Add("video1.mp4");
+builder.Add("video2.mp4");
+builder.Add("video3.mp4");
+
+// Verify segments were added in correct order
+Assert.Equal(3, builder.Segments.Count);
+Assert.Equal("video1.mp4", builder.Segments[0].Path);
+Assert.Equal("video2.mp4", builder.Segments[1].Path);
+Assert.Equal("video3.mp4", builder.Segments[2].Path);
+
+// Test segment insertion at specific position
+builder.Insert(1, "video1_5.mp4");
+Assert.Equal(4, builder.Segments.Count);
+Assert.Equal("video1_5.mp4", builder.Segments[1].Path);
+
+// Test segment removal
+builder.Remove("video2.mp4");
+Assert.Equal(3, builder.Segments.Count);
+Assert.DoesNotContain(s => s.Path == "video2.mp4", builder.Segments);
+
+// Test adding segments with trim parameters
+builder.Add("long_video.mp4", trimStart: TimeSpan.FromSeconds(10), trimEnd: TimeSpan.FromSeconds(60));
+Assert.Single(builder.Segments.Where(s => s.TrimStart.HasValue && s.TrimEnd.HasValue));
+
+// Test adding transition between segments
+builder.WithTransition(TimeSpan.FromSeconds(2.5));
+Assert.Equal(TimeSpan.FromSeconds(2.5), builder.Transition.Duration);
+
+// Test fluent API chaining
+var settings = new ConcatenationSettings
+{
+    OutputPath = "/output/merged.mp4",
+    VideoCodec = "libx264",
+    AudioCodec = "aac"
+};
+
+var result = builder
+    .WithTransition(TimeSpan.FromSeconds(1.5))
+    .WithReencode()
+    .Build(settings);
+
+Assert.Equal("/output/merged.mp4", result.OutputPath);
+Assert.Equal("libx264", result.VideoCodec);
+Assert.Equal("aac", result.AudioCodec);
+Assert.True(result.TranscodeOnMerge);
+
+// Test reset functionality
+builder.Reset();
+Assert.Empty(builder.Segments);
+Assert.Null(builder.Transition);
+```
+
 ## FormattingUtilities
 
 The `FormattingUtilities` class provides a collection of static formatting methods for consistent string representation of FFmpeg-related data types. It handles time formatting, byte size formatting, bitrate formatting, resolution formatting, and various string sanitization utilities used throughout the library for logging, CLI output, and API responses.
