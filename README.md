@@ -171,4 +171,49 @@ clonedSettings.Width = 640;
 clonedSettings.Height = 360;
 ```
 
+## StreamingProfile
+
+`StreamingProfile` describes a single quality rendition in an adaptive‑bitrate ladder. It is immutable, thread‑safe, and provides helper properties such as the resolution string and total bitrate.
+
+```csharp
+using FFmpegDotnetWrapper.Models;
+
+// Create a custom profile
+var customProfile = new StreamingProfile(
+    Name: "720p-custom",
+    Width: 1280,
+    Height: 720,
+    VideoBitrateKbps: 3000,
+    AudioBitrateKbps: 128,
+    FrameRate: 30);
+
+// Use one of the predefined profiles
+var hdProfile = StreamingProfile.HD;
+
+// Access helper properties
+Console.WriteLine($"HD resolution: {hdProfile.Resolution}");
+Console.WriteLine($"HD total bitrate: {hdProfile.TotalBitrateKbps} kbps");
+
+// Enumerate the default ladder
+foreach (var profile in StreamingProfile.DefaultLadder)
+{
+    Console.WriteLine($"{profile.Name}: {profile.Resolution} @ {profile.VideoBitrateKbps} kbps video");
+}
+```
+
+The `StreamingProfile` record is used in `StreamingPipelineSettings.Profiles` to define which renditions the pipeline should generate.
+
+```csharp
+var pipelineSettings = new StreamingPipelineSettings
+{
+    InputFilePath = "/videos/source.mp4",
+    OutputDirectory = "/videos/output",
+    Profiles = new List<StreamingProfile> { StreamingProfile.FullHD, StreamingProfile.HD, StreamingProfile.SD },
+    EnableHardwareAcceleration = true,
+    EncodeProfilesConcurrently = false
+};
+
+pipelineSettings.Validate();
+```
+
 // ... (rest of README.md content remains unchanged)
