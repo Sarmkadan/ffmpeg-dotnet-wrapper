@@ -263,6 +263,93 @@ Console.WriteLine(1024L.FormatAsSize()); // Output: 1.00 KB
 Console.WriteLine(5000.FormatAsBitrate()); // Output: 5000 kbps
 ```
 
+## FormattingUtilities
+
+The `FormattingUtilities` class provides a collection of static formatting methods for consistent string representation of FFmpeg-related data types. It handles time formatting, byte size formatting, bitrate formatting, resolution formatting, and various string sanitization utilities used throughout the library for logging, CLI output, and API responses.
+
+Here is an example usage of the `FormattingUtilities` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Utilities;
+using System;
+
+// Format durations for logging and progress reporting
+var duration = TimeSpan.FromSeconds(3725); // 1 hour, 2 minutes, 5 seconds
+Console.WriteLine(FormattingUtilities.FormatDuration(duration)); // Output: 01:02:05
+
+var shortDuration = TimeSpan.FromSeconds(95); // Less than 1 hour
+Console.WriteLine(FormattingUtilities.FormatDuration(shortDuration)); // Output: 00:01:35
+
+// Format byte sizes for file size display
+Console.WriteLine(FormattingUtilities.FormatBytes(1024)); // Output: 1 KB
+Console.WriteLine(FormattingUtilities.FormatBytes(1572864)); // Output: 1.5 MB
+Console.WriteLine(FormattingUtilities.FormatBytes(2147483648)); // Output: 2 GB
+
+// Format bitrates for encoding settings
+Console.WriteLine(FormattingUtilities.FormatBitrate(5000)); // Output: 5000 Kbps
+Console.WriteLine(FormattingUtilities.FormatBitrate(3000000)); // Output: 3 Mbps
+Console.WriteLine(FormattingUtilities.FormatBitrate(2500000000)); // Output: 2.5 Gbps
+
+// Format FFmpeg commands for logging (automatically masks file paths)
+var ffmpegCommand = FormattingUtilities.FormatFFmpegCommand(
+    "ffmpeg",
+    "-i /home/user/input.mp4 -c:v libx264 -preset fast -b:v 5000k /output/output.mp4"
+);
+Console.WriteLine(ffmpegCommand);
+/* Output:
+ffmpeg \
+ -i <input.mp4> \
+ -c:v libx264 \
+ -preset fast \
+ -b:v 5000k \
+ <output.mp4>
+*/
+
+// Parse FFmpeg progress output for display
+var progressOutput = @"frame=  123: fps= 29.98 q=28.0 size=    123kB time=00:00:04.12 bitrate= 243kbits/s speed=1.21x"';
+Console.WriteLine(FormattingUtilities.ExtractProgressSummary(progressOutput));
+// Output: Frame: 123 | Speed: 1.21x | FPS: 29.98 | Bitrate: 243kbits/s
+
+// Format progress time display (elapsed / estimated)
+var elapsed = TimeSpan.FromSeconds(125);
+var estimated = TimeSpan.FromSeconds(500);
+Console.WriteLine(FormattingUtilities.FormatProgressTime(elapsed, estimated));
+// Output: 00:02:05 / 00:08:20
+
+// Calculate and format ETA
+var progressPercentage = 25.0; // 25% complete
+Console.WriteLine(FormattingUtilities.FormatETA(elapsed, progressPercentage));
+// Output: ~00:06:15 remaining
+
+// Format timestamps for logging
+Console.WriteLine(FormattingUtilities.FormatTimestamp(DateTime.Now));
+// Output: 2026-07-16 14:30:45.123
+
+// Format resolution for video metadata
+Console.WriteLine(FormattingUtilities.FormatResolution(1920, 1080)); // Output: 1920x1080
+Console.WriteLine(FormattingUtilities.FormatResolution(1280, 720)); // Output: 1280x720
+
+// Format percentages for progress display
+Console.WriteLine(FormattingUtilities.FormatPercentage(25.5)); // Output: 25.5%
+Console.WriteLine(FormattingUtilities.FormatPercentage(99.99)); // Output: 100.0%
+
+// Truncate long strings for display
+var longPath = @"/home/user/videos/very/long/path/with/many/nested/directories/file-name-that-is-quite-long.mp4";
+Console.WriteLine(FormattingUtilities.TruncateString(longPath, 60));
+// Output: /home/user/videos/very/long/path/with/many/n...mp4
+
+// Sanitize strings for safe display
+var unsafeString = "Hello World\tLine1\nLine2";
+Console.WriteLine(FormattingUtilities.SanitizeForDisplay(unsafeString));
+// Output: HelloWorld
+Line1
+Line2
+
+// Convert kebab-case to Title Case
+Console.WriteLine(FormattingUtilities.TitleCase("output-format")); // Output: Output Format
+Console.WriteLine(FormattingUtilities.TitleCase("input_file-path")); // Output: Input File Path
+```
+
 ## FFmpegController
 
 The `FFmpegController` class provides a REST API for FFmpeg transcoding, trimming, merging, and watermarking operations. It offers a fluent API for video transformation workflows with request validation and error handling.
