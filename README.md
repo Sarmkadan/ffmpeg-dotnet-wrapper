@@ -160,6 +160,46 @@ foreach (var operationStat in allOperationStats)
 }
 ```
 
+## ProgressReport
+
+The `ProgressReport` class provides detailed progress tracking information for FFmpeg operations, including completion percentage, items processed, timing metrics, throughput rates, and status messages. It is used by the `ProgressTracker` to report operation status during video processing workflows.
+
+Here is an example usage of the `ProgressReport` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Utilities;
+using System;
+
+// Simulate a video processing operation with 1000 frames
+var progressTracker = new ProgressTracker(totalItems: 1000);
+
+// Simulate processing 250 frames (25% complete)
+for (int i = 0; i < 250; i++)
+{
+    progressTracker.ReportItemProgress($"Processing frame {i + 1}");
+}
+
+// Get the current progress report
+var progressReport = progressTracker.GetProgressReport();
+
+Console.WriteLine($"Progress: {progressReport.ProgressPercentage:F1}%");
+Console.WriteLine($"Items completed: {progressReport.ItemsCompleted}/{progressReport.TotalItems}");
+Console.WriteLine($"Status: {progressReport.StatusMessage}");
+Console.WriteLine($"Elapsed time: {progressReport.ElapsedTime}");
+Console.WriteLine($"ETA: {progressReport.EstimatedTimeRemaining}");
+Console.WriteLine($"Throughput: {progressReport.ThroughputItemsPerSecond:F2} items/sec");
+Console.WriteLine($"Throughput: {progressReport.ThroughputBytesPerSecond / 1024 / 1024:F2} MB/sec");
+
+// Reset for a new operation
+progressTracker.Reset(totalItems: 500);
+
+// Alternative: track by bytes processed
+var byteProgressTracker = new ProgressTracker(totalBytes: 1000000000); // 1GB
+byteProgressTracker.ReportBytesProgress(250000000, "Processing 250MB"); // 250MB
+var byteProgressReport = byteProgressTracker.GetProgressReport();
+Console.WriteLine($"Bytes processed: {byteProgressReport.ThroughputBytesPerSecond / 1024 / 1024:F2} MB/sec");
+```
+
 ## ExtensionMethods
 
 The `ExtensionMethods` class provides a collection of extension methods that enhance standard .NET types with additional functionality. These methods improve code readability, reduce boilerplate, and provide convenient utilities for string manipulation, collection operations, time formatting, and file path handling throughout the FFmpeg wrapper library.
