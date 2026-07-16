@@ -1044,6 +1044,100 @@ clonedSettings.FontSize = 20;
 originalSettings.FontSize.Should().Be(30);
 ```
 
+## TranscodeSettingsTests
+
+The `TranscodeSettingsTests` class provides unit tests for the `TranscodeSettings` class, verifying that transcoding configuration validation works correctly with various settings including video/audio bitrates, frame rates, dimensions, codecs, containers, and validation scenarios.
+
+Here is an example usage of the `TranscodeSettingsTests` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Models;
+using FFmpegDotnetWrapper.Constants;
+using FFmpegDotnetWrapper.Exceptions;
+using FluentAssertions;
+
+// Create a new TranscodeSettings instance with default values
+var settings = new TranscodeSettings();
+
+// Verify default values
+settings.VideoCodec.Should().Be(VideoCodec.H264);
+settings.AudioCodec.Should().Be(AudioCodec.AAC);
+settings.Container.Should().Be(ContainerFormat.MP4);
+settings.VideoBitrate.Should().Be(FFmpegConstants.DefaultBitrate);
+settings.AudioBitrate.Should().Be(FFmpegConstants.DefaultAudioBitrate);
+settings.FrameRate.Should().Be(FFmpegConstants.DefaultFrameRate);
+settings.Quality.Should().Be(QualityPreset.Medium);
+settings.EnableAutoScale.Should().BeTrue();
+settings.PreserveAspectRatio.Should().BeTrue();
+settings.TwoPass.Should().BeFalse();
+settings.HardwareAcceleration.Should().Be(HwAccel.None);
+
+// Configure transcoding settings for H.264 to MP4
+var h264Settings = new TranscodeSettings
+{
+    VideoCodec = VideoCodec.H264,
+    AudioCodec = AudioCodec.AAC,
+    Container = ContainerFormat.MP4,
+    VideoBitrate = 5000, // 5000 kbps
+    AudioBitrate = 192, // 192 kbps
+    FrameRate = 30,
+    Width = 1920,
+    Height = 1080,
+    Quality = QualityPreset.High,
+    EnableAutoScale = true,
+    PreserveAspectRatio = true,
+    TwoPass = false,
+    HardwareAcceleration = HwAccel.NVENC,
+    CustomFFmpegArgs = "-movflags +faststart"
+};
+
+// Validate settings before use (throws if invalid)
+h264Settings.Validate(); // No exception thrown for valid settings
+
+// Test validation with invalid video bitrate (too low)
+var invalidBitrateSettings = new TranscodeSettings { VideoBitrate = 50 }; // Below minimum
+var bitrateAct = () => invalidBitrateSettings.Validate();
+bitrateAct.Should().Throw<InvalidOperationConfigurationException>()
+    .WithMessage("*bitrate*");
+
+// Test validation with incompatible codec/container combination
+var invalidCodecSettings = new TranscodeSettings
+{
+    VideoCodec = VideoCodec.H264,
+    Container = ContainerFormat.WebM // H.264 not supported in WebM
+};
+var codecAct = () => invalidCodecSettings.Validate();
+codecAct.Should().Throw<InvalidOperationConfigurationException>()
+    .WithMessage("*not supported*");
+
+// Test validation with invalid dimensions (zero width)
+var invalidDimensionsSettings = new TranscodeSettings { Width = 0 };
+var dimensionsAct = () => invalidDimensionsSettings.Validate();
+dimensionsAct.Should().Throw<InvalidOperationConfigurationException>()
+    .WithMessage("*too small*");
+
+// Clone settings to create an independent copy
+var originalSettings = new TranscodeSettings
+{
+    VideoCodec = VideoCodec.VP9,
+    VideoBitrate = 8000,
+    Width = 1280,
+    TwoPass = true
+};
+
+var clonedSettings = originalSettings.Clone();
+
+// Verify clone has same values
+clonedSettings.VideoCodec.Should().Be(VideoCodec.VP9);
+clonedSettings.VideoBitrate.Should().Be(8000);
+clonedSettings.Width.Should().Be(1280);
+clonedSettings.TwoPass.Should().BeTrue();
+
+// Mutations on clone should not affect original
+clonedSettings.VideoBitrate = 6000;
+originalSettings.VideoBitrate.Should().Be(8000);
+```
+
 ## FFmpegOperationTests
 
 The `FFmpegOperationTests` class provides unit tests for FFmpeg operations including command line building, conversion results, and service mocking. It verifies that FFmpeg operations can be constructed with input files and arguments, cloned independently, and that conversion results can be marked as successful or failed with appropriate metrics and error messages.
