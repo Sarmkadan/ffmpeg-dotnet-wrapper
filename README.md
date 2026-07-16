@@ -315,6 +315,126 @@ Console.WriteLine(1024L.FormatAsSize()); // Output: 1.00 KB
 Console.WriteLine(5000.FormatAsBitrate()); // Output: 5000 kbps
 ```
 
+## ValidationUtilities
+
+The `ValidationUtilities` class provides static methods for validating FFmpeg-related parameters such as bitrates, codecs, output formats, resolutions, frame rates, and various media settings. It includes validation for video files, time parsing/formatting, quality settings, watermark positioning, and aspect ratios, ensuring that all parameters passed to FFmpeg operations are valid and compatible.
+
+Here is an example usage of the `ValidationUtilities` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Utilities;
+using System;
+
+// Validate video file paths and formats
+string inputFile = @"/home/user/videos/input.mp4";
+string outputFile = @"/home/user/videos/output/processed.mp4";
+
+if (ValidationUtilities.IsValidVideo(inputFile))
+{
+    Console.WriteLine($"Valid video file: {inputFile}");
+    Console.WriteLine($"Video duration: {ValidationUtilities.ParseTimeToSeconds(ValidationUtilities.GetVideoDuration(inputFile))} seconds");
+}
+
+// Validate FFmpeg codecs
+string videoCodec = "libx264";
+string audioCodec = "aac";
+
+if (ValidationUtilities.IsValidCodec(videoCodec))
+{
+    Console.WriteLine($"Valid video codec: {videoCodec}");
+}
+
+if (ValidationUtilities.IsValidCodec(audioCodec))
+{
+    Console.WriteLine($"Valid audio codec: {audioCodec}");
+}
+
+// Validate output format
+string outputFormat = "mp4";
+if (ValidationUtilities.IsValidOutputFormat(outputFormat))
+{
+    Console.WriteLine($"Valid output format: {outputFormat}");
+}
+
+// Validate resolution
+int width = 1920;
+int height = 1080;
+if (ValidationUtilities.IsValidResolution(width, height))
+{
+    Console.WriteLine($"Valid resolution: {ValidationUtilities.FormatResolution(width, height)}");
+}
+
+// Validate frame rate
+if (ValidationUtilities.IsValidFrameRate(30.0))
+{
+    Console.WriteLine("Valid frame rate: 30 fps");
+}
+
+// Validate bitrate
+if (ValidationUtilities.IsValidBitrate(5000))
+{
+    Console.WriteLine("Valid bitrate: 5000 kbps");
+}
+
+// Validate quality setting
+if (ValidationUtilities.IsValidQualitySetting(23))
+{
+    Console.WriteLine("Valid quality setting: 23");
+}
+
+// Validate aspect ratio
+if (ValidationUtilities.IsValidAspectRatio(16, 9))
+{
+    Console.WriteLine("Valid aspect ratio: 16:9");
+}
+
+// Validate and parse time strings
+string timeString = "00:02:30";
+double? seconds = ValidationUtilities.ParseTimeToSeconds(timeString);
+if (seconds.HasValue)
+{
+    Console.WriteLine($"Parsed time: {timeString} -> {seconds.Value} seconds");
+    Console.WriteLine($"Formatted back: {ValidationUtilities.FormatSecondsToTime(seconds.Value)}");
+}
+
+// Validate trim times
+string startTime = "00:00:10";
+string endTime = "00:01:45";
+if (ValidationUtilities.ValidateTrimTimes(startTime, endTime))
+{
+    Console.WriteLine($"Valid trim range: {startTime} to {endTime}");
+}
+
+// Get supported codecs and formats
+Console.WriteLine("Supported video codecs:");
+foreach (var codec in ValidationUtilities.GetSupportedCodecs())
+{
+    Console.WriteLine($"  - {codec}");
+}
+
+Console.WriteLine("\nSupported output formats:");
+foreach (var format in ValidationUtilities.GetSupportedFormats())
+{
+    Console.WriteLine($"  - {format}");
+}
+
+// Validate watermark settings
+if (ValidationUtilities.IsValidWatermarkPosition(10, 10))
+{
+    Console.WriteLine("Valid watermark position: (10, 10)");
+}
+
+if (ValidationUtilities.IsValidWatermarkScale(0.5))
+{
+    Console.WriteLine("Valid watermark scale: 0.5");
+}
+
+if (ValidationUtilities.IsValidOpacity(0.75))
+{
+    Console.WriteLine("Valid opacity: 0.75");
+}
+```
+
 ## FormattingUtilities
 
 The `FormattingUtilities` class provides a collection of static formatting methods for consistent string representation of FFmpeg-related data types. It handles time formatting, byte size formatting, bitrate formatting, resolution formatting, and various string sanitization utilities used throughout the library for logging, CLI output, and API responses.
