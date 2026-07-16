@@ -51,6 +51,53 @@ var currentCount = cacheService.Count;
 Console.WriteLine($"Current cache entries: {currentCount}");
 ```
 
+## StreamingPipelineMetrics
+
+The `StreamingPipelineMetrics` class provides real-time monitoring and analytics for streaming pipeline performance, tracking segment production, bitrate switches, pipeline completion/failure states, and comprehensive profile-based metrics breakdown. It enables detailed performance analysis and debugging of FFmpeg transcoding workflows by collecting and exporting operational data.
+
+Here is an example usage of the `StreamingPipelineMetrics` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Monitoring;
+
+// Create a metrics tracker for a specific profile
+var metrics = new StreamingPipelineMetrics("hls-transcode-1080p");
+
+// Record segment production events
+metrics.RecordSegmentProduced("segment_001.ts", TimeSpan.FromSeconds(2.45));
+metrics.RecordSegmentProduced("segment_002.ts", TimeSpan.FromSeconds(2.51));
+
+// Record bitrate switches during encoding
+metrics.RecordBitrateSwitch("1080p", 5000);  // kbps
+metrics.RecordBitrateSwitch("720p", 3000);   // kbps
+metrics.RecordBitrateSwitch("480p", 1500);   // kbps
+
+// Record pipeline completion
+metrics.RecordPipelineCompleted(TimeSpan.FromSeconds(125.3));
+
+// Get detailed profile breakdown
+var profileMetrics = metrics.GetProfileBreakdown();
+foreach (var profile in profileMetrics)
+{
+    Console.WriteLine($"Profile {profile.Key}: {profile.Value.SegmentsProduced} segments, " +
+                     $"Avg duration: {profile.Value.AverageSegmentDuration.TotalSeconds:F2}s");
+}
+
+// Generate summary report
+var summary = metrics.GetSummaryReport();
+Console.WriteLine(summary);
+
+// Export metrics to CSV for external analysis
+var csvData = metrics.ExportProfilesAsCsv();
+File.WriteAllText("pipeline_metrics.csv", csvData);
+
+// Reset metrics for a new encoding session
+metrics.Reset();
+
+// Create a new metrics instance with a different profile
+var backupMetrics = new StreamingPipelineMetrics("backup-stream-720p");
+```
+
 ## FFmpegController
 
 The `FFmpegController` class provides a REST API for FFmpeg transcoding, trimming, merging, and watermarking operations. It offers a fluent API for video transformation workflows with request validation and error handling.
