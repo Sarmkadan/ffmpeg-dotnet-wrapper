@@ -200,6 +200,58 @@ var byteProgressReport = byteProgressTracker.GetProgressReport();
 Console.WriteLine($"Bytes processed: {byteProgressReport.ThroughputBytesPerSecond / 1024 / 1024:F2} MB/sec");
 ```
 
+## FileUtilities
+
+The `FileUtilities` class provides a collection of static methods for safe file system operations, including path validation, file accessibility checks, temporary file management, and format compatibility verification. It includes comprehensive security checks to prevent directory traversal attacks and handles edge cases like locked files, invalid paths, and permission issues gracefully.
+
+Here is an example usage of the `FileUtilities` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Utilities;
+using System;
+
+// Validate file paths before processing
+string inputPath = @"/home/user/videos/input.mp4";
+string outputPath = @"/home/user/videos/output/processed.mp4";
+
+if (FileUtilities.IsValidInputFile(inputPath))
+{
+    Console.WriteLine($"Input file exists and is accessible: {inputPath}");
+    Console.WriteLine($"File size: {FileUtilities.GetHumanReadableFileSize(FileUtilities.GetFileSize(inputPath))}");
+    Console.WriteLine($"File extension: {FileUtilities.GetFileExtension(inputPath)}");
+}
+
+// Validate output path and create directory if needed
+if (FileUtilities.IsValidOutputPath(outputPath))
+{
+    Console.WriteLine($"Output path is valid and writable: {outputPath}");
+}
+
+// Generate a safe temporary file for intermediate processing
+string tempFile = FileUtilities.GetTempFilePath(".tmp");
+Console.WriteLine($"Temporary file created: {tempFile}");
+
+// Sanitize filenames for user-provided input
+string userFileName = "My Video #1!@#.mp4";
+string safeFileName = FileUtilities.SanitizeFileName(userFileName);
+Console.WriteLine($"Original: {userFileName}");
+Console.WriteLine($"Sanitized: {safeFileName}"); // Output: My_Video__1____.mp4
+
+// Check if two files have compatible formats for merging
+string file1 = @"/videos/video1.mp4";
+string file2 = @"/videos/video2.mp4";
+bool formatsCompatible = FileUtilities.AreFormatsCompatible(file1, file2);
+Console.WriteLine($"Formats compatible: {formatsCompatible}"); // Output: True
+
+// Safely delete files that might be locked
+bool deleted = FileUtilities.SafeDeleteFile(@"/tmp/old-temp-file.tmp");
+Console.WriteLine($"File deleted successfully: {deleted}");
+
+// Get human-readable file sizes for logging
+long fileSize = 157286400; // 150MB
+Console.WriteLine($"File size: {FileUtilities.GetHumanReadableFileSize(fileSize)}"); // Output: 150 MB
+```
+
 ## ExtensionMethods
 
 The `ExtensionMethods` class provides a collection of extension methods that enhance standard .NET types with additional functionality. These methods improve code readability, reduce boilerplate, and provide convenient utilities for string manipulation, collection operations, time formatting, and file path handling throughout the FFmpeg wrapper library.
