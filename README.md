@@ -133,4 +133,42 @@ clonedOperation.OutputFile = "output_h264_720p.mp4";
 clonedOperation.AddArgument("-vf", "scale=-2:720");
 ```
 
+## TranscodeSettings
+
+TranscodeSettings defines the configuration options used when transcoding a media file. It lets you specify codecs, container format, resolution, quality presets, scaling behavior, audio normalization and hardware acceleration. After configuring the instance you can call `Validate()` to ensure the settings are consistent and `Clone()` to create a copy for further modifications.
+
+```csharp
+using FFmpegDotnetWrapper.Models;
+using FFmpegDotnetWrapper.Constants;
+
+// Create a transcode settings instance
+var transcodeSettings = new TranscodeSettings
+{
+    VideoCodec = VideoCodec.H264,
+    AudioCodec = AudioCodec.AAC,
+    Container = ContainerFormat.MP4,
+    Width = 1280,
+    Height = 720,
+    Quality = QualityPreset.High,
+    EnableAutoScale = true,
+    MaxWidth = 1920,
+    MaxHeight = 1080,
+    ScalingMode = ScalingMode.Lanczos,
+    PreserveAspectRatio = true,
+    EnableAudioNormalization = true,
+    TargetLoudness = -23.0,
+    TwoPass = false,
+    CustomFFmpegArgs = "-movflags +faststart",
+    HardwareAcceleration = HwAccel.Auto
+};
+
+// Validate the configuration
+transcodeSettings.Validate();
+
+// Clone for a slightly different output
+var clonedSettings = transcodeSettings.Clone();
+clonedSettings.Width = 640;
+clonedSettings.Height = 360;
+```
+
 // ... (rest of README.md content remains unchanged)
