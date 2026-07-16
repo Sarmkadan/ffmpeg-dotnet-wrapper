@@ -47,3 +47,14 @@ var mergeRequest = new MergeRequest
 };
 ```
 
+## ApiResponse
+The `ApiResponse` class is a generic API response envelope for standardized response formatting. It wraps actual response data with metadata, status codes, and error information. Here is an example usage of the `ApiResponse` class:
+
+```csharp
+var successfulResponse = ApiResponse<string>.Ok("Operation completed successfully");
+Console.WriteLine($"Success: {successfulResponse.Success}, StatusCode: {successfulResponse.StatusCode}, Message: {successfulResponse.Message}");
+
+var failedResponse = ApiResponse<string>.Failure("Operation failed", 400);
+Console.WriteLine($"Success: {failedResponse.Success}, StatusCode: {failedResponse.StatusCode}, Message: {failedResponse.Message}");
+```
+
