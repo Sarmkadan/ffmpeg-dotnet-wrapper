@@ -160,6 +160,69 @@ foreach (var operationStat in allOperationStats)
 }
 ```
 
+## ExtensionMethods
+
+The `ExtensionMethods` class provides a collection of extension methods that enhance standard .NET types with additional functionality. These methods improve code readability, reduce boilerplate, and provide convenient utilities for string manipulation, collection operations, time formatting, and file path handling throughout the FFmpeg wrapper library.
+
+Here is an example usage of the `ExtensionMethods` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Utilities;
+using System.Text;
+using System.Linq;
+
+// String manipulation extensions
+var message = new StringBuilder();
+message.AppendArgument("-i");
+message.AppendArgument("/input/video.mp4");
+message.AppendArguments("-c:v", "libx264", "-preset", "fast");
+Console.WriteLine(message.ToString()); // Output: -i /input/video.mp4 -c:v libx264 -preset fast
+
+var text = "Hello";
+Console.WriteLine(text.Repeat(3)); // Output: HelloHelloHello
+
+var items = new[] { "apple", "banana", "cherry" };
+Console.WriteLine(items.Join(", ")); // Output: apple, banana, cherry
+Console.WriteLine(items.Join(x => x.ToUpper(), " | ")); // Output: APPLE | BANANA | CHERRY
+
+// String validation extensions
+var emptyString = "";
+Console.WriteLine(emptyString.IsNullOrWhiteSpace()); // Output: True
+Console.WriteLine(emptyString.HasValue()); // Output: False
+
+// Collection extensions
+var numbers = new[] { 1, 2, 3, 4, 5, 6 };
+var batches = numbers.Batch(2);
+foreach (var batch in batches)
+{
+    Console.WriteLine(string.Join(", ", batch));
+}
+// Output:
+// 1, 2
+// 3, 4
+// 5, 6
+
+// Time and duration extensions
+var duration = TimeSpan.FromSeconds(95.5);
+Console.WriteLine(duration.FormatAsTime()); // Output: 01:35
+Console.WriteLine(duration.ToSeconds()); // Output: 95.5
+Console.WriteLine(duration.ToMilliseconds()); // Output: 95500
+
+var timeString = "00:02:30";
+var parsedSeconds = timeString.TryParseTime();
+Console.WriteLine(parsedSeconds); // Output: 150
+
+// File path extensions
+var filePath = @"/home/user/videos/movie.mp4";
+Console.WriteLine(filePath.GetFileName()); // Output: movie.mp4
+Console.WriteLine(filePath.GetDirectoryPath()); // Output: /home/user/videos
+Console.WriteLine(filePath.GetFileExtension()); // Output: mp4
+
+// Size and bitrate formatting
+Console.WriteLine(1024L.FormatAsSize()); // Output: 1.00 KB
+Console.WriteLine(5000.FormatAsBitrate()); // Output: 5000 kbps
+```
+
 ## FFmpegController
 
 The `FFmpegController` class provides a REST API for FFmpeg transcoding, trimming, merging, and watermarking operations. It offers a fluent API for video transformation workflows with request validation and error handling.
