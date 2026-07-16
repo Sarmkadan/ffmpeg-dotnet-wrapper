@@ -1297,6 +1297,190 @@ Console.WriteLine(FormattingUtilities.TitleCase("output-format")); // Output: Ou
 Console.WriteLine(FormattingUtilities.TitleCase("input_file-path")); // Output: Input File Path
 ```
 
+## FFmpegServiceIntegrationTests
+
+The `FFmpegServiceIntegrationTests` class provides integration tests for the `FFmpegService` class, verifying end-to-end video processing workflows including transcoding, trimming, merging, watermarking, and batch operations. These tests ensure that the FFmpeg wrapper integrates correctly with the actual FFmpeg binary and produces expected results with various configurations and edge cases.
+
+Here is an example usage of the `FFmpegServiceIntegrationTests` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Services;
+using FFmpegDotnetWrapper.Models;
+
+// Create an FFmpeg service instance
+var ffmpegService = new FFmpegService();
+
+// Test basic transcoding workflow
+var transcodeResult = await ffmpegService.TranscodeAsync(
+    inputPath: "/input/source.mp4",
+    outputPath: "/output/transcoded.webm",
+    settings: new TranscodeSettings
+    {
+        VideoCodec = VideoCodec.VP9,
+        AudioCodec = AudioCodec.Vorbis,
+        Container = ContainerFormat.WebM,
+        VideoBitrate = 2500,
+        Quality = QualityPreset.Medium
+    }
+);
+Assert.True(transcodeResult.Success);
+
+// Test hardware acceleration with NVENC
+var hwResult = await ffmpegService.TranscodeAsync(
+    inputPath: "/input/source.mp4",
+    outputPath: "/output/hw-accelerated.mp4",
+    settings: new TranscodeSettings
+    {
+        VideoCodec = VideoCodec.H264,
+        HardwareAcceleration = HwAccel.NVENC,
+        VideoBitrate = 5000,
+        Quality = QualityPreset.High
+    }
+);
+Assert.True(hwResult.Success);
+
+// Test audio normalization workflow
+var normalizeResult = await ffmpegService.TranscodeAsync(
+    inputPath: "/input/source.mp4",
+    outputPath: "/output/normalized.mp4",
+    settings: new TranscodeSettings
+    {
+        VideoCodec = VideoCodec.H264,
+        AudioNormalization = true,
+        AudioBitrate = 192,
+        VideoBitrate = 3000
+    }
+);
+Assert.True(normalizeResult.Success);
+
+// Test trimming workflow
+var trimResult = await ffmpegService.TrimAsync(
+    inputPath: "/input/source.mp4",
+    outputPath: "/output/trimmed.mp4",
+    startTime: TimeSpan.FromSeconds(10),
+    duration: TimeSpan.FromSeconds(30)
+);
+Assert.True(trimResult.Success);
+
+// Test trimming to preserve only audio
+var audioOnlyResult = await ffmpegService.TrimAsync(
+    inputPath: "/input/source.mp4",
+    outputPath: "/output/audio-only.mp3",
+    startTime: TimeSpan.FromSeconds(0),
+    duration: TimeSpan.FromSeconds(60),
+    videoStreamIndex: -1 // Exclude video stream
+);
+Assert.True(audioOnlyResult.Success);
+
+// Test merging multiple videos
+var mergeResult = await ffmpegService.MergeAsync(
+    inputPaths: new List<string> { "/input/video1.mp4", "/input/video2.mp4" },
+    outputPath: "/output/merged.mp4",
+    transitionDuration: TimeSpan.FromSeconds(2)
+);
+Assert.True(mergeResult.Success);
+
+// Test watermarking workflow
+var watermarkResult = await ffmpegService.WatermarkAsync(
+    inputPath: "/input/source.mp4",
+    outputPath: "/output/watermarked.mp4",
+    watermarkPath: "/watermark.png",
+    positionX: 10,
+    positionY: 10,
+    opacity: 0.3,
+    scale: 0.2
+);
+Assert.True(watermarkResult.Success);
+
+// Test batch processing of multiple files
+var batchResult = await ffmpegService.ProcessBatchAsync(
+    operations: new List<BatchOperation>
+    {
+        new BatchOperation
+        {
+            InputPath = "/input/video1.mp4",
+            OutputPath = "/output/processed1.mp4",
+            OperationType = BatchOperationType.Transcode,
+            Settings = new TranscodeSettings { VideoCodec = VideoCodec.H264 }
+        },
+        new BatchOperation
+        {
+            InputPath = "/input/video2.mp4",
+            OutputPath = "/output/processed2.mp4",
+            OperationType = BatchOperationType.Transcode,
+            Settings = new TranscodeSettings { VideoCodec = VideoCodec.H264 }
+        }
+    },
+    parallel: true
+);
+Assert.True(batchResult.All(r => r.Success));
+
+// Test error handling with invalid input
+var invalidResult = await ffmpegService.TranscodeAsync(
+    inputPath: "/input/nonexistent.mp4",
+    outputPath: "/output/output.mp4",
+    settings: new TranscodeSettings { VideoCodec = VideoCodec.H264 }
+);
+Assert.False(invalidResult.Success);
+Assert.Contains("not found", invalidResult.ErrorMessage);
+
+// Test cancellation support
+var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+var cancelResult = await ffmpegService.TranscodeAsync(
+    inputPath: "/input/large-video.mp4",
+    outputPath: "/output/cancelled.mp4",
+    settings: new TranscodeSettings { VideoCodec = VideoCodec.H264 },
+    cancellationToken: cts.Token
+);
+Assert.True(cancelResult.TimedOut || !cancelResult.Success);
+
+// Test various codec and container combinations
+var combinations = new List<(VideoCodec, AudioCodec, ContainerFormat)>
+{
+    (VideoCodec.H264, AudioCodec.AAC, ContainerFormat.MP4),
+    (VideoCodec.VP9, AudioCodec.Vorbis, ContainerFormat.WebM),
+    (VideoCodec.H265, AudioCodec.AAC, ContainerFormat.MP4),
+    (VideoCodec.MPEG4, AudioCodec.MP3, ContainerFormat.AVI)
+};
+
+foreach (var (videoCodec, audioCodec, container) in combinations)
+{
+    var comboResult = await ffmpegService.TranscodeAsync(
+        inputPath: "/input/source.mp4",
+        outputPath: $@"/output/combo-{videoCodec}-{audioCodec}-{container}",
+        settings: new TranscodeSettings
+        {
+            VideoCodec = videoCodec,
+            AudioCodec = audioCodec,
+            Container = container,
+            VideoBitrate = 3000
+        }
+    );
+    Assert.True(comboResult.Success);
+}
+
+// Test different quality presets
+var presets = new[] { QualityPreset.Low, QualityPreset.Medium, QualityPreset.High, QualityPreset.VeryHigh };
+foreach (var preset in presets)
+{
+    var presetResult = await ffmpegService.TranscodeAsync(
+        inputPath: "/input/source.mp4",
+        outputPath: $@"/output/preset-{preset}",
+        settings: new TranscodeSettings
+        {
+            VideoCodec = VideoCodec.H264,
+            Quality = preset,
+            VideoBitrate = 4000
+        }
+    );
+    Assert.True(presetResult.Success);
+}
+
+// Verify FFmpeg availability
+var availability = ffmpegService.IsFFmpegAvailable();
+Assert.True(availability);
+```
+
 ## FormattingUtilitiesTests
 
 The `FormattingUtilitiesTests` class provides unit tests for the `FormattingUtilities` class, verifying that formatting methods work correctly with various FFmpeg-related data types. It includes tests for duration formatting, byte size formatting, bitrate formatting, resolution formatting, string truncation, title casing, percentage formatting, ETA calculation, and string sanitization scenarios.
