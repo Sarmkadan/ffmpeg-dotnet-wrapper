@@ -216,4 +216,69 @@ var pipelineSettings = new StreamingPipelineSettings
 pipelineSettings.Validate();
 ```
 
+## OperationRepository
+
+In-memory repository implementation for managing FFmpeg operations. Provides CRUD operations and query capabilities for FFmpeg operations with built-in memory management to prevent unbounded growth. The repository automatically evicts the oldest operations when the configured memory limit is reached.
+
+
+```csharp
+using FFmpegDotnetWrapper.Models;
+using FFmpegDotnetWrapper.Repository;
+
+// Create repository instance
+var repository = new OperationRepository();
+
+// Add a new FFmpeg operation
+var operation = new FFmpegOperation
+{
+    Name = "Transcode video",
+    Type = FFmpegOperationType.Transcode,
+    Priority = 1,
+    IsParallel = false
+};
+operation.AddInputFile("input.mp4");
+operation.AddArguments("-c:v", "libx264", "-crf", "23");
+operation.OutputFile = "output.mp4";
+
+var addedOperation = await repository.AddAsync(operation);
+Console.WriteLine($"Added operation with ID: {addedOperation.Id}");
+
+// Get operation by ID
+var retrievedOperation = await repository.GetByIdAsync(addedOperation.Id);
+Console.WriteLine(retrievedOperation?.Name);
+
+// Get all operations
+var allOperations = await repository.GetAllAsync();
+Console.WriteLine($"Total operations: {allOperations.Count()}");
+
+// Update an operation
+addedOperation.Priority = 2;
+var updatedOperation = await repository.UpdateAsync(addedOperation);
+
+// Get operations by type
+var transcodeOps = await repository.GetByTypeAsync(FFmpegOperationType.Transcode);
+Console.WriteLine($"Transcode operations: {transcodeOps.Count()}");
+
+// Get recent operations
+var recentOps = await repository.GetRecentAsync(5);
+Console.WriteLine($"Most recent operations: {recentOps.Count()}");
+
+// Get operations by date range
+var fromDate = DateTime.UtcNow.AddDays(-7);
+var toDate = DateTime.UtcNow;
+var dateRangeOps = await repository.GetByDateRangeAsync(fromDate, toDate);
+Console.WriteLine($"Operations from last 7 days: {dateRangeOps.Count()}");
+
+// Get total count
+var totalCount = await repository.GetCountAsync();
+Console.WriteLine($"Total operations in repository: {totalCount}");
+
+// Delete an operation
+await repository.DeleteAsync(addedOperation.Id);
+
+// Clear old operations (older than 30 days)
+var clearedCount = await repository.ClearOldAsync(30);
+Console.WriteLine($"Cleared {clearedCount} old operations");
+```
+
 // ... (rest of README.md content remains unchanged)
