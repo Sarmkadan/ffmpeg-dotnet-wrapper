@@ -569,6 +569,81 @@ Assert.Empty(builder.Segments);
 Assert.Null(builder.Transition);
 ```
 
+## ThumbnailSettingsTests
+
+The `ThumbnailSettingsTests` class provides unit tests for the `ThumbnailSettings` class, verifying that thumbnail extraction configurations work correctly with various settings including count, quality, dimensions, timestamps, and validation scenarios.
+
+Here is an example usage of the `ThumbnailSettingsTests` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Models;
+using FluentAssertions;
+using Xunit;
+
+// Create a new ThumbnailSettings instance with default values
+var settings = new ThumbnailSettings();
+
+// Verify default values
+settings.Count.Should().Be(1);
+settings.Format.Should().Be(ThumbnailFormat.Jpeg);
+settings.Times.Should().BeEmpty();
+settings.Width.Should().BeNull();
+settings.Height.Should().BeNull();
+settings.JpegQuality.Should().Be(2);
+
+// Set valid count value
+var settingsWithCount = new ThumbnailSettings { Count = 10 };
+settingsWithCount.Count.Should().Be(10);
+
+// Set valid JPEG quality value
+var settingsWithQuality = new ThumbnailSettings { JpegQuality = 15 };
+settingsWithQuality.JpegQuality.Should().Be(15);
+
+// Add explicit timestamps for thumbnail extraction
+var settingsWithTimestamps = new ThumbnailSettings();
+settingsWithTimestamps.Times.Add(TimeSpan.FromSeconds(10));
+settingsWithTimestamps.Times.Add(TimeSpan.FromSeconds(30));
+settingsWithTimestamps.Times.Add(TimeSpan.FromSeconds(60));
+
+// Set specific dimensions for thumbnails
+var settingsWithDimensions = new ThumbnailSettings
+{
+    Width = 640,
+    Height = 480
+};
+settingsWithDimensions.Width.Should().Be(640);
+settingsWithDimensions.Height.Should().Be(480);
+
+// Set auto width (negative value) with specific height
+var settingsWithAutoWidth = new ThumbnailSettings
+{
+    Width = -1,
+    Height = 720
+};
+
+// Clone settings to create an independent copy
+var originalSettings = new ThumbnailSettings
+{
+    Count = 5,
+    Format = ThumbnailFormat.Png,
+    Width = 640,
+    Height = 360
+};
+originalSettings.Times.Add(TimeSpan.FromSeconds(10));
+
+var clonedSettings = originalSettings.Clone();
+
+// Verify clone has same values
+clonedSettings.Count.Should().Be(5);
+clonedSettings.Format.Should().Be(ThumbnailFormat.Png);
+clonedSettings.Width.Should().Be(640);
+clonedSettings.Times.Should().HaveCount(1);
+
+// Mutations on clone should not affect original
+clonedSettings.Times.Add(TimeSpan.FromSeconds(20));
+originalSettings.Times.Should().HaveCount(1);
+```
+
 ## FormattingUtilities
 
 The `FormattingUtilities` class provides a collection of static formatting methods for consistent string representation of FFmpeg-related data types. It handles time formatting, byte size formatting, bitrate formatting, resolution formatting, and various string sanitization utilities used throughout the library for logging, CLI output, and API responses.
