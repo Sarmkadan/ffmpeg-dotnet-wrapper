@@ -138,6 +138,42 @@ if (job != null)
 await jobService.UpdateJobProgressAsync(jobId, 100, "Job completed successfully");
 ```
 
+## SubtitleSettings
+
+Configuration settings for embedding subtitles into video files. Supports both soft embedding (as a subtitle stream) and hard embedding (burning subtitles directly into video frames). Provides font selection, size control, and stream selection capabilities.
+
+```csharp
+// Create subtitle settings for soft-embedding English subtitles
+var subtitleSettings = new SubtitleSettings
+{
+  SubtitlePath = "/subtitles/english.srt",
+  HardEmbed = false,
+  FontName = "Arial",
+  FontSize = 24,
+  SubtitleStreamIndex = 0,
+  Language = "en",
+  CharEncoding = "UTF-8"
+};
+
+// Validate the settings before use
+subtitleSettings.Validate();
+
+// Clone settings for reuse with different parameters
+var clonedSettings = subtitleSettings.Clone();
+clonedSettings.FontSize = 28;
+clonedSettings.Language = "fr";
+
+// Create settings for hard-embedding subtitles (burned into frames)
+var burnedSubtitles = new SubtitleSettings
+{
+  SubtitlePath = "/subtitles/forced.srt",
+  HardEmbed = true,
+  FontName = "Helvetica",
+  FontSize = 32,
+  CharEncoding = "latin1"
+};
+```
+
 ## ConcatenationSegment
 
 Represents a segment of media files to be concatenated into a single output. The `ConcatenationSegment` class provides properties for file paths, time trimming options, labels, and builder methods for constructing concatenation pipelines with transitions, re-encoding, and transcode settings.
