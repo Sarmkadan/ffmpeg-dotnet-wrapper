@@ -98,6 +98,68 @@ metrics.Reset();
 var backupMetrics = new StreamingPipelineMetrics("backup-stream-720p");
 ```
 
+## OperationStats
+
+The `OperationStats` class provides detailed statistics and performance metrics for FFmpeg operations, tracking success rates, execution times, data throughput, and failure analysis. It supports aggregating statistics across multiple operations and generating comprehensive performance reports for monitoring and optimization purposes.
+
+Here is an example usage of the `OperationStats` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Monitoring;
+using FFmpegDotnetWrapper.Models;
+
+// Create operation statistics tracker for a specific operation type
+var stats = new OperationStats(OperationType.Transcode);
+
+// Record successful operations
+stats.RecordSuccess(TimeSpan.FromSeconds(45.2), 157286400); // 150MB processed
+stats.RecordSuccess(TimeSpan.FromSeconds(38.7), 125829120); // 120MB processed
+stats.RecordSuccess(TimeSpan.FromSeconds(52.1), 214958080); // 205MB processed
+
+// Record failed operations
+stats.RecordFailure(TimeSpan.FromSeconds(12.5));
+stats.RecordFailure(TimeSpan.FromSeconds(8.3));
+
+// Get current statistics
+Console.WriteLine($"Total attempts: {stats.TotalAttempts}");
+Console.WriteLine($"Successful operations: {stats.SuccessfulOperations}");
+Console.WriteLine($"Failed operations: {stats.FailedOperations}");
+Console.WriteLine($"Total bytes processed: {stats.TotalBytesProcessed} ({stats.TotalBytesProcessed / (1024.0 * 1024.0):F2} MB)");
+Console.WriteLine($"Total execution time: {stats.TotalExecutionTime}");
+Console.WriteLine($"Average execution time: {stats.TotalExecutionTime / stats.TotalAttempts:F2}s");
+Console.WriteLine($"Minimum execution time: {stats.MinimumExecutionTime}");
+Console.WriteLine($"Maximum execution time: {stats.MaximumExecutionTime}");
+Console.WriteLine($"Last updated: {stats.LastUpdated}");
+
+// Get aggregate statistics from multiple operation instances
+var allStats = new List<OperationStats> { stats, new OperationStats(OperationType.Watermark) };
+var aggregateStats = OperationStats.GetAggregateStatistics(allStats);
+Console.WriteLine($"Aggregate successful operations: {aggregateStats.SuccessfulOperations}");
+
+// Generate performance report
+var report = stats.GetPerformanceReport();
+Console.WriteLine(report);
+
+// Export statistics as CSV
+var csv = stats.ExportAsCSV();
+File.WriteAllText("operation_stats.csv", csv);
+
+// Reset statistics for a new batch of operations
+stats.Reset();
+
+// Get statistics for a specific operation type
+var transcodeStats = OperationStats.GetStatistics(OperationType.Transcode);
+var watermarkStats = OperationStats.GetStatistics(OperationType.Watermark);
+
+// Get all stored statistics
+var allOperationStats = OperationStats.GetAllStatistics();
+foreach (var operationStat in allOperationStats)
+{
+    Console.WriteLine($"{operationStat.Type}: {operationStat.SuccessfulOperations} successes, " +
+    $"{operationStat.FailedOperations} failures");
+}
+```
+
 ## FFmpegController
 
 The `FFmpegController` class provides a REST API for FFmpeg transcoding, trimming, merging, and watermarking operations. It offers a fluent API for video transformation workflows with request validation and error handling.
