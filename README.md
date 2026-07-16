@@ -21,6 +21,61 @@ var audioResult = await transcodeService.ExtractAudioAsync(new MediaFile { Name 
 var resizeResult = await transcodeService.ResizeVideoAsync(new MediaFile { Name = "sample_video.mp4", FilePath = "/path/to/sample_video.mp4" }, "/path/to/output/resized.mp4", 1280, 720);
 ```
 
+## ApplicationStartup
+
+The `ApplicationStartup` class provides static extension methods for configuring and initializing the FFmpeg wrapper application in ASP.NET Core or custom applications. It registers all services, middleware, event handlers, and provides access to configured services through the service provider.
+
+```csharp
+using FFmpegDotnetWrapper.Configuration;
+using FFmpegDotnetWrapper.Events;
+using FFmpegDotnetWrapper.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+// Create service collection
+var services = new ServiceCollection();
+
+// Add FFmpeg wrapper services with configuration
+services.AddFFmpegWrapperWithConfiguration(
+    ffmpegOptions: options =>
+    {
+        options.FFMpegPath = "/usr/bin/ffmpeg";
+        options.FFProbePath = "/usr/bin/ffprobe";
+        options.TempDirectory = "/tmp/ffmpeg";
+    },
+    cachingOptions: options =>
+    {
+        options.CacheDuration = TimeSpan.FromHours(1);
+        options.MaxCacheSize = 1024 * 1024 * 1024; // 1GB
+    },
+    rateLimitingOptions: options =>
+    {
+        options.MaxRequestsPerMinute = 100;
+        options.MaxConcurrentJobs = 10;
+    }
+);
+
+// Configure logging
+services.AddLogging(builder => builder.ConfigureFFmpegLogging(LogLevel.Debug));
+
+// Build service provider
+var serviceProvider = services.BuildServiceProvider();
+
+// Initialize application (subscribes event handlers and validates FFmpeg)
+await serviceProvider.InitializeApplicationAsync();
+
+// Access configured services
+var ffmpegOptions = serviceProvider.GetFFmpegOptions();
+var cacheService = serviceProvider.GetCacheService();
+var eventPublisher = serviceProvider.GetEventPublisher();
+var backgroundJobService = serviceProvider.GetBackgroundJobService();
+var rateLimiter = serviceProvider.GetRateLimiter();
+
+// Register custom event handler
+serviceProvider.RegisterEventHandler<OperationCompletedEvent, CustomOperationHandler>();
+```
+
 ## JsonOutputFormatter
 
 `JsonOutputFormatter` centralises JSON serialization and deserialization for API responses, offering pretty‑printed output and custom converters for `TimeSpan` and `DateTime`. It also bundles CSV and plain‑text formatters for batch operation results, giving a consistent way to produce machine‑readable and human‑readable output.
