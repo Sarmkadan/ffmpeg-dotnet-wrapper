@@ -569,6 +569,177 @@ Assert.Empty(builder.Segments);
 Assert.Null(builder.Transition);
 ```
 
+## ValidationUtilitiesTests
+
+The `ValidationUtilitiesTests` class provides unit tests for the `ValidationUtilities` class, verifying that validation methods work correctly with various FFmpeg parameters including bitrates, codecs, output formats, resolutions, time parsing, and trim validation scenarios.
+
+Here is an example usage of the `ValidationUtilitiesTests` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Utilities;
+using Xunit;
+
+// Test bitrate validation
+[Fact]
+public void IsValidBitrate_WithinRange_ReturnsTrue()
+{
+    Assert.True(ValidationUtilities.IsValidBitrate(5000));
+    Assert.True(ValidationUtilities.IsValidBitrate(1000));
+    Assert.True(ValidationUtilities.IsValidBitrate(100000));
+}
+
+[Fact]
+public void IsValidBitrate_OutsideRange_ReturnsFalse()
+{
+    Assert.False(ValidationUtilities.IsValidBitrate(50));
+    Assert.False(ValidationUtilities.IsValidBitrate(100001));
+    Assert.False(ValidationUtilities.IsValidBitrate(-1));
+}
+
+// Test codec validation
+[Fact]
+public void IsValidCodec_SupportedCodec_ReturnsTrue()
+{
+    Assert.True(ValidationUtilities.IsValidCodec("libx264"));
+    Assert.True(ValidationUtilities.IsValidCodec("aac"));
+    Assert.True(ValidationUtilities.IsValidCodec("h264"));
+}
+
+[Fact]
+public void IsValidCodec_UnsupportedOrEmpty_ReturnsFalse()
+{
+    Assert.False(ValidationUtilities.IsValidCodec(""));
+    Assert.False(ValidationUtilities.IsValidCodec("invalid-codec"));
+    Assert.False(ValidationUtilities.IsValidCodec(null));
+}
+
+// Test output format validation
+[Fact]
+public void IsValidOutputFormat_SupportedFormat_ReturnsTrue()
+{
+    Assert.True(ValidationUtilities.IsValidOutputFormat("mp4"));
+    Assert.True(ValidationUtilities.IsValidOutputFormat("mov"));
+    Assert.True(ValidationUtilities.IsValidOutputFormat("mkv"));
+}
+
+[Fact]
+public void IsValidOutputFormat_UnrecognizedFormat_ReturnsFalse()
+{
+    Assert.False(ValidationUtilities.IsValidOutputFormat("invalid-format"));
+    Assert.False(ValidationUtilities.IsValidOutputFormat(""));
+}
+
+// Test time parsing and formatting
+[Fact]
+public void ParseTimeToSeconds_HhMmSsFormat_ReturnsCorrectSeconds()
+{
+    Assert.Equal(90, ValidationUtilities.ParseTimeToSeconds("00:01:30"));
+    Assert.Equal(3661, ValidationUtilities.ParseTimeToSeconds("01:01:01"));
+    Assert.Equal(0, ValidationUtilities.ParseTimeToSeconds("00:00:00"));
+}
+
+[Fact]
+public void ParseTimeToSeconds_PureSecondsString_ReturnsValue()
+{
+    Assert.Equal(125, ValidationUtilities.ParseTimeToSeconds("125"));
+    Assert.Equal(0, ValidationUtilities.ParseTimeToSeconds("0"));
+}
+
+[Fact]
+public void ParseTimeToSeconds_InvalidOrEmpty_ReturnsNull()
+{
+    Assert.Null(ValidationUtilities.ParseTimeToSeconds(""));
+    Assert.Null(ValidationUtilities.ParseTimeToSeconds("invalid"));
+    Assert.Null(ValidationUtilities.ParseTimeToSeconds("1:2:3"));
+}
+
+[Fact]
+public void FormatSecondsToTime_VariousValues_ReturnsHhMmSs()
+{
+    Assert.Equal("00:01:30", ValidationUtilities.FormatSecondsToTime(90));
+    Assert.Equal("01:01:01", ValidationUtilities.FormatSecondsToTime(3661));
+    Assert.Equal("00:00:00", ValidationUtilities.FormatSecondsToTime(0));
+}
+
+[Fact]
+public void FormatSecondsToTime_NegativeSeconds_ClampsToZero()
+{
+    Assert.Equal("00:00:00", ValidationUtilities.FormatSecondsToTime(-1));
+    Assert.Equal("00:00:00", ValidationUtilities.FormatSecondsToTime(-100));
+}
+
+// Test resolution validation
+[Fact]
+public void IsValidResolution_ValidFormat_ReturnsTrue()
+{
+    Assert.True(ValidationUtilities.IsValidResolution(1920, 1080));
+    Assert.True(ValidationUtilities.IsValidResolution(1280, 720));
+    Assert.True(ValidationUtilities.IsValidResolution(640, 480));
+}
+
+[Fact]
+public void IsValidResolution_InvalidFormat_ReturnsFalse()
+{
+    Assert.False(ValidationUtilities.IsValidResolution(0, 1080));
+    Assert.False(ValidationUtilities.IsValidResolution(1920, 0));
+    Assert.False(ValidationUtilities.IsValidResolution(-1, -1));
+}
+
+// Test trim time validation
+[Fact]
+public void ValidateTrimTimes_StartBeforeEnd_ReturnsTrue()
+{
+    Assert.True(ValidationUtilities.ValidateTrimTimes("00:00:10", "00:01:45"));
+    Assert.True(ValidationUtilities.ValidateTrimTimes("00:00:00", "00:00:01"));
+}
+
+[Fact]
+public void ValidateTrimTimes_StartGreaterThanEnd_ReturnsFalse()
+{
+    Assert.False(ValidationUtilities.ValidateTrimTimes("00:01:45", "00:00:10"));
+    Assert.False(ValidationUtilities.ValidateTrimTimes("00:00:10", "00:00:05"));
+}
+
+[Fact]
+public void ValidateTrimTimes_NegativeStart_ReturnsFalse()
+{
+    Assert.False(ValidationUtilities.ValidateTrimTimes("-00:00:10", "00:01:45"));
+    Assert.False(ValidationUtilities.ValidateTrimTimes("-10", "00:01:45"));
+}
+
+[Fact]
+public void ValidateTrimTimes_WithDurationOnly_ReturnsTrue()
+{
+    Assert.True(ValidationUtilities.ValidateTrimTimes("00:00:10", null, "00:01:35"));
+    Assert.True(ValidationUtilities.ValidateTrimTimes("00:00:00", null, "00:05:00"));
+}
+
+[Fact]
+public void ValidateTrimTimes_NoEndOrDuration_ReturnsFalse()
+{
+    Assert.False(ValidationUtilities.ValidateTrimTimes("00:00:10", null, null));
+    Assert.False(ValidationUtilities.ValidateTrimTimes("00:00:00", null, null));
+}
+
+// Test watermark scale validation
+[Fact]
+public void IsValidWatermarkScale_ValidRange_ReturnsTrue()
+{
+    Assert.True(ValidationUtilities.IsValidWatermarkScale(0.1));
+    Assert.True(ValidationUtilities.IsValidWatermarkScale(0.5));
+    Assert.True(ValidationUtilities.IsValidWatermarkScale(0.9));
+}
+
+[Fact]
+public void IsValidWatermarkScale_OutsideRange_ReturnsFalse()
+{
+    Assert.False(ValidationUtilities.IsValidWatermarkScale(0.0));
+    Assert.False(ValidationUtilities.IsValidWatermarkScale(1.0));
+    Assert.False(ValidationUtilities.IsValidWatermarkScale(1.1));
+    Assert.False(ValidationUtilities.IsValidWatermarkScale(-0.1));
+}
+```
+
 ## ThumbnailSettingsTests
 
 The `ThumbnailSettingsTests` class provides unit tests for the `ThumbnailSettings` class, verifying that thumbnail extraction configurations work correctly with various settings including count, quality, dimensions, timestamps, and validation scenarios.
