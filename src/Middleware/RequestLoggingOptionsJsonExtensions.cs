@@ -1,7 +1,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =====================================================================
+// ===================================================================
 
 using System;
 using System.Text.Json;
@@ -28,16 +28,14 @@ namespace FFmpegDotnetWrapper.Middleware
         /// <param name="value">The RequestLoggingOptions instance to serialize.</param>
         /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
         /// <returns>A JSON string representation of the RequestLoggingOptions.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when value is null.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="value"/> is <see langword="null"/>.</exception>
         public static string ToJson(this RequestLoggingOptions value, bool indented = false)
         {
             ArgumentNullException.ThrowIfNull(value);
 
             var options = indented
                 ? new JsonSerializerOptions(_jsonOptions)
-                {
-                    WriteIndented = true
-                }
+                { WriteIndented = true }
                 : _jsonOptions;
 
             return JsonSerializer.Serialize(value, options);
@@ -47,9 +45,9 @@ namespace FFmpegDotnetWrapper.Middleware
         /// Deserializes a JSON string into a RequestLoggingOptions instance.
         /// </summary>
         /// <param name="json">The JSON string to deserialize.</param>
-        /// <returns>A RequestLoggingOptions instance populated from the JSON, or null if parsing fails.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when json is null.</exception>
-        /// <exception cref="ArgumentException">Thrown when json is empty or whitespace.</exception>
+        /// <returns>A RequestLoggingOptions instance populated from the JSON, or <see langword="null"/> if parsing fails.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="json"/> is empty or consists only of whitespace.</exception>
         public static RequestLoggingOptions? FromJson(string json)
         {
             ArgumentNullException.ThrowIfNull(json);
@@ -62,9 +60,9 @@ namespace FFmpegDotnetWrapper.Middleware
         /// Attempts to deserialize a JSON string into a RequestLoggingOptions instance.
         /// </summary>
         /// <param name="json">The JSON string to deserialize.</param>
-        /// <param name="value">Receives the deserialized RequestLoggingOptions if successful, otherwise null.</param>
-        /// <returns>True if deserialization succeeded; false if an exception occurred.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when json is null.</exception>
+        /// <param name="value">Receives the deserialized RequestLoggingOptions if successful, otherwise <see langword="null"/>.</param>
+        /// <returns><see langword="true"/> if deserialization succeeded; <see langword="false"/> if an exception occurred.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="json"/> is <see langword="null"/>.</exception>
         public static bool TryFromJson(string json, out RequestLoggingOptions? value)
         {
             ArgumentNullException.ThrowIfNull(json);
