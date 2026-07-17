@@ -1,9 +1,10 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =====================================================================
+// ===================================================================
 
 using System;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -44,13 +45,13 @@ namespace FFmpegDotnetWrapper.Configuration
         /// <summary>
         /// Deserializes a JSON string to an <see cref="ApplicationStartup"/> configuration instance.
         /// </summary>
-        /// <param name="json">The JSON string to deserialize.</param>
+        /// <param name="json">The JSON string to deserialize. Must not be <see langword="null"/>, empty, or whitespace-only.</param>
         /// <returns>The deserialized <see cref="ApplicationStartup"/> instance, or <see langword="null"/> if the JSON represents a null value.</returns>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/> or empty.</exception>
-        /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
+        /// <exception cref="ArgumentException"><paramref name="json"/> is <see langword="null"/>, empty, or consists only of whitespace.</exception>
+        /// <exception cref="JsonException">The JSON is invalid or cannot be deserialized into an <see cref="ApplicationStartup"/> instance.</exception>
         public static ApplicationStartup? FromJson(string json)
         {
-            ArgumentException.ThrowIfNullOrEmpty(json);
+            ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
             return JsonSerializer.Deserialize<ApplicationStartup>(json, _jsonOptions);
         }
@@ -58,12 +59,12 @@ namespace FFmpegDotnetWrapper.Configuration
         /// <summary>
         /// Attempts to deserialize a JSON string to an <see cref="ApplicationStartup"/> configuration instance.
         /// </summary>
-        /// <param name="json">The JSON string to deserialize.</param>
-        /// <param name="value">Receives the deserialized instance if successful.</param>
+        /// <param name="json">The JSON string to deserialize. Must not be <see langword="null"/>, empty, or whitespace-only.</param>
+        /// <param name="value">Receives the deserialized instance if successful; otherwise, <see langword="null"/>.</param>
         /// <returns><see langword="true"/> if deserialization succeeds; otherwise, <see langword="false"/>.</returns>
         public static bool TryFromJson(string json, out ApplicationStartup? value)
         {
-            ArgumentException.ThrowIfNullOrEmpty(json);
+            ArgumentException.ThrowIfNullOrWhiteSpace(json);
 
             try
             {
@@ -119,9 +120,7 @@ namespace FFmpegDotnetWrapper.Configuration
 
         /// <summary>Supported output formats.</summary>
         public string[] SupportedFormats { get; init; } =
-        {
-            "mp4", "mkv", "webm", "avi", "mov", "flv", "3gp", "ts"
-        };
+        ["mp4", "mkv", "webm", "avi", "mov", "flv", "3gp", "ts"];
 
         /// <summary>Number of retry attempts for failed operations.</summary>
         public int RetryAttempts { get; init; } = 1;
