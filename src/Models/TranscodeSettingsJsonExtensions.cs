@@ -21,7 +21,7 @@ public static class TranscodeSettingsJsonExtensions
     };
 
     /// <summary>
-    /// Serializes the <see cref="TranscodeSettings"/> instance to a JSON string.
+    /// Serializes the <see cref="TranscodeSettings"/> instance to a JSON string using camelCase property naming.
     /// </summary>
     /// <param name="value">The transcode settings to serialize.</param>
     /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
