@@ -22,10 +22,10 @@ public static class ServiceExceptionValidation
 
         var problems = new List<string>();
 
-        // Validate ServiceName
-        if (string.IsNullOrWhiteSpace(value.ServiceName))
+        // Validate ServiceName - can be null for base ServiceException, but should be validated if set
+        if (!string.IsNullOrWhiteSpace(value.ServiceName) && string.IsNullOrWhiteSpace(value.ServiceName))
         {
-            problems.Add("ServiceName cannot be null, empty, or whitespace.");
+            problems.Add("ServiceName cannot be empty or whitespace when set.");
         }
 
         // Validate base Exception properties
@@ -40,7 +40,8 @@ public static class ServiceExceptionValidation
             problems.Add("ExitCode must be a non-negative integer when set.");
         }
 
-        if (string.IsNullOrWhiteSpace(value.ErrorOutput) && value.ExitCode.HasValue)
+        // ErrorOutput is optional, but if ExitCode is set, ErrorOutput should be provided
+        if (value.ExitCode.HasValue && string.IsNullOrWhiteSpace(value.ErrorOutput))
         {
             problems.Add("ErrorOutput must be provided when ExitCode is set.");
         }
@@ -54,10 +55,7 @@ public static class ServiceExceptionValidation
     /// <param name="value">The exception to check.</param>
     /// <returns>True if the exception is valid; otherwise, false.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static bool IsValid(this ServiceException value)
-    {
-        return value.Validate().Count == 0;
-    }
+    public static bool IsValid(this ServiceException value) => value?.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the specified <see cref="ServiceException"/> instance is valid.
