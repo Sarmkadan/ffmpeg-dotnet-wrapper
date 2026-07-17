@@ -1222,6 +1222,90 @@ Console.WriteLine($"\nFailed event log:\n{failedEvent.ToLogString()}");
 Console.WriteLine($"\nMetadata: {startedEvent.GetMetadataString()}");
 ```
 
+## MediaRepositoryValidation
+
+The `MediaRepositoryValidation` class provides validation helpers for `MediaRepository` instances and collections of `MediaFile` objects. It includes methods for validating repository integrity, checking file paths, validating media file properties, and ensuring dates and numeric values are within acceptable ranges. This validation layer helps prevent invalid data from being persisted in the media repository.
+
+Here is an example usage of the `MediaRepositoryValidation` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Models;
+using FFmpegDotnetWrapper.Repository;
+
+// Create a media repository with some media files
+var mediaRepository = new MediaRepository();
+
+// Add valid media files
+mediaRepository.Add(new MediaFile("/videos/video1.mp4")
+{
+    Name = "Introduction Video",
+    FileSize = 157286400, // 150MB
+    Duration = TimeSpan.FromMinutes(2),
+    Width = 1920,
+    Height = 1080,
+    FrameRate = 30.0,
+    Bitrate = 5000000,
+    CreatedAt = DateTime.UtcNow.AddDays(-1)
+});
+
+mediaRepository.Add(new MediaFile("/videos/tutorial.mp4")
+{
+    Name = "Tutorial Video",
+    FileSize = 262144000, // 250MB
+    Duration = TimeSpan.FromMinutes(5),
+    Width = 1280,
+    Height = 720,
+    FrameRate = 60.0,
+    Bitrate = 8000000,
+    CreatedAt = DateTime.UtcNow.AddDays(-2)
+});
+
+// Validate the entire repository
+var validationProblems = MediaRepositoryValidation.Validate(mediaRepository);
+if (validationProblems.Count > 0)
+{
+    Console.WriteLine("Repository validation failed:");
+    foreach (var problem in validationProblems)
+    {
+        Console.WriteLine($"- {problem}");
+    }
+}
+else
+{
+    Console.WriteLine("Repository is valid!");
+}
+
+// Check if repository is valid without getting detailed problems
+bool isValid = MediaRepositoryValidation.IsValid(mediaRepository);
+Console.WriteLine($"Repository valid: {isValid}");
+
+// Validate repository and throw if invalid
+try
+{
+    MediaRepositoryValidation.EnsureValid(mediaRepository);
+    Console.WriteLine("Repository passed validation checks");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine($"Repository validation failed: {ex.Message}");
+}
+
+// Validate individual media files
+var fileValidationProblems = MediaRepositoryValidation.ValidateMediaFiles(mediaRepository);
+Console.WriteLine($"Validated {mediaRepository.Count} media files");
+
+// Validate specific properties
+bool isValidId = MediaRepositoryValidation.IsValidId("video-001");
+bool isValidPath = MediaRepositoryValidation.IsValidFilePath("/videos/video1.mp4");
+bool isValidDate = MediaRepositoryValidation.IsValidDate(DateTime.UtcNow.AddDays(-1), nameof(mediaRepository));
+bool isValidPositiveNumber = MediaRepositoryValidation.IsValidPositiveNumber(157286400, nameof(MediaFile.FileSize));
+
+Console.WriteLine($"ID valid: {isValidId}");
+Console.WriteLine($"Path valid: {isValidPath}");
+Console.WriteLine($"Date valid: {isValidDate}");
+Console.WriteLine($"Positive number valid: {isValidPositiveNumber}");
+```
+
 ## FileUtilitiesTests
 
 The `FileUtilitiesTests` class provides unit tests for the `FileUtilities` class, verifying that file path validation, file operations, and utility methods work correctly. It includes tests for validating absolute and relative paths, handling edge cases like null/empty strings, directory traversal attempts, and environment variable expansion, as well as testing file existence checks and extension extraction.
