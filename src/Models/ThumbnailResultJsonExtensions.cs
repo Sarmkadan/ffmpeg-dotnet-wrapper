@@ -60,8 +60,11 @@ public static class ThumbnailResultJsonExtensions
     /// <param name="json">The JSON string to deserialize.</param>
     /// <param name="value">Receives the deserialized instance if successful.</param>
     /// <returns><c>true</c> if deserialization succeeded; otherwise, <c>false</c>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="json"/> is <c>null</c>.</exception>
     public static bool TryFromJson(string json, out ThumbnailResult? value)
     {
+        ArgumentNullException.ThrowIfNull(json);
+
         value = null;
 
         if (string.IsNullOrWhiteSpace(json))
