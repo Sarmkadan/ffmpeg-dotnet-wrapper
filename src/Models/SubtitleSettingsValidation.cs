@@ -1,7 +1,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =====================================================================
+// ===================================================================
 
 using System.Globalization;
 
@@ -82,13 +82,11 @@ public static class SubtitleSettingsValidation
         ArgumentNullException.ThrowIfNull(value);
 
         var errors = Validate(value);
-        if (errors.Count == 0)
+        if (errors.Count > 0)
         {
-            return;
+            throw new ArgumentException(
+                $"SubtitleSettings validation failed with {errors.Count} error(s):{Environment.NewLine}" +
+                string.Join(Environment.NewLine, errors.Select((error, index) => $" {index + 1}. {error}")));
         }
-
-        throw new ArgumentException(
-            $"SubtitleSettings validation failed with {errors.Count} error(s):{Environment.NewLine}" +
-            string.Join(Environment.NewLine, errors.Select((error, index) => $"  {index + 1}. {error}")));
     }
 }
