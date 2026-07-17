@@ -14,74 +14,72 @@ namespace FFmpegDotnetWrapper.Models;
 /// </summary>
 public static class ConcatenationSegmentJsonExtensions
 {
-    private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
-    };
+ private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
+ {
+ PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+ WriteIndented = false,
+ DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+ Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+ };
 
-    /// <summary>
-    /// Serializes a <see cref="ConcatenationSegment"/> to a JSON string.
-    /// </summary>
-    /// <param name="value">The segment to serialize.</param>
-    /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
-    /// <returns>A JSON string representing the segment.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-    public static string ToJson(this ConcatenationSegment value, bool indented = false)
-    {
-        ArgumentNullException.ThrowIfNull(value);
+ /// <summary>
+ /// Serializes a <see cref="ConcatenationSegment"/> to a JSON string.
+ /// </summary>
+ /// <param name="value">The segment to serialize.</param>
+ /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
+ /// <returns>A JSON string representing the segment.</returns>
+ /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+ public static string ToJson(this ConcatenationSegment value, bool indented = false)
+ {
+ ArgumentNullException.ThrowIfNull(value);
 
-        var options = indented
-            ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
-            : _jsonOptions;
+ var options = indented
+ ? new JsonSerializerOptions(_jsonOptions) { WriteIndented = true }
+ : _jsonOptions;
 
-        return JsonSerializer.Serialize(value, options);
-    }
+ return JsonSerializer.Serialize(value, options);
+ }
 
-    /// <summary>
-    /// Deserializes a JSON string to a <see cref="ConcatenationSegment"/> instance.
-    /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
-    /// <returns>The deserialized segment, or null if the JSON is empty or whitespace.</returns>
-    /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
-    /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
-    public static ConcatenationSegment? FromJson(string json)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+ /// <summary>
+ /// Deserializes a JSON string to a <see cref="ConcatenationSegment"/> instance.
+ /// </summary>
+ /// <param name="json">The JSON string to deserialize.</param>
+ /// <returns>The deserialized segment, or null if the JSON is empty or whitespace.</returns>
+ /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+ /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
+ public static ConcatenationSegment? FromJson(string json)
+ {
+ ArgumentException.ThrowIfNullOrEmpty(json);
 
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return null;
-        }
+ if (string.IsNullOrWhiteSpace(json))
+ {
+ return null;
+ }
 
-        return JsonSerializer.Deserialize<ConcatenationSegment>(json, _jsonOptions);
-    }
+ return JsonSerializer.Deserialize<ConcatenationSegment>(json, _jsonOptions);
+ }
 
-    /// <summary>
-    /// Attempts to deserialize a JSON string to a <see cref="ConcatenationSegment"/> instance.
-    /// </summary>
-    /// <param name="json">The JSON string to deserialize.</param>
-    /// <param name="value">Receives the deserialized segment if successful, otherwise null.</param>
-    /// <returns>True if deserialization succeeded; otherwise false.</returns>
-    public static bool TryFromJson(string json, out ConcatenationSegment? value)
-    {
-        value = null;
+ /// <summary>
+ /// Attempts to deserialize a JSON string to a <see cref="ConcatenationSegment"/> instance.
+ /// </summary>
+ /// <param name="json">The JSON string to deserialize.</param>
+ /// <param name="value">Receives the deserialized segment if successful, otherwise null.</param>
+ /// <returns>True if deserialization succeeded; otherwise false.</returns>
+ /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is null or empty.</exception>
+ public static bool TryFromJson(string json, out ConcatenationSegment? value)
+ {
+ ArgumentException.ThrowIfNullOrEmpty(json);
 
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return false;
-        }
+ value = null;
 
-        try
-        {
-            value = JsonSerializer.Deserialize<ConcatenationSegment>(json, _jsonOptions);
-            return true;
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
-    }
+ try
+ {
+ value = JsonSerializer.Deserialize<ConcatenationSegment>(json, _jsonOptions);
+ return value is not null;
+ }
+ catch (JsonException)
+ {
+ return false;
+ }
+ }
 }
