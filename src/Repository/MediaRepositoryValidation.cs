@@ -3,7 +3,6 @@
 // CTO & Software Architect
 // =====================================================================
 
-using System.Globalization;
 using FFmpegDotnetWrapper.Models;
 
 namespace FFmpegDotnetWrapper.Repository;
@@ -23,13 +22,7 @@ public static class MediaRepositoryValidation
     {
         ArgumentNullException.ThrowIfNull(value);
 
-        var problems = new List<string>();
-
-        // Repository should not be null (already checked above)
-        // No additional validation needed for the repository itself beyond null check
-        // since it's just a container for the actual media files
-
-        return problems.AsReadOnly();
+        return Array.Empty<string>();
     }
 
     /// <summary>
@@ -172,11 +165,15 @@ public static class MediaRepositoryValidation
             problems.Add($"Media file at index {index} has non-positive AudioChannels: {mediaFile.AudioChannels}");
         }
 
-        if (mediaFile.Metadata != null)
+        if (mediaFile.Metadata != null && mediaFile.Metadata.Count > 0)
         {
-            if (mediaFile.Metadata.Count == 0 && mediaFile.Metadata.Keys.Any(k => string.IsNullOrWhiteSpace(k)))
+            var invalidKeys = mediaFile.Metadata.Keys
+                .Where(k => string.IsNullOrWhiteSpace(k))
+                .ToList();
+
+            if (invalidKeys.Count > 0)
             {
-                problems.Add($"Media file at index {index} has null or empty metadata keys");
+                problems.Add($"Media file at index {index} has null or empty metadata keys: {string.Join(", ", invalidKeys)}");
             }
         }
     }
@@ -201,19 +198,12 @@ public static class MediaRepositoryValidation
     /// <param name="date">The date to validate.</param>
     /// <param name="paramName">The name of the parameter for error messages.</param>
     /// <returns><see langword="true"/> if the date is valid; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="paramName"/> is null or empty.</exception>
     public static bool IsValidDate(DateTime date, string paramName)
     {
-        if (date == default)
-        {
-            return false;
-        }
+        ArgumentException.ThrowIfNullOrEmpty(paramName);
 
-        if (date > DateTime.UtcNow)
-        {
-            return false;
-        }
-
-        return true;
+        return date != default && date <= DateTime.UtcNow;
     }
 
     /// <summary>
@@ -222,14 +212,12 @@ public static class MediaRepositoryValidation
     /// <param name="date">The nullable date to validate.</param>
     /// <param name="paramName">The name of the parameter for error messages.</param>
     /// <returns><see langword="true"/> if the date is valid; otherwise, <see langword="false"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="paramName"/> is null or empty.</exception>
     public static bool IsValidDate(DateTime? date, string paramName)
     {
-        if (!date.HasValue)
-        {
-            return true; // Nullable dates are considered valid when null
-        }
+        ArgumentException.ThrowIfNullOrEmpty(paramName);
 
-        return IsValidDate(date.Value, paramName);
+        return !date.HasValue || date.Value != default && date.Value <= DateTime.UtcNow;
     }
 
     /// <summary>
@@ -238,7 +226,12 @@ public static class MediaRepositoryValidation
     /// <param name="value">The number to validate.</param>
     /// <param name="paramName">The name of the parameter for error messages.</param>
     /// <returns><see langword="true"/> if the number is valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValidPositiveNumber(long value, string paramName) => value >= 0;
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="paramName"/> is null or empty.</exception>
+    public static bool IsValidPositiveNumber(long value, string paramName)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(paramName);
+        return value >= 0;
+    }
 
     /// <summary>
     /// Validates that a positive number is valid.
@@ -246,7 +239,12 @@ public static class MediaRepositoryValidation
     /// <param name="value">The number to validate.</param>
     /// <param name="paramName">The name of the parameter for error messages.</param>
     /// <returns><see langword="true"/> if the number is valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValidPositiveNumber(int value, string paramName) => value >= 0;
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="paramName"/> is null or empty.</exception>
+    public static bool IsValidPositiveNumber(int value, string paramName)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(paramName);
+        return value >= 0;
+    }
 
     /// <summary>
     /// Validates that a positive number is valid.
@@ -254,5 +252,10 @@ public static class MediaRepositoryValidation
     /// <param name="value">The number to validate.</param>
     /// <param name="paramName">The name of the parameter for error messages.</param>
     /// <returns><see langword="true"/> if the number is valid; otherwise, <see langword="false"/>.</returns>
-    public static bool IsValidPositiveNumber(double value, string paramName) => value >= 0;
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="paramName"/> is null or empty.</exception>
+    public static bool IsValidPositiveNumber(double value, string paramName)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(paramName);
+        return value >= 0;
+    }
 }
