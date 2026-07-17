@@ -3,8 +3,6 @@
 // CTO & Software Architect
 // =============================================================================
 
-using System.Globalization;
-
 namespace FFmpegDotnetWrapper.Models;
 
 /// <summary>
@@ -218,7 +216,7 @@ public static class FFmpegOperationValidation
             {
                 errors.Add("ExecutedAt cannot be in the future.");
             }
-            else if (value.CreatedAt > value.ExecutedAt.Value)
+            else if (value.ExecutedAt.Value < value.CreatedAt)
             {
                 errors.Add("ExecutedAt cannot be earlier than CreatedAt.");
             }
@@ -230,8 +228,8 @@ public static class FFmpegOperationValidation
     /// <summary>
     /// Determines whether the specified FFmpeg operation is valid.
     /// </summary>
-    /// <param name="value">The operation to check.</param>
-    /// <returns><see langword="true"/> if valid; otherwise, <see langword="false"/>.</returns>
+    /// <param name="value">The operation to validate.</param>
+    /// <returns><see langword="true"/> if the operation is valid; otherwise, <see langword="false"/>.</returns>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
     public static bool IsValid(this FFmpegOperation? value)
     {
@@ -253,7 +251,7 @@ public static class FFmpegOperationValidation
         if (errors.Count > 0)
         {
             throw new ArgumentException(
-                $"FFmpegOperation is invalid. Validation failed with {errors.Count} error(s):{Environment.NewLine}- ",
+                $"FFmpegOperation is invalid. Validation failed with {errors.Count} error(s):{Environment.NewLine}{string.Join(Environment.NewLine, errors.Select(e => $"- {e}"))}",
                 nameof(value),
                 new AggregateException(errors.Select(e => new InvalidOperationException(e))));
         }
