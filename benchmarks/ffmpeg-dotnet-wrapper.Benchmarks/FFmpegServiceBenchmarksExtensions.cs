@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using FFmpegDotnetWrapper.Benchmarks;
 using FFmpegDotnetWrapper.Constants;
@@ -15,6 +13,10 @@ namespace FFmpegDotnetWrapper.Benchmarks;
 /// Extension methods for <see cref="FFmpegServiceBenchmarks"/> that provide additional benchmarking utilities
 /// and helper methods for working with benchmark results.
 /// </summary>
+/// <remarks>
+/// This class provides extension methods to enhance the benchmarking capabilities of <see cref="FFmpegServiceBenchmarks"/>
+/// by offering batch operations, validation, statistics analysis, and comparison utilities.
+/// </remarks>
 public static class FFmpegServiceBenchmarksExtensions
 {
     /// <summary>
@@ -29,7 +31,7 @@ public static class FFmpegServiceBenchmarksExtensions
     /// <returns>Collection of benchmark results with file paths.</returns>
     /// <exception cref="ArgumentNullException">Thrown when inputPath or outputDirectory is null.</exception>
     /// <exception cref="ArgumentException">Thrown when inputPath is empty or outputDirectory is empty.</exception>
-    public static IReadOnlyList<BenchmarkResult> CreateBenchmarkBatch(
+    public static async Task<IReadOnlyList<BenchmarkResult>> CreateBenchmarkBatch(
         this FFmpegServiceBenchmarks benchmarks,
         string inputPath,
         string outputDirectory,
@@ -51,18 +53,10 @@ public static class FFmpegServiceBenchmarksExtensions
             Directory.CreateDirectory(iterationOutput);
 
             var outputPath = Path.Combine(iterationOutput, $"output_{videoCodec}.mp4");
-            var settings = new TranscodeSettings
-            {
-                VideoCodec = videoCodec,
-                AudioCodec = audioCodec,
-                Container = ContainerFormat.MP4,
-                VideoBitrate = 2000,
-                Quality = QualityPreset.Medium
-            };
 
             benchmarks.GlobalSetup();
-            var task = benchmarks.Transcode_H264_to_H265_MP4();
-            task.Wait();
+            var benchmarkTask = benchmarks.Transcode_H264_to_H265_MP4();
+            await benchmarkTask;
             benchmarks.GlobalCleanup();
 
             results.Add(new BenchmarkResult
@@ -105,7 +99,7 @@ public static class FFmpegServiceBenchmarksExtensions
 
             return true;
         }
-        catch
+        catch (Exception)
         {
             return false;
         }
@@ -130,7 +124,6 @@ public static class FFmpegServiceBenchmarksExtensions
         // For this extension class, we return mock statistics based on benchmark type
         return benchmarkName switch
         {
-            nameof(FFmpegServiceBenchmarks.Transcode_H264_to_H265_MP4) or
             nameof(FFmpegServiceBenchmarks.Transcode_H264_to_H265_MP4) or
             nameof(FFmpegServiceBenchmarks.Transcode_H264_to_VP9_WebM) or
             nameof(FFmpegServiceBenchmarks.Transcode_With_Hardware_Acceleration) =>
@@ -260,35 +253,32 @@ public static class FFmpegServiceBenchmarksExtensions
 
         foreach (var key in currentStats.Keys)
         {
-            if (baselineStats.TryGetValue(key, out var baselineValue))
+            if (baselineStats.TryGetValue(key, out var baselineValue) &&
+                currentStats[key] is double currentValue &&
+                baselineValue is double baselineValueDouble)
             {
-                if (currentStats[key] is double currentValue && baselineValue is double baselineValueDouble)
-                {
-                    var difference = currentValue - baselineValueDouble;
-                    var percentageChange = baselineValueDouble != 0
-                        ? (difference / baselineValueDouble) * 100
-                        : 0;
+                var difference = currentValue - baselineValueDouble;
+                var percentageChange = baselineValueDouble != 0
+                    ? (difference / baselineValueDouble) * 100
+                    : 0;
 
-                    metrics.Add(new BenchmarkMetricComparison
-                    {
-                        MetricName = key,
-                        CurrentValue = currentValue,
-                        BaselineValue = baselineValueDouble,
-                        Difference = difference,
-                        PercentageChange = Math.Round(percentageChange, 2, MidpointRounding.AwayFromZero),
-                        IsRegression = percentageChange > 5,
-                        IsImprovement = percentageChange < -5
-                    });
-                }
+                metrics.Add(new BenchmarkMetricComparison
+                {
+                    MetricName = key,
+                    CurrentValue = currentValue,
+                    BaselineValue = baselineValueDouble,
+                    Difference = difference,
+                    PercentageChange = Math.Round(percentageChange, 2, MidpointRounding.AwayFromZero),
+                    IsRegression = percentageChange > 5,
+                    IsImprovement = percentageChange < -5
+                });
             }
         }
 
-        var comparison = new BenchmarkComparison
+        return new BenchmarkComparison
         {
             Metrics = metrics.AsReadOnly()
         };
-
-        return comparison;
     }
 
     /// <summary>
@@ -296,19 +286,19 @@ public static class FFmpegServiceBenchmarksExtensions
     /// </summary>
     public sealed class BenchmarkResult
     {
-        /// <summary>Iteration number.</summary>
+        /// <summary>Gets or sets the iteration number.</summary>
         public int Iteration { get; set; }
 
-        /// <summary>Path to generated output file.</summary>
+        /// <summary>Gets or sets the path to generated output file.</summary>
         public string OutputPath { get; set; } = string.Empty;
 
-        /// <summary>Video codec used.</summary>
+        /// <summary>Gets or sets the video codec used.</summary>
         public VideoCodec VideoCodec { get; set; }
 
-        /// <summary>Audio codec used.</summary>
+        /// <summary>Gets or sets the audio codec used.</summary>
         public AudioCodec AudioCodec { get; set; }
 
-        /// <summary>Timestamp of execution.</summary>
+        /// <summary>Gets or sets the timestamp of execution.</summary>
         public DateTime Timestamp { get; set; }
     }
 
@@ -317,8 +307,8 @@ public static class FFmpegServiceBenchmarksExtensions
     /// </summary>
     public sealed class BenchmarkComparison
     {
-        /// <summary>Collection of metric comparisons.</summary>
-        public IReadOnlyList<BenchmarkMetricComparison> Metrics { get; set; } = Array.Empty<BenchmarkMetricComparison>();
+        /// <summary>Gets the collection of metric comparisons.</summary>
+        public IReadOnlyList<BenchmarkMetricComparison> Metrics { get; init; } = Array.Empty<BenchmarkMetricComparison>();
     }
 
     /// <summary>
@@ -326,25 +316,25 @@ public static class FFmpegServiceBenchmarksExtensions
     /// </summary>
     public sealed class BenchmarkMetricComparison
     {
-        /// <summary>Name of the metric.</summary>
-        public string MetricName { get; set; } = string.Empty;
+        /// <summary>Gets the name of the metric.</summary>
+        public string MetricName { get; init; } = string.Empty;
 
-        /// <summary>Value from current benchmark.</summary>
-        public double CurrentValue { get; set; }
+        /// <summary>Gets the value from current benchmark.</summary>
+        public double CurrentValue { get; init; }
 
-        /// <summary>Value from baseline benchmark.</summary>
-        public double BaselineValue { get; set; }
+        /// <summary>Gets the value from baseline benchmark.</summary>
+        public double BaselineValue { get; init; }
 
-        /// <summary>Absolute difference between values.</summary>
-        public double Difference { get; set; }
+        /// <summary>Gets the absolute difference between values.</summary>
+        public double Difference { get; init; }
 
-        /// <summary>Percentage change from baseline.</summary>
-        public double PercentageChange { get; set; }
+        /// <summary>Gets the percentage change from baseline.</summary>
+        public double PercentageChange { get; init; }
 
-        /// <summary>True if this is a performance regression.</summary>
-        public bool IsRegression { get; set; }
+        /// <summary>Gets a value indicating whether this is a performance regression.</summary>
+        public bool IsRegression { get; init; }
 
-        /// <summary>True if this is a performance improvement.</summary>
-        public bool IsImprovement { get; set; }
+        /// <summary>Gets a value indicating whether this is a performance improvement.</summary>
+        public bool IsImprovement { get; init; }
     }
 }
