@@ -1047,6 +1047,76 @@ foreach (var metric in comparison.Metrics)
 }
 ```
 
+## FFmpegEventExtensions
+
+The `FFmpegEventExtensions` class provides extension methods for `FFmpegEvent` and its derived types (`OperationStartedEvent`, `OperationCompletedEvent`, `OperationFailedEvent`, `ProgressReportedEvent`). These methods offer convenient utilities for filtering events by type, extracting operation metadata (input/output files, progress, duration, error details), and formatting events for logging or display purposes.
+
+Here is an example usage of the `FFmpegEventExtensions` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Events;
+using FFmpegDotnetWrapper.Models;
+
+// Create sample events for demonstration
+var startedEvent = new OperationStartedEvent(
+    operationType: "Transcode",
+    inputFile: @"/videos/input.mp4",
+    outputFile: @"/videos/output.mp4",
+    correlationId: "transcode-001"
+);
+
+var progressEvent = new ProgressReportedEvent(
+    operationType: "Transcode",
+    progressPercentage: 45.5,
+    elapsedTime: TimeSpan.FromSeconds(125.3),
+    correlationId: "transcode-001"
+);
+
+var completedEvent = new OperationCompletedEvent(
+    operationType: "Transcode",
+    inputFile: @"/videos/input.mp4",
+    outputFile: @"/videos/output.mp4",
+    duration: TimeSpan.FromSeconds(245.8),
+    outputFileSize: 157286400, // 150MB
+    correlationId: "transcode-001"
+);
+
+var failedEvent = new OperationFailedEvent(
+    operationType: "Transcode",
+    inputFile: @"/videos/input.mp4",
+    outputFile: @"/videos/output.mp4",
+    errorMessage: "Input file not found",
+    errorCode: "FILE_NOT_FOUND",
+    correlationId: "transcode-002"
+);
+
+// Use extension methods to extract information
+Console.WriteLine($"Started event is success: {startedEvent.IsSuccess()}");
+Console.WriteLine($"Progress event is failure: {progressEvent.IsFailure()}");
+Console.WriteLine($"Operation type: {progressEvent.GetOperationType()}");
+Console.WriteLine($"Input file: {progressEvent.GetInputFile()}");
+Console.WriteLine($"Output file: {completedEvent.GetOutputFile()}");
+Console.WriteLine($"Error message: {failedEvent.GetErrorMessage()}");
+Console.WriteLine($"Progress percentage: {progressEvent.GetProgressPercentage()}%
+");
+Console.WriteLine($"Duration: {completedEvent.GetDuration()?.TotalSeconds}s");
+Console.WriteLine($"Output file size: {completedEvent.GetOutputFileSize() / (1024.0 * 1024.0):F2} MB");
+Console.WriteLine($"Error code: {failedEvent.GetErrorCode()}");
+
+// Check correlation IDs
+Console.WriteLine($"Progress event has correlation ID 'transcode-001': {progressEvent.HasCorrelationId("transcode-001")}");
+Console.WriteLine($"Failed event has correlation ID 'transcode-001': {failedEvent.HasCorrelationId("transcode-001")}");
+
+// Format events for logging
+Console.WriteLine($"\nStarted event log:\n{startedEvent.ToLogString()}");
+Console.WriteLine($"\nProgress event log:\n{progressEvent.ToLogString()}");
+Console.WriteLine($"\nCompleted event log:\n{completedEvent.ToLogString()}");
+Console.WriteLine($"\nFailed event log:\n{failedEvent.ToLogString()}");
+
+// Get metadata string
+Console.WriteLine($"\nMetadata: {startedEvent.GetMetadataString()}");
+```
+
 ## FileUtilitiesTests
 
 The `FileUtilitiesTests` class provides unit tests for the `FileUtilities` class, verifying that file path validation, file operations, and utility methods work correctly. It includes tests for validating absolute and relative paths, handling edge cases like null/empty strings, directory traversal attempts, and environment variable expansion, as well as testing file existence checks and extension extraction.
