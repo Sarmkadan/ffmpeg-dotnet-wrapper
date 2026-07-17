@@ -356,6 +356,85 @@ long fileSize = 157286400; // 150MB
 Console.WriteLine($"File size: {FileUtilities.GetHumanReadableFileSize(fileSize)}"); // Output: 150 MB
 ```
 
+## ApplicationStartupJsonExtensions
+
+The `ApplicationStartupJsonExtensions` class provides JSON serialization and deserialization extensions for the `ApplicationStartup` configuration record. It enables converting application startup configurations to and from JSON strings, making it easy to save and load configuration settings for the FFmpeg wrapper library.
+
+
+Here is an example usage of the `ApplicationStartupJsonExtensions` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Configuration;
+using System;
+
+// Create an ApplicationStartup configuration with custom settings
+var startupConfig = new ApplicationStartup
+{
+    FFmpegPath = @"/usr/bin/ffmpeg",
+    FFprobePath = @"/usr/bin/ffprobe",
+    EnableHardwareAcceleration = true,
+    EncodingPreset = "fast",
+    VerboseLogging = true,
+    AllowConcurrentOperations = true,
+    MaxConcurrentOperations = 4,
+    OperationTimeoutSeconds = 1200,
+    MaxFileSizeBytes = 100L * 1024 * 1024 * 1024, // 100GB
+    KeepTemporaryFiles = false,
+    TemporaryDirectory = @"/tmp/ffmpeg",
+    SupportedFormats = ["mp4", "mkv", "webm"],
+    RetryAttempts = 3,
+    RetryDelayMs = 2000
+};
+
+// Serialize the configuration to JSON
+string jsonConfig = startupConfig.ToJson(indented: true);
+Console.WriteLine("Serialized configuration:");
+Console.WriteLine(jsonConfig);
+
+// Deserialize from JSON back to an ApplicationStartup instance
+string jsonInput = @"{
+    \"ffmpegPath\": \"/usr/local/bin/ffmpeg\",
+    \"ffprobePath\": \"/usr/local/bin/ffprobe\",
+    \"enableHardwareAcceleration\": true,
+    \"encodingPreset\": \"medium\",
+    \"verboseLogging\": false,
+    \"allowConcurrentOperations\": true,
+    \"maxConcurrentOperations\": 2,
+    \"operationTimeoutSeconds\": 900,
+    \"maxFileSizeBytes\": 53687091200,
+    \"keepTemporaryFiles\": false,
+    \"temporaryDirectory\": \"/var/tmp/ffmpeg\",
+    \"supportedFormats\": [\"mp4\", \"mkv\", \"webm\"],
+    \"retryAttempts\": 2,
+    \"retryDelayMs\": 1500
+}";
+
+var deserializedConfig = ApplicationStartupJsonExtensions.FromJson(jsonInput);
+
+if (deserializedConfig != null)
+{
+    Console.WriteLine($"\nDeserialized configuration:");
+    Console.WriteLine($"FFmpeg Path: {deserializedConfig.FFmpegPath}");
+    Console.WriteLine($"FFprobe Path: {deserializedConfig.FFprobePath}");
+    Console.WriteLine($"Hardware Acceleration: {deserializedConfig.EnableHardwareAcceleration}");
+    Console.WriteLine($"Encoding Preset: {deserializedConfig.EncodingPreset}");
+    Console.WriteLine($"Verbose Logging: {deserializedConfig.VerboseLogging}");
+    Console.WriteLine($"Max Concurrent Operations: {deserializedConfig.MaxConcurrentOperations}");
+    Console.WriteLine($"Operation Timeout: {deserializedConfig.OperationTimeoutSeconds}s");
+    Console.WriteLine($"Supported Formats: {string.Join(", ", deserializedConfig.SupportedFormats)}");
+}
+
+// Use TryFromJson for safe deserialization with error handling
+if (ApplicationStartupJsonExtensions.TryFromJson(jsonInput, out var safeConfig))
+{
+    Console.WriteLine("\nSafe deserialization succeeded!");
+}
+else
+{
+    Console.WriteLine("Safe deserialization failed - invalid JSON");
+}
+```
+
 ## ProcessUtilities
 
 The `ProcessUtilities` class provides static methods for executing external processes with comprehensive output capture, timeout management, and error handling. It's designed for running command-line tools like FFmpeg and FFprobe safely, with support for both synchronous and asynchronous execution, progress tracking, and argument escaping to prevent command injection.
