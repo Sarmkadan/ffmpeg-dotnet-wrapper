@@ -994,6 +994,59 @@ clonedSettings.Times.Add(TimeSpan.FromSeconds(20));
 originalSettings.Times.Should().HaveCount(1);
 ```
 
+## FFmpegServiceBenchmarksExtensions
+
+The `FFmpegServiceBenchmarksExtensions` class provides extension methods for the `FFmpegServiceBenchmarks` class that enhance benchmarking capabilities with batch operations, validation utilities, statistics analysis, and performance comparison tools. It's designed to facilitate automated benchmark execution, validation, and performance regression detection in CI/CD pipelines.
+
+Here is an example usage of the `FFmpegServiceBenchmarksExtensions` class with its public members:
+
+```csharp
+using BenchmarkDotNet.Running;
+using FFmpegDotnetWrapper.Benchmarks;
+using FFmpegDotnetWrapper.Models;
+
+// Create a benchmarks instance
+var benchmarks = BenchmarkRunner.Run<FFmpegServiceBenchmarks>();
+
+// Create a batch of benchmark runs for comparison testing
+var batchResults = await benchmarks.CreateBenchmarkBatch(
+    inputPath: @"/videos/sample.mp4",
+    outputDirectory: @"/benchmarks/output",
+    videoCodec: VideoCodec.H265,
+    audioCodec: AudioCodec.AAC,
+    iterations: 5
+);
+
+foreach (var result in batchResults)
+{
+    Console.WriteLine($"Iteration {result.Iteration}: {result.VideoCodec} -> {result.OutputPath}");
+}
+
+// Validate that all benchmark methods can execute successfully
+var isValid = await benchmarks.ValidateAllBenchmarksAsync();
+Console.WriteLine($"All benchmarks valid: {isValid}");
+
+// Get performance statistics for a specific benchmark
+var stats = benchmarks.GetBenchmarkStatistics(nameof(FFmpegServiceBenchmarks.Transcode_H264_to_H265_MP4));
+Console.WriteLine($"Mean execution time: {stats["MeanMs"]} ms");
+Console.WriteLine($"Memory allocated: {stats["AllocatedBytes"]} bytes");
+
+// Compare current performance against a baseline
+var baselineStats = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+{
+    ["MeanMs"] = 1200.0,
+    ["AllocatedBytes"] = 15000000L
+};
+
+var comparison = stats.CompareBenchmarks(baselineStats);
+
+foreach (var metric in comparison.Metrics)
+{
+    Console.WriteLine($"{metric.MetricName}: {metric.PercentageChange:+#.##%;-#.##%;0.00}% " +
+                     $"{(metric.IsRegression ? "(REGRESSION)" : metric.IsImprovement ? "(IMPROVEMENT)" : "")}");
+}
+```
+
 ## FileUtilitiesTests
 
 The `FileUtilitiesTests` class provides unit tests for the `FileUtilities` class, verifying that file path validation, file operations, and utility methods work correctly. It includes tests for validating absolute and relative paths, handling edge cases like null/empty strings, directory traversal attempts, and environment variable expansion, as well as testing file existence checks and extension extraction.
