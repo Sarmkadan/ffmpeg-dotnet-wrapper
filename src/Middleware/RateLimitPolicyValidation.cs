@@ -57,11 +57,12 @@ namespace FFmpegDotnetWrapper.Middleware
         /// <summary>
         /// Determines whether a <see cref="RateLimitPolicy"/> instance is valid.
         /// </summary>
-        /// <param name="value">The policy to check.</param>
+        /// <param name="value">The policy to validate.</param>
         /// <returns>True if the policy is valid; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
         public static bool IsValid(this RateLimitPolicy value)
         {
-            return value?.Validate().Count == 0;
+            return value is not null && value.Validate().Count == 0;
         }
 
         /// <summary>
@@ -78,9 +79,7 @@ namespace FFmpegDotnetWrapper.Middleware
             if (problems.Count > 0)
             {
                 throw new ArgumentException(
-                    $"RateLimitPolicy is invalid. Problems:\n- {
-                    string.Join("\n- ", problems)
-                    }",
+                    $"RateLimitPolicy '{value.PolicyName}' is invalid. Problems:{Environment.NewLine}- {string.Join($"{Environment.NewLine}- ", problems)}",
                     nameof(value));
             }
         }
