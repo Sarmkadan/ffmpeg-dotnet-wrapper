@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 
 namespace FFmpegDotnetWrapper.Events
 {
@@ -83,7 +84,6 @@ namespace FFmpegDotnetWrapper.Events
                 OperationStartedEvent e => e.InputFile.NullIfEmpty(),
                 OperationCompletedEvent e => e.InputFile.NullIfEmpty(),
                 OperationFailedEvent e => e.InputFile.NullIfEmpty(),
-                ProgressReportedEvent => null,
                 _ => null
             };
         }
@@ -102,8 +102,6 @@ namespace FFmpegDotnetWrapper.Events
             {
                 OperationStartedEvent e => e.OutputFile.NullIfEmpty(),
                 OperationCompletedEvent e => e.OutputFile.NullIfEmpty(),
-                OperationFailedEvent e => null, // OperationFailedEvent doesn't have OutputFile
-                ProgressReportedEvent => null,
                 _ => null
             };
         }
@@ -205,34 +203,34 @@ namespace FFmpegDotnetWrapper.Events
         {
             ArgumentNullException.ThrowIfNull(ffmpegEvent);
 
-            var parts = new List<string>();
+            var builder = new StringBuilder();
 
             if (includeTimestamp)
             {
-                parts.Add($"[{ffmpegEvent.OccurredAt:yyyy-MM-dd HH:mm:ss.fff}]");
+                builder.Append('[').Append(ffmpegEvent.OccurredAt.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture)).Append(']');
             }
 
-            parts.Add($"Event: {ffmpegEvent.GetType().Name}");
+            builder.Append("Event: ").Append(ffmpegEvent.GetType().Name);
 
             if (!string.IsNullOrEmpty(ffmpegEvent.EventId))
             {
-                parts.Add($"ID: {ffmpegEvent.EventId}");
+                builder.Append(" | ID: ").Append(ffmpegEvent.EventId);
             }
 
             if (!string.IsNullOrEmpty(ffmpegEvent.CorrelationId))
             {
-                parts.Add($"Correlation: {ffmpegEvent.CorrelationId}");
+                builder.Append(" | Correlation: ").Append(ffmpegEvent.CorrelationId);
             }
 
             if (!string.IsNullOrEmpty(ffmpegEvent.Source))
             {
-                parts.Add($"Source: {ffmpegEvent.Source}");
+                builder.Append(" | Source: ").Append(ffmpegEvent.Source);
             }
 
             var operationType = ffmpegEvent.GetOperationType();
             if (!string.IsNullOrEmpty(operationType))
             {
-                parts.Add($"Operation: {operationType}");
+                builder.Append(" | Operation: ").Append(operationType);
             }
 
             var inputFile = ffmpegEvent.GetInputFile();
@@ -240,45 +238,45 @@ namespace FFmpegDotnetWrapper.Events
 
             if (!string.IsNullOrEmpty(inputFile))
             {
-                parts.Add($"Input: {inputFile}");
+                builder.Append(" | Input: ").Append(inputFile);
             }
 
             if (!string.IsNullOrEmpty(outputFile))
             {
-                parts.Add($"Output: {outputFile}");
+                builder.Append(" | Output: ").Append(outputFile);
             }
 
             var progress = ffmpegEvent.GetProgressPercentage();
             if (progress.HasValue)
             {
-                parts.Add($"Progress: {progress.Value:0.00}%");
+                builder.Append(" | Progress: ").Append(progress.Value.ToString("0.00", CultureInfo.InvariantCulture)).Append('%');
             }
 
             var duration = ffmpegEvent.GetDuration();
             if (duration.HasValue)
             {
-                parts.Add($"Duration: {duration.Value.TotalSeconds:0.00}s");
+                builder.Append(" | Duration: ").Append(duration.Value.TotalSeconds.ToString("0.00", CultureInfo.InvariantCulture)).Append('s');
             }
 
             var fileSize = ffmpegEvent.GetOutputFileSize();
             if (fileSize.HasValue)
             {
-                parts.Add($"Size: {fileSize.Value:N0} bytes");
+                builder.Append(" | Size: ").Append(fileSize.Value.ToString("N0", CultureInfo.InvariantCulture)).Append(" bytes");
             }
 
             var errorMessage = ffmpegEvent.GetErrorMessage();
             if (!string.IsNullOrEmpty(errorMessage))
             {
-                parts.Add($"Error: {errorMessage}");
+                builder.Append(" | Error: ").Append(errorMessage);
             }
 
             var errorCode = ffmpegEvent.GetErrorCode();
             if (!string.IsNullOrEmpty(errorCode))
             {
-                parts.Add($"Code: {errorCode}");
+                builder.Append(" | Code: ").Append(errorCode);
             }
 
-            return string.Join(" | ", parts);
+            return builder.ToString();
         }
 
         /// <summary>
@@ -306,9 +304,9 @@ namespace FFmpegDotnetWrapper.Events
         {
             ArgumentNullException.ThrowIfNull(ffmpegEvent);
 
-            if (ffmpegEvent is OperationStartedEvent e && e.Metadata != null && e.Metadata.Count > 0)
+            if (ffmpegEvent is OperationStartedEvent { Metadata: { } metadata } && metadata.Count > 0)
             {
-                var metadataParts = e.Metadata
+                var metadataParts = metadata
                     .Select(kvp => $"{kvp.Key}={FormatMetadataValue(kvp.Value)}")
                     .ToList();
                 return string.Join(", ", metadataParts);
@@ -322,14 +320,14 @@ namespace FFmpegDotnetWrapper.Events
             return string.IsNullOrEmpty(value) ? null : value;
         }
 
-        private static string FormatMetadataValue(object value)
+        private static string FormatMetadataValue(object? value)
         {
             return value switch
             {
                 null => "null",
                 string s => s,
                 IFormattable f => f.ToString(null, CultureInfo.InvariantCulture),
-                _ => value.ToString() ?? "null"
+                _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? "null"
             };
         }
     }
