@@ -17,26 +17,29 @@ namespace FFmpegDotnetWrapper.Cli
     /// </summary>
     public static class CliOutputFormatterValidation
     {
+        private const int MaxConsoleWidth = 200;
+        private const int MaxWidth = 200;
+        private static readonly IReadOnlyList<string> EmptyProblems = Array.Empty<string>();
+
         /// <summary>
         /// Validates the specified console width value.
         /// </summary>
         /// <param name="consoleWidth">The console width to validate.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if consoleWidth is less than or equal to 0.</exception>
         /// <returns>A list of human-readable validation problems; empty if valid.</returns>
         public static IReadOnlyList<string> ValidateConsoleWidth(int consoleWidth)
         {
-            var problems = new List<string>();
-
             if (consoleWidth <= 0)
             {
-                problems.Add($"Console width must be positive, but was {consoleWidth}.");
+                return new[] { $"Console width must be positive, but was {consoleWidth}." };
             }
 
-            if (consoleWidth > 200)
+            if (consoleWidth > MaxConsoleWidth)
             {
-                problems.Add($"Console width {consoleWidth} exceeds reasonable maximum of 200.");
+                return new[] { $"Console width {consoleWidth} exceeds reasonable maximum of {MaxConsoleWidth}." };
             }
 
-            return problems.AsReadOnly();
+            return EmptyProblems;
         }
 
         /// <summary>
@@ -45,60 +48,58 @@ namespace FFmpegDotnetWrapper.Cli
         /// <param name="useColors">The use colors flag to validate.</param>
         /// <returns>A list of validation problems; empty if valid.</returns>
         public static IReadOnlyList<string> ValidateUseColors(bool useColors)
-        {
-            // Boolean is always valid
-            return Array.Empty<string>();
-        }
+            => EmptyProblems;
 
         /// <summary>
         /// Validates a percentage value for progress bars.
         /// </summary>
         /// <param name="percentage">The percentage to validate (0-100).</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if percentage is NaN, infinite, negative, or greater than 100.</exception>
         /// <returns>A list of validation problems; empty if valid.</returns>
         public static IReadOnlyList<string> ValidatePercentage(double percentage)
         {
-            var problems = new List<string>();
-
             if (double.IsNaN(percentage))
             {
-                problems.Add("Percentage cannot be NaN.");
-            }
-            else if (double.IsInfinity(percentage))
-            {
-                problems.Add("Percentage cannot be infinite.");
-            }
-            else if (percentage < 0)
-            {
-                problems.Add($"Percentage cannot be negative, but was {percentage}.");
-            }
-            else if (percentage > 100)
-            {
-                problems.Add($"Percentage cannot exceed 100, but was {percentage}.");
+                return new[] { "Percentage cannot be NaN." };
             }
 
-            return problems.AsReadOnly();
+            if (double.IsInfinity(percentage))
+            {
+                return new[] { "Percentage cannot be infinite." };
+            }
+
+            if (percentage < 0)
+            {
+                return new[] { $"Percentage cannot be negative, but was {percentage}." };
+            }
+
+            if (percentage > 100)
+            {
+                return new[] { $"Percentage cannot exceed 100, but was {percentage}." };
+            }
+
+            return EmptyProblems;
         }
 
         /// <summary>
         /// Validates a width parameter for formatting operations.
         /// </summary>
         /// <param name="width">The width to validate.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if width is less than or equal to 0.</exception>
         /// <returns>A list of validation problems; empty if valid.</returns>
         public static IReadOnlyList<string> ValidateWidth(int width)
         {
-            var problems = new List<string>();
-
             if (width <= 0)
             {
-                problems.Add($"Width must be positive, but was {width}.");
+                return new[] { $"Width must be positive, but was {width}." };
             }
 
-            if (width > 200)
+            if (width > MaxWidth)
             {
-                problems.Add($"Width {width} exceeds reasonable maximum of 200.");
+                return new[] { $"Width {width} exceeds reasonable maximum of {MaxWidth}." };
             }
 
-            return problems.AsReadOnly();
+            return EmptyProblems;
         }
 
         /// <summary>
@@ -106,10 +107,16 @@ namespace FFmpegDotnetWrapper.Cli
         /// </summary>
         /// <param name="values">The list of strings to validate.</param>
         /// <param name="paramName">The name of the parameter for error messages.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="values"/> is null.</exception>
         /// <returns>A list of validation problems; empty if valid.</returns>
         public static IReadOnlyList<string> ValidateStringList(IReadOnlyList<string> values, string paramName = "value")
         {
             ArgumentNullException.ThrowIfNull(values);
+
+            if (values.Count == 0)
+            {
+                return EmptyProblems;
+            }
 
             var problems = new List<string>();
 
@@ -123,10 +130,6 @@ namespace FFmpegDotnetWrapper.Cli
                 {
                     problems.Add($"{paramName}[{i}] is null or empty.");
                 }
-                else if (string.IsNullOrWhiteSpace(values[i]))
-                {
-                    problems.Add($"{paramName}[{i}] is null, empty, or whitespace.");
-                }
             }
 
             return problems.AsReadOnly();
@@ -137,23 +140,24 @@ namespace FFmpegDotnetWrapper.Cli
         /// </summary>
         /// <param name="message">The message to validate.</param>
         /// <param name="paramName">The name of the parameter for error messages.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="message"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="message"/> is empty or whitespace.</exception>
         /// <returns>A list of validation problems; empty if valid.</returns>
         public static IReadOnlyList<string> ValidateMessage(string message, string paramName = "message")
         {
             ArgumentNullException.ThrowIfNull(message);
 
-            var problems = new List<string>();
-
             if (string.IsNullOrEmpty(message))
             {
-                problems.Add($"{paramName} is null or empty.");
-            }
-            else if (string.IsNullOrWhiteSpace(message))
-            {
-                problems.Add($"{paramName} is null, empty, or whitespace.");
+                return new[] { $"{paramName} is null or empty." };
             }
 
-            return problems.AsReadOnly();
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return new[] { $"{paramName} is null, empty, or whitespace." };
+            }
+
+            return EmptyProblems;
         }
     }
 }
