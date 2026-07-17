@@ -1,7 +1,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =====================================================================
+// ===================================================================
 
 using System;
 using System.Text.Json;
@@ -29,6 +29,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// <param name="indented">Whether to format the JSON with indentation for readability.</param>
         /// <returns>A JSON string representation of the API request.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is <see langword="null"/>.</exception>
+        /// <exception cref="JsonException">Thrown when serialization fails.</exception>
         public static string ToJson(this ApiRequest value, bool indented = false)
         {
             ArgumentNullException.ThrowIfNull(value);
@@ -49,6 +50,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// <param name="json">The JSON string to deserialize.</param>
         /// <returns>An <see cref="ApiRequest"/> object if deserialization succeeds; otherwise, <see langword="null"/>.</returns>
         /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
+        /// <exception cref="JsonException">Thrown when deserialization fails due to malformed JSON.</exception>
         public static ApiRequest? FromJson(string json)
         {
             ArgumentException.ThrowIfNullOrEmpty(json);
