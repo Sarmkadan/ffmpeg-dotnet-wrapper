@@ -608,6 +608,111 @@ if (ValidationUtilities.IsValidOpacity(0.75))
 }
 ```
 
+## CliOutputFormatterValidation
+
+The `CliOutputFormatterValidation` class provides validation helpers for CLI output formatting operations. It validates constructor parameters and ensures formatting methods receive valid inputs, preventing runtime errors when configuring console output formatting for FFmpeg operations.
+
+Here is an example usage of the `CliOutputFormatterValidation` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Cli;
+using System;
+
+// Validate console width for formatting operations
+var consoleWidthValidation = CliOutputFormatterValidation.ValidateConsoleWidth(120);
+if (consoleWidthValidation.Count == 0)
+{
+    Console.WriteLine("Console width 120 is valid");
+}
+else
+{
+    foreach (var problem in consoleWidthValidation)
+    {
+        Console.WriteLine($"Validation error: {problem}");
+    }
+}
+
+// Validate percentage values for progress bars (0-100 range)
+var percentageValidation = CliOutputFormatterValidation.ValidatePercentage(75.5);
+if (percentageValidation.Count == 0)
+{
+    Console.WriteLine("Percentage 75.5% is valid");
+}
+
+// Validate width parameters
+var widthValidation = CliOutputFormatterValidation.ValidateWidth(80);
+if (widthValidation.Count == 0)
+{
+    Console.WriteLine("Width 80 is valid");
+}
+
+// Validate use colors flag (always valid - returns empty list)
+var colorsValidation = CliOutputFormatterValidation.ValidateUseColors(true);
+if (colorsValidation.Count == 0)
+{
+    Console.WriteLine("Use colors flag is valid");
+}
+
+// Validate string lists to ensure no null or empty entries
+var stringList = new[] { "item1", "item2", "item3" };
+var stringListValidation = CliOutputFormatterValidation.ValidateStringList(stringList, "items");
+if (stringListValidation.Count == 0)
+{
+    Console.WriteLine("String list is valid");
+}
+
+// Validate message strings
+var messageValidation = CliOutputFormatterValidation.ValidateMessage("Processing complete");
+if (messageValidation.Count == 0)
+{
+    Console.WriteLine("Message is valid");
+}
+
+// Example: Using validation in a real formatting scenario
+public class ConsoleOutputFormatter
+{
+    private readonly int _consoleWidth;
+    private readonly bool _useColors;
+    
+    public ConsoleOutputFormatter(int consoleWidth = 80, bool useColors = true)
+    {
+        var widthProblems = CliOutputFormatterValidation.ValidateConsoleWidth(consoleWidth);
+        var colorsProblems = CliOutputFormatterValidation.ValidateUseColors(useColors);
+        
+        if (widthProblems.Count > 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(consoleWidth), string.Join(" ", widthProblems));
+        }
+        
+        _consoleWidth = consoleWidth;
+        _useColors = useColors;
+    }
+    
+    public void WriteProgress(double percentage, string message)
+    {
+        var percentageProblems = CliOutputFormatterValidation.ValidatePercentage(percentage);
+        var messageProblems = CliOutputFormatterValidation.ValidateMessage(message);
+        
+        if (percentageProblems.Count > 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(percentage), string.Join(" ", percentageProblems));
+        }
+        
+        if (messageProblems.Count > 0)
+        {
+            throw new ArgumentException(string.Join(" ", messageProblems));
+        }
+        
+        // Format progress bar based on validated values
+        Console.WriteLine($"[{percentage:F1}%] {message}");
+    }
+}
+
+// Usage example
+var formatter = new ConsoleOutputFormatter(consoleWidth: 100, useColors: true);
+formatter.WriteProgress(45.2, "Processing video file...");
+```
+
 ## ConcatenationBuilderTests
 
 The `ConcatenationBuilderTests` class provides unit tests for the `ConcatenationBuilder` class, verifying that video concatenation operations work correctly with various configurations including segment management, transitions, trimming, and error handling scenarios.
