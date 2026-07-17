@@ -1,7 +1,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =====================================================================
+// ===================================================================
 
 using System;
 using System.Collections.Generic;
@@ -51,10 +51,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
                 errors.Add("ProgressPercentage must be between 0 and 100 inclusive.");
             }
 
-            // Validate StatusMessage
-            if (string.IsNullOrWhiteSpace(value.StatusMessage))
+            // StatusMessage is required for all states except Queued (before processing starts)
+            if (value.State != JobState.Queued && string.IsNullOrWhiteSpace(value.StatusMessage))
             {
-                errors.Add("StatusMessage cannot be null or whitespace.");
+                errors.Add("StatusMessage cannot be null or whitespace for non-queued jobs.");
             }
 
             // Validate CreatedAt
@@ -141,10 +141,9 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
         /// </summary>
         /// <param name="value">The job to check.</param>
         /// <returns>True if the job is valid; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
         public static bool IsValid(this BackgroundJob value)
-        {
-            return value.Validate().Count == 0;
-        }
+            => value.Validate().Count == 0;
 
         /// <summary>
         /// Ensures that a background job is valid, throwing an exception if it is not.
