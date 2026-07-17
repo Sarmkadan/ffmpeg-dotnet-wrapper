@@ -3,7 +3,7 @@
 // CTO & Software Architect
 // =====================================================================
 
-using System.Globalization;
+using System.Diagnostics.CodeAnalysis;
 
 namespace FFmpegDotnetWrapper.Models;
 
@@ -48,11 +48,11 @@ public static class ConversionResultValidation
         }
 
         // Validate OutputMedia
-        if (value.IsSuccess && value.OutputMedia == null)
+        if (value.IsSuccess && value.OutputMedia is null)
         {
             problems.Add("ConversionResult.OutputMedia must not be null when IsSuccess is true.");
         }
-        else if (value.OutputMedia != null)
+        else if (value.OutputMedia is not null)
         {
             // Validate MediaFile properties
             if (string.IsNullOrWhiteSpace(value.OutputMedia.FilePath))
@@ -91,7 +91,7 @@ public static class ConversionResultValidation
         // WarningMessage can be null, empty, or contain warnings - no validation needed
 
         // Validate Metrics
-        if (value.Metrics == null)
+        if (value.Metrics is null)
         {
             problems.Add("ConversionResult.Metrics must not be null.");
         }
@@ -119,7 +119,7 @@ public static class ConversionResultValidation
         {
             problems.Add("ConversionResult.CompletedAt should be set when IsSuccess is false.");
         }
-        else if (value.CompletedAt != default && value.CompletedAt < value.CreatedAt)
+        else if (value.CompletedAt != default && value.CreatedAt != default && value.CompletedAt < value.CreatedAt)
         {
             problems.Add("ConversionResult.CompletedAt cannot be earlier than CreatedAt.");
         }
@@ -151,9 +151,7 @@ public static class ConversionResultValidation
     /// <returns>True if the result is valid; otherwise, false.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
     public static bool IsValid(this ConversionResult value)
-    {
-        return value.Validate().Count == 0;
-    }
+        => value.Validate().Count == 0;
 
     /// <summary>
     /// Ensures that the conversion result is valid, throwing an exception if it is not.
@@ -167,13 +165,11 @@ public static class ConversionResultValidation
 
         var problems = value.Validate();
 
-        if (problems.Count == 0)
+        if (problems.Count != 0)
         {
-            return;
+            throw new ArgumentException(
+                $"ConversionResult is invalid. Problems: {string.Join(" ", problems)}",
+                nameof(value));
         }
-
-        throw new ArgumentException(
-            $"ConversionResult is invalid. Problems: {string.Join(" ", problems)}",
-            nameof(value));
     }
 }
