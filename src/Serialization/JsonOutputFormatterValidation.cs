@@ -26,13 +26,10 @@ namespace FFmpegDotnetWrapper.Serialization
         {
             ArgumentNullException.ThrowIfNull(value);
 
-            var errors = new List<string>();
-
             // JsonOutputFormatter has no configurable properties to validate
             // The constructor parameter 'indent' is private and has no public accessors
             // All validation is handled by the constructor itself
-
-            return errors.AsReadOnly();
+            return Array.Empty<string>();
         }
 
         /// <summary>
@@ -40,16 +37,11 @@ namespace FFmpegDotnetWrapper.Serialization
         /// </summary>
         /// <param name="value">The JsonOutputFormatter instance to check.</param>
         /// <returns>True if the instance is valid; otherwise, false.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="value"/> is null.</exception>
         public static bool IsValid(this object? value)
         {
-            try
-            {
-                return value?.Validate()?.Count == 0;
-            }
-            catch (ArgumentNullException)
-            {
-                return false;
-            }
+            ArgumentNullException.ThrowIfNull(value);
+            return value.Validate().Count == 0;
         }
 
         /// <summary>
