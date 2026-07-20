@@ -55,10 +55,10 @@ namespace FFmpegDotnetWrapper.Services
             var bitrate = ParseBitrate(probeData.Format?.BitRate);
             var streams = probeData.Streams?
                 .Select(s => new MediaStreamInfo(
-                    codec: s.CodecName ?? string.Empty,
-                    width: s.Width,
-                    height: s.Height,
-                    channels: s.Channels))
+                    Codec: s.CodecName ?? string.Empty,
+                    Width: s.Width,
+                    Height: s.Height,
+                    Channels: s.Channels))
                 .ToList() ?? new List<MediaStreamInfo>();
 
             return new MediaProbeResult(duration, bitrate, streams);
