@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using FFmpegDotnetWrapper.Api.DTOs;
 using FFmpegDotnetWrapper.Services;
 using FFmpegDotnetWrapper.Models;
+using FFmpegDotnetWrapper.Constants;
 using Microsoft.Extensions.Logging;
 
 namespace FFmpegDotnetWrapper.Api.Controllers
@@ -267,6 +268,52 @@ namespace FFmpegDotnetWrapper.Api.Controllers
                 _logger.LogError(ex, "Thumbnail extraction failed for {InputPath}", request.InputPath);
                 return ApiResponse<ThumbnailResult>.Failure(ex.Message);
             }
+        }
+
+    /// <summary>
+    /// Extracts audio from a video file and saves as a standalone audio file.
+    /// Supports multiple audio codecs (MP3, AAC, OPUS, FLAC) and configurable bitrate.
+    /// </summary>
+    public async Task<ApiResponse<ConversionResult>> ExtractAudioAsync(AudioExtractRequest request)
+    {
+        try
+        {
+            if (!System.IO.File.Exists(request.InputPath))
+            {
+                _logger.LogWarning("Input file not found: {InputPath}", request.InputPath);
+                return ApiResponse<ConversionResult>.Failure("Input file does not exist");
+            }
+
+            var inputMedia = new MediaFile(request.InputPath);
+
+            // Map string audio codec to enum
+            if (!Enum.TryParse<AudioCodec>(request.AudioCodec, true, out var audioCodec))
+            {
+                _logger.LogWarning("Invalid audio codec specified: {AudioCodec}, defaulting to MP3", request.AudioCodec);
+                audioCodec = AudioCodec.MP3;
+            }
+
+            var result = await _ffmpegService.ExtractAudioAsync(
+                inputMedia,
+                request.OutputPath,
+                audioCodec,
+                request.AudioBitrate
+            );
+
+            _logger.LogInformation(
+                "Audio extraction completed: {Input} -> {Output} ({Codec} @ {Bitrate}kbps)",
+                request.InputPath,
+                request.OutputPath,
+                audioCodec,
+                request.AudioBitrate
+            );
+
+            return ApiResponse<ConversionResult>.Success(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Audio extraction failed for {InputPath}", request.InputPath);
+            return ApiResponse<ConversionResult>.Failure(ex.Message);
         }
     }
 }

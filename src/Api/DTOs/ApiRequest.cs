@@ -254,4 +254,30 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// </summary>
         public string Format { get; set; } = "jpeg";
     }
+
+    /// <summary>
+    /// Request DTO for audio extraction operations.
+    /// Extracts audio from video files and saves as standalone audio files.
+    /// </summary>
+    public class AudioExtractRequest : ApiRequest
+    {
+        [Required(ErrorMessage = "Input path is required")]
+        [StringLength(500)]
+        public string InputPath { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Output path is required")]
+        [StringLength(500)]
+        public string OutputPath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Target audio codec for extraction. Defaults to MP3.
+        /// </summary>
+        public string AudioCodec { get; set; } = "mp3";
+
+        /// <summary>
+        /// Target audio bitrate in kbps. Defaults to 192 kbps.
+        /// </summary>
+        [Range(32, 320)]
+        public int AudioBitrate { get; set; } = 192;
+    }
 }

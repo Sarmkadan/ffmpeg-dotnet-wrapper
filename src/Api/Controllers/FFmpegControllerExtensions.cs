@@ -508,5 +508,52 @@ namespace FFmpegDotnetWrapper.Api.Controllers
                 return ApiResponse<ConversionResult>.Failure(ex.Message);
             }
         }
+
+    /// <summary>
+    /// Extracts audio from a video file and saves as a standalone audio file.
+    /// Supports multiple audio codecs (MP3, AAC, OPUS, FLAC) and configurable bitrate.
+    /// </summary>
+    /// <param name="controller">The FFmpeg controller instance</param>
+    /// <param name="inputPath">Path to the input video file</param>
+    /// <param name="outputPath">Path to save the extracted audio</param>
+    /// <param name="audioCodec">Target audio codec (mp3, aac, opus, flac)</param>
+    /// <param name="audioBitrate">Target audio bitrate in kbps</param>
+    /// <returns>Conversion result with output file information</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="controller"/> is <see langword="null"/></exception>
+    /// <exception cref="ArgumentException"><paramref name="inputPath"/> or <paramref name="outputPath"/> is <see langword="null"/>, empty, or consists only of whitespace</exception>
+    public static async Task<ApiResponse<ConversionResult>> ExtractAudioAsync(
+        this FFmpegController controller,
+        string inputPath,
+        string outputPath,
+        string audioCodec = "mp3",
+        int audioBitrate = 192)
+    {
+        ArgumentNullException.ThrowIfNull(controller);
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(inputPath, nameof(inputPath));
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath, nameof(outputPath));
+
+        if (!File.Exists(inputPath))
+            return ApiResponse<ConversionResult>.Failure("Input file does not exist");
+
+        if (audioBitrate < 32 || audioBitrate > 320)
+            return ApiResponse<ConversionResult>.Failure("Audio bitrate must be between 32 and 320 kbps");
+
+        try
+        {
+            var request = new AudioExtractRequest
+            {
+                InputPath = inputPath,
+                OutputPath = outputPath,
+                AudioCodec = audioCodec,
+                AudioBitrate = audioBitrate
+            };
+
+            return await controller.ExtractAudioAsync(request);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<ConversionResult>.Failure(ex.Message);
+        }
     }
 }
