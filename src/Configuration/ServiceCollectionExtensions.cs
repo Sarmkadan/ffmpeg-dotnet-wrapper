@@ -39,6 +39,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<TranscodeService>();
         services.AddSingleton<SubtitleService>();
         services.AddSingleton<ThumbnailService>();
+            services.AddSingleton<IWatermarkService, WatermarkService>();
 
         // Register options if they were configured
         if (configureOptions is not null)
