@@ -1,6 +1,12 @@
+// =============================================================================
+// Author: Vladyslav Zaiets | https://sarmkadan.com
+// CTO & Software Architect
+// =============================================================================
+
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using FFmpegDotnetWrapper.Models;
 using FFmpegDotnetWrapper.Utilities;
 
 namespace FFmpegDotnetWrapper.Services
@@ -26,29 +32,46 @@ namespace FFmpegDotnetWrapper.Services
         }
 
         /// <summary>
+        /// Generates an optimized GIF from a video segment using default settings.
+        /// </summary>
+        /// <param name="sourcePath">Path to the source video file.</param>
+        /// <param name="start">Start time of the segment.</param>
+        /// <param name="duration">Length of the segment.</param>
+        /// <returns>The full path to the generated GIF file.</returns>
+        public async Task<string> ExportGifAsync(
+            string sourcePath,
+            TimeSpan start,
+            TimeSpan duration)
+        {
+            var settings = new GifExportSettings();
+            return await ExportGifAsync(sourcePath, start, duration, settings).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Generates an optimized GIF from a video segment.
         /// </summary>
         /// <param name="sourcePath">Path to the source video file.</param>
         /// <param name="start">Start time of the segment.</param>
         /// <param name="duration">Length of the segment.</param>
-        /// <param name="fps">Frames‑per‑second for the output GIF.</param>
-        /// <param name="width">Target width of the GIF (height is scaled to preserve aspect ratio).</param>
+        /// <param name="settings">Configuration settings for the GIF export.</param>
         /// <returns>The full path to the generated GIF file.</returns>
         public async Task<string> ExportGifAsync(
             string sourcePath,
             TimeSpan start,
             TimeSpan duration,
-            int fps,
-            int width)
+            GifExportSettings settings)
         {
+            if (settings == null)
+                throw new ArgumentNullException(nameof(settings));
+
             if (string.IsNullOrWhiteSpace(sourcePath))
                 throw new ArgumentException("Source path must be provided.", nameof(sourcePath));
 
             if (!File.Exists(sourcePath))
                 throw new FileNotFoundException("Source video file not found.", sourcePath);
 
-            if (fps <= 0) throw new ArgumentOutOfRangeException(nameof(fps));
-            if (width <= 0) throw new ArgumentOutOfRangeException(nameof(width));
+            int fps = settings.Fps;
+            int width = settings.Width;
 
             // Build output file name next to the source file.
             string outputGifPath = Path.Combine(
@@ -66,15 +89,15 @@ namespace FFmpegDotnetWrapper.Services
             {
                 // ---------- First pass: generate palette ----------
                 string paletteArgs = $"-y -ss {start.TotalSeconds:F3} -t {duration.TotalSeconds:F3} -i \"{sourcePath}\" " +
-                                    $"-vf \"fps={fps},scale={width}:-1:flags=lanczos,palettegen\" \"{palettePath}\"";
+                    $"-vf \"fps={fps},scale={width}:-1:flags=lanczos,palettegen\" \"{palettePath}\"";
 
                 await RunFfmpegAsync(paletteArgs).ConfigureAwait(false);
 
                 // ---------- Second pass: create GIF using palette ----------
                 string gifArgs = $"-y -ss {start.TotalSeconds:F3} -t {duration.TotalSeconds:F3} -i \"{sourcePath}\" " +
-                                 $"-i \"{palettePath}\" " +
-                                 $"-filter_complex \"fps={fps},scale={width}:-1:flags=lanczos[x];[x][1:v]paletteuse\" " +
-                                 $"\"{outputGifPath}\"";
+                    $"-i \"{palettePath}\" " +
+                    $"-filter_complex \"fps={fps},scale={width}:-1:flags=lanczos[x];[x][1:v]paletteuse\" " +
+                    $"\"{outputGifPath}\"";
 
                 await RunFfmpegAsync(gifArgs).ConfigureAwait(false);
             }
@@ -112,8 +135,8 @@ namespace FFmpegDotnetWrapper.Services
                 {
                     // Include both stdout and stderr to aid debugging.
                     string message = $"ffmpeg exited with code {result.ExitCode}. " +
-                                     $"StdOut: {result.StandardOutput} " +
-                                     $"StdErr: {result.StandardError}";
+                        $"StdOut: {result.StandardOutput} " +
+                        $"StdErr: {result.StandardError}";
                     throw new InvalidOperationException(message);
                 }
             });
