@@ -252,3 +252,19 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
         }
     }
 }
+
+/// <summary>
+/// Priority constants for job queue operations.
+/// Lower values indicate higher priority (1 = highest, 10 = lowest).
+/// </summary>
+public static class JobPriority
+{
+    /// <summary>Highest priority jobs (1).</summary>
+    public const int High = 1;
+
+    /// <summary>Normal priority jobs (5).</summary>
+    public const int Normal = 5;
+
+    /// <summary>Lowest priority jobs (10).</summary>
+    public const int Low = 10;
+}

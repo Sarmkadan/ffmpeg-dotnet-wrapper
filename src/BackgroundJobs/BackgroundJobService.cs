@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FFmpegDotnetWrapper.BackgroundJobs;
 using FFmpegDotnetWrapper.Events;
 using Microsoft.Extensions.Logging;
 
@@ -92,7 +93,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
     /// </summary>
     public interface IBackgroundJobService
     {
-        string EnqueueJob(string jobName, Func<CancellationToken, Task> jobWork, Dictionary<string, object>? metadata = null);
+        string EnqueueJob(string jobName, Func<CancellationToken, Task> jobWork, Dictionary<string, object>? metadata = null, int priority = JobPriority.Normal);
         Task<BackgroundJob?> GetJobAsync(string jobId);
         Task<IEnumerable<BackgroundJob>> GetActiveJobsAsync();
         Task<IEnumerable<BackgroundJob>> GetJobsAsync(JobState state);
@@ -104,55 +105,93 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
     {
         private readonly ILogger<BackgroundJobService> _logger;
         private readonly IEventPublisher _eventPublisher;
+    private readonly IJobQueue _jobQueue;
         private readonly Dictionary<string, BackgroundJob> _jobs = new();
         private readonly Dictionary<string, CancellationTokenSource> _cancellationTokens = new();
         private readonly object _lockObject = new();
 
-        public BackgroundJobService(ILogger<BackgroundJobService> logger, IEventPublisher eventPublisher)
+        public BackgroundJobService(ILogger<BackgroundJobService> logger, IEventPublisher eventPublisher, IJobQueue jobQueue)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _eventPublisher = eventPublisher ?? throw new ArgumentNullException(nameof(eventPublisher));
+        _jobQueue = jobQueue ?? throw new ArgumentNullException(nameof(jobQueue));
         }
 
         /// <summary>
         /// Enqueues a new background job for processing.
         /// Jobs are executed on a thread pool and can be tracked via their job ID.
         /// </summary>
-        public string EnqueueJob(string jobName, Func<CancellationToken, Task> jobWork, Dictionary<string, object>? metadata = null)
-        {
-            if (string.IsNullOrEmpty(jobName))
-                throw new ArgumentException("Job name cannot be empty", nameof(jobName));
-            if (jobWork == null)
-                throw new ArgumentNullException(nameof(jobWork));
-
-            var job = new BackgroundJob
-            {
-                JobName = jobName,
-                State = JobState.Queued,
-                StatusMessage = "Waiting to be processed",
-                Metadata = metadata ?? new()
-            };
-
-            var cts = new CancellationTokenSource();
-
-            lock (_lockObject)
-            {
-                _jobs[job.JobId] = job;
-                _cancellationTokens[job.JobId] = cts;
-            }
-
-            _logger.LogInformation("Job enqueued: {JobId} ({JobName})", job.JobId, jobName);
-
-            // Fire off the job on thread pool
-            _ = ProcessJobAsync(job, jobWork, cts.Token);
-
-            return job.JobId;
-        }
 
         /// <summary>
         /// Retrieves job information by ID.
         /// Returns null if job doesn't exist or has been cleaned up.
         /// </summary>
+    /// <summary>
+    /// Enqueues a new background job for processing.
+    /// Jobs are executed on a thread pool and can be tracked via their job ID.
+    /// </summary>
+    public string EnqueueJob(string jobName, Func<CancellationToken, Task> jobWork, Dictionary<string, object>? metadata = null, int priority = JobPriority.Normal)
+    {
+        if (string.IsNullOrEmpty(jobName))
+            throw new ArgumentException("Job name cannot be empty", nameof(jobName));
+        if (jobWork == null)
+            throw new ArgumentNullException(nameof(jobWork));
+
+        var job = new BackgroundJob
+        {
+            JobName = jobName,
+            State = JobState.Queued,
+            StatusMessage = "Waiting to be processed",
+            Metadata = metadata ?? new()
+        };
+
+        var cts = new CancellationTokenSource();
+
+        lock (_lockObject)
+        {
+            _jobs[job.JobId] = job;
+            _cancellationTokens[job.JobId] = cts;
+        }
+
+        _logger.LogInformation("Job enqueued: {JobId} ({JobName}, Priority: {Priority})", job.JobId, jobName, priority);
+
+        // Fire off the job on thread pool with priority-based scheduling
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                // Wait for job to be dequeued based on priority
+                var queuedJob = await _jobQueue.DequeueAsync();
+                if (queuedJob?.JobId == job.JobId)
+                {
+                    await ProcessJobAsync(job, jobWork, cts.Token);
+                }
+                else
+                {
+                    _logger.LogWarning("Job {JobId} was not dequeued, marking as failed", job.JobId);
+                    lock (_lockObject)
+                    {
+                        job.State = JobState.Failed;
+                        job.ErrorMessage = "Job was not dequeued from priority queue";
+                        job.StatusMessage = "Failed - not dequeued";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing job {JobId}", job.JobId);
+                lock (_lockObject)
+                {
+                    job.State = JobState.Failed;
+                    job.ErrorMessage = ex.Message;
+                    job.StatusMessage = "Failed during processing";
+                }
+            }
+        }, cts.Token);
+
+        return job.JobId;
+    }
+
         public Task<BackgroundJob?> GetJobAsync(string jobId)
         {
             lock (_lockObject)
