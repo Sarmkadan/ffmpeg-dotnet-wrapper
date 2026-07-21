@@ -241,11 +241,22 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         private TimeSpan CalculateETA(double progressPercent, TimeSpan elapsed)
         {
-            if (progressPercent <= 0 || progressPercent >= 100)
+            if (double.IsNaN(progressPercent) || double.IsInfinity(progressPercent))
+                return TimeSpan.Zero;
+
+            if (progressPercent <= 0 || progressPercent >= 100 || elapsed.TotalSeconds <= 0)
+                return TimeSpan.Zero;
+
+            // Prevent division by very small numbers that could cause NaN
+            if (progressPercent < 0.001)
                 return TimeSpan.Zero;
 
             var totalSeconds = (elapsed.TotalSeconds / progressPercent) * 100;
             var remainingSeconds = totalSeconds - elapsed.TotalSeconds;
+
+            if (double.IsNaN(remainingSeconds) || double.IsInfinity(remainingSeconds))
+                return TimeSpan.Zero;
+
             return TimeSpan.FromSeconds(Math.Max(0, remainingSeconds));
         }
 
@@ -285,7 +296,7 @@ namespace FFmpegDotnetWrapper.Utilities
 
         public void Dispose()
         {
-            _stopwatch?.Dispose();
+            _stopwatch?.Stop();
         }
     }
 

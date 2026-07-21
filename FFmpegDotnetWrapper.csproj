@@ -40,7 +40,6 @@
     <Compile Remove="src/Serialization/JsonOutputFormatter.cs" />
     <Compile Remove="src/Services/BatchOperationService.cs" />
     <Compile Remove="src/Services/FFmpegService.cs" />
-    <Compile Remove="src/Utilities/ProgressTracker.cs" />
   </ItemGroup>
 
   <ItemGroup>
