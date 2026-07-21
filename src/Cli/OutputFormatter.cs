@@ -280,3 +280,144 @@ namespace FFmpegDotnetWrapper.Cli
         }
     }
 }
+
+    /// <summary>
+    /// Formats a batch operation result report.
+    /// </summary>
+    /// <param name="result">The batch operation result to format</param>
+    /// <returns>Formatted batch operation result report</returns>
+    public string FormatBatchOperationResult(BatchOperationResult result)
+    {
+        var report = new System.Text.StringBuilder();
+
+        // Header
+        report.AppendLine(FormatInfo($"Batch Operation Result Report - {result.OperationType}"));
+        report.AppendLine();
+
+        // Summary statistics
+        var duration = result.GetDuration();
+        var successRate = result.GetSuccessRate();
+        var totalDuration = TimeSpan.Zero;
+        var averageDuration = TimeSpan.Zero;
+
+        if (result.Results.Any())
+        {
+            totalDuration = result.Results
+                .Where(r => r.IsSuccess)
+                .Sum(r => r.Duration);
+            averageDuration = TimeSpan.FromTicks((long)(totalDuration.Ticks / (double)result.Results.Count(r => r.IsSuccess)));
+        }
+
+        report.AppendLine(FormatKeyValue("Operation Type", result.OperationType, 25));
+        report.AppendLine(FormatKeyValue("Total Files", result.TotalFiles.ToString(), 25));
+        report.AppendLine(FormatKeyValue("Successful", FormatSuccess(result.SuccessfulCount.ToString()), 25));
+        report.AppendLine(FormatKeyValue("Failed", FormatError(result.FailedCount.ToString()), 25));
+        report.AppendLine(FormatKeyValue("Success Rate", $"{successRate:F2}%", 25));
+        report.AppendLine(FormatKeyValue("Duration", duration.ToString(), 25));
+        report.AppendLine(FormatKeyValue("Total Processing Time", totalDuration.ToString(), 25));
+        report.AppendLine(FormatKeyValue("Average Processing Time", averageDuration.ToString(), 25));
+        report.AppendLine(FormatKeyValue("Cancelled", result.IsCancelled.ToString(), 25));
+        report.AppendLine(FormatKeyValue("Created", result.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"), 25));
+        report.AppendLine(FormatKeyValue("Completed", result.CompletedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A", 25));
+        report.AppendLine();
+
+        // Per-item details
+        if (result.Results.Count > 0)
+        {
+            report.AppendLine("File Processing Details:");
+            report.AppendLine(FormatResultsTable(result.Results));
+            report.AppendLine();
+
+            // Detailed per-item report
+            report.AppendLine("Detailed Item Status:");
+            foreach (var itemResult in result.Results.OrderBy(r => r.IsSuccess ? 0 : 1).ThenBy(r => r.CompletedAt))
+            {
+                var status = itemResult.IsSuccess ? FormatSuccess("SUCCESS") : FormatError("FAILED");
+                var durationStr = itemResult.IsSuccess ? $"{itemResult.Duration.TotalSeconds:0.00}s" : "-";
+                var completedAt = itemResult.CompletedAt?.ToString("HH:mm:ss.fff") ?? "-";
+
+                var inputFile = System.IO.Path.GetFileName(itemResult.InputFile);
+                var outputFile = itemResult.IsSuccess ? System.IO.Path.GetFileName(itemResult.OutputFilePath) : "-";
+
+                report.AppendLine($"  {status} | {completedAt} | {durationStr.PadRight(8)} | {inputFile,-30} → {outputFile}");
+
+                if (!itemResult.IsSuccess && !string.IsNullOrEmpty(itemResult.ErrorMessage))
+                {
+                    report.AppendLine(FormatWarning($"    Error: {itemResult.ErrorMessage}"));
+                }
+
+                if (!string.IsNullOrEmpty(itemResult.WarningMessage))
+                {
+                    report.AppendLine(FormatWarning($"    Warning: {itemResult.WarningMessage}"));
+                }
+            }
+        }
+        else
+        {
+            report.AppendLine(FormatWarning("No results available"));
+        }
+
+        report.AppendLine();
+
+        // Summary footer
+        report.AppendLine("Summary:");
+        report.AppendLine(FormatSuccess($"✓ {result.SuccessfulCount} files processed successfully"));
+        if (result.FailedCount > 0)
+        {
+            report.AppendLine(FormatError($"✗ {result.FailedCount} files failed to process"));
+        }
+        report.AppendLine(FormatInfo($"Total processing time: {totalDuration}"));
+        report.AppendLine(FormatInfo($"Overall success rate: {successRate:F2}%"));
+
+        return report.ToString();
+    }
+
+    /// <summary>
+    /// Formats a batch analysis result report.
+    /// </summary>
+    /// <param name="result">The batch analysis result to format</param>
+    /// <returns>Formatted batch analysis result report</returns>
+    public string FormatBatchAnalysisResult(BatchAnalysisResult result)
+    {
+        var report = new StringBuilder();
+
+        // Header
+        report.AppendLine(FormatInfo("Batch Analysis Result Report"));
+        report.AppendLine();
+
+        // Summary statistics
+        var duration = result.GetDuration();
+
+        report.AppendLine(FormatKeyValue("Total Files", result.TotalFiles.ToString(), 25));
+        report.AppendLine(FormatKeyValue("Files Analyzed", result.AnalyzedFiles.Count.ToString(), 25));
+        report.AppendLine(FormatKeyValue("Cancelled", result.IsCancelled.ToString(), 25));
+        report.AppendLine(FormatKeyValue("Duration", duration.ToString(), 25));
+        report.AppendLine(FormatKeyValue("Created", result.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"), 25));
+        report.AppendLine(FormatKeyValue("Completed", result.CompletedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A", 25));
+        report.AppendLine();
+
+        // Per-item details
+        if (result.AnalyzedFiles.Count > 0)
+        {
+            report.AppendLine("Analysis Results:");
+            foreach (var analyzedFile in result.AnalyzedFiles.OrderBy(f => f.FileName))
+            {
+                var durationStr = analyzedFile.Duration.HasValue ? $"{analyzedFile.Duration.Value.TotalSeconds:0.00}s" : "-";
+                var fileSize = analyzedFile.GetFileSizeInMegabytes();
+
+                report.AppendLine($"  ✓ {analyzedFile.FileName,-30} | {durationStr.PadRight(8)} | {fileSize:F2} MB");
+            }
+        }
+        else
+        {
+            report.AppendLine(FormatWarning("No analysis results available"));
+        }
+
+        report.AppendLine();
+        report.AppendLine("Summary:");
+        report.AppendLine(FormatSuccess($"✓ Analyzed {result.AnalyzedFiles.Count} files successfully"));
+        report.AppendLine(FormatInfo($"Total analysis time: {duration}"));
+
+        return report.ToString();
+    }
+}
