@@ -233,6 +233,7 @@ public class FFmpegService : IFFmpegService
                 }
             };
 
+            cancellationToken.ThrowIfCancellationRequested();
             process.Start();
             var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
             await process.WaitForExitAsync(cancellationToken);
@@ -318,6 +319,7 @@ public class FFmpegService : IFFmpegService
                 }
             };
 
+            cancellationToken.ThrowIfCancellationRequested();
             process.Start();
             var versionOutput = await process.StandardOutput.ReadLineAsync(cancellationToken);
             await process.WaitForExitAsync(cancellationToken);
@@ -521,6 +523,7 @@ public class FFmpegService : IFFmpegService
                 }
             };
 
+        cancellationToken.ThrowIfCancellationRequested();
             process.Start();
 
             // Drain stdout/stderr concurrently while waiting for exit; FFmpeg writes
