@@ -1,3 +1,8 @@
+// =============================================================================
+// Author: Vladyslav Zaiets | https://sarmkadan.com
+// CTO & Software Architect
+// =============================================================================
+
 using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Models;
@@ -99,7 +104,7 @@ public class ConcatenationBuilderTests : IDisposable
             trimDuration: TimeSpan.FromSeconds(20));
 
         act.Should().Throw<InvalidOperationConfigurationException>()
-           .WithMessage("*TrimEnd*TrimDuration*");
+            .WithMessage("*TrimEnd*TrimDuration*");
     }
 
     /// <summary>
@@ -113,7 +118,7 @@ public class ConcatenationBuilderTests : IDisposable
         var act = () => builder.Add("/nonexistent/video.mp4");
 
         act.Should().Throw<InvalidOperationConfigurationException>()
-           .WithMessage("*does not exist*");
+            .WithMessage("*does not exist*");
     }
 
     /// <summary>
@@ -177,7 +182,7 @@ public class ConcatenationBuilderTests : IDisposable
         var act = () => builder.WithTransition(ConcatTransition.Crossfade, duration: 0);
 
         act.Should().Throw<InvalidOperationConfigurationException>()
-           .WithMessage("*duration*greater than zero*");
+            .WithMessage("*duration*greater than zero*");
     }
 
     /// <summary>
@@ -208,7 +213,7 @@ public class ConcatenationBuilderTests : IDisposable
         var act = () => builder.Build();
 
         act.Should().Throw<InvalidOperationConfigurationException>()
-           .WithMessage("*At least two segments*");
+            .WithMessage("*At least two segments*");
     }
 
     /// <summary>
@@ -296,5 +301,127 @@ public class ConcatenationBuilderTests : IDisposable
 
         settings.InputFiles.Should().HaveCount(3);
         settings.Crossfade.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that the generated input file list contains absolute paths for all segments.
+    /// </summary>
+    [Fact]
+    public void Build_GeneratesAbsolutePathsInInputFiles()
+    {
+        var builder = new ConcatenationBuilder()
+            .Add(_tempFiles[0])
+            .Add(_tempFiles[1])
+            .Add(_tempFiles[2]);
+
+        var settings = builder.Build();
+
+        settings.InputFiles.Should().HaveCount(3);
+        foreach (var path in settings.InputFiles)
+        {
+            path.Should().Be(Path.GetFullPath(path));
+            Path.IsPathRooted(path).Should().BeTrue();
+        }
+    }
+
+    /// <summary>
+    /// Ensures that file paths with special characters (spaces, parentheses, quotes, etc.) are properly handled.
+    /// </summary>
+    [Fact]
+    public void Build_WithSpecialCharactersInPaths_EscapesCorrectly()
+    {
+        var specialDir = Path.Combine(Path.GetTempPath(), "test (special) dir with spaces & quotes");
+        Directory.CreateDirectory(specialDir);
+
+        try
+        {
+            var file1 = Path.Combine(specialDir, "file with spaces.mp4");
+            var file2 = Path.Combine(specialDir, "file(with)parens.mp4");
+            var file3 = Path.Combine(specialDir, "file&quotes.mp4");
+
+            File.WriteAllText(file1, "fake video data");
+            File.WriteAllText(file2, "fake video data");
+            File.WriteAllText(file3, "fake video data");
+
+            var settings = new ConcatenationBuilder()
+                .Add(file1)
+                .Add(file2)
+                .Add(file3)
+                .Build();
+
+            settings.Should().NotBeNull();
+            settings.InputFiles.Should().HaveCount(3);
+            settings.InputFiles.Should().AllSatisfy(path => File.Exists(path));
+        }
+        finally
+        {
+            if (Directory.Exists(specialDir))
+            {
+                Directory.Delete(specialDir, true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Verifies that attempting to build with an empty segment list throws an <see cref="InvalidOperationConfigurationException"/>.
+    /// </summary>
+    [Fact]
+    public void Build_WithEmptySegmentList_ThrowsException()
+    {
+        var builder = new ConcatenationBuilder();
+
+        var act = () => builder.Build();
+
+        act.Should().Throw<InvalidOperationConfigurationException>()
+            .WithMessage("*At least two segments*");
+    }
+
+    /// <summary>
+    /// Ensures that file paths are normalized to absolute paths in the generated input file list.
+    /// </summary>
+    [Fact]
+    public void Build_NormalizesRelativePathsToAbsolute()
+    {
+        var relativePath = Path.GetFileName(_tempFiles[0]);
+        var fullPath = Path.GetFullPath(relativePath);
+        File.Copy(_tempFiles[0], fullPath, overwrite: true);
+
+        try
+        {
+            var builder = new ConcatenationBuilder()
+                .Add(relativePath)
+                .Add(_tempFiles[1]);
+
+            var settings = builder.Build();
+
+            settings.InputFiles.Should().HaveCount(2);
+            settings.InputFiles[0].Should().Be(Path.GetFullPath(relativePath));
+            settings.InputFiles[1].Should().Be(Path.GetFullPath(_tempFiles[1]));
+        }
+        finally
+        {
+            if (File.Exists(fullPath))
+            {
+                File.Delete(fullPath);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tests that the input file list is properly formatted for FFmpeg consumption.
+    /// </summary>
+    [Fact]
+    public void Build_InputFilesListIsValidForFFmpeg()
+    {
+        var builder = new ConcatenationBuilder()
+            .Add(_tempFiles[0])
+            .Add(_tempFiles[1])
+            .Add(_tempFiles[2]);
+
+        var settings = builder.Build();
+
+        settings.InputFiles.Should().NotContainNulls();
+        settings.InputFiles.Should().NotContain(string.Empty);
+        settings.InputFiles.Should().OnlyContain(path => File.Exists(path));
     }
 }
