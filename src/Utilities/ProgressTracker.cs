@@ -54,6 +54,10 @@ namespace FFmpegDotnetWrapper.Utilities
         private long _totalBytes = 0;
         private string _currentStatus = string.Empty;
 
+        // New fields for duration‑based tracking
+        private TimeSpan _processedDuration = TimeSpan.Zero;
+        private TimeSpan _totalDuration = TimeSpan.Zero;
+
         public ProgressTracker(int totalItems = 0, long totalBytes = 0)
         {
             _stopwatch = Stopwatch.StartNew();
@@ -101,13 +105,43 @@ namespace FFmpegDotnetWrapper.Utilities
         {
             lock (_lockObject)
             {
-                // Clamp to 0-100
+                // Clamp to 0‑100
                 percentage = Math.Max(0, Math.Min(100, percentage));
 
                 // Calculate items completed based on percentage
                 if (_totalItems > 0)
                 {
                     _itemsProcessed = (int)((_totalItems * percentage) / 100);
+                }
+
+                if (!string.IsNullOrEmpty(statusMessage))
+                {
+                    _currentStatus = statusMessage;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reports progress based on processed and total duration.
+        /// Calculates percentage and ETA using the duration values.
+        /// </summary>
+        public void ReportDurationProgress(TimeSpan processedDuration, TimeSpan totalDuration, string? statusMessage = null)
+        {
+            lock (_lockObject)
+            {
+                _processedDuration = processedDuration;
+                _totalDuration = totalDuration;
+
+                // Clamp percentage between 0 and 100
+                var percent = totalDuration.TotalSeconds > 0
+                    ? (processedDuration.TotalSeconds / totalDuration.TotalSeconds) * 100
+                    : 0;
+                percent = Math.Max(0, Math.Min(100, percent));
+
+                // Update items processed for compatibility with existing reporting
+                if (_totalItems > 0)
+                {
+                    _itemsProcessed = (int)((_totalItems * percent) / 100);
                 }
 
                 if (!string.IsNullOrEmpty(statusMessage))
@@ -155,6 +189,8 @@ namespace FFmpegDotnetWrapper.Utilities
                 _bytesProcessed = 0;
                 _totalItems = totalItems;
                 _totalBytes = totalBytes;
+                _processedDuration = TimeSpan.Zero;
+                _totalDuration = TimeSpan.Zero;
                 _currentStatus = string.Empty;
                 _stopwatch.Restart();
             }
@@ -177,7 +213,7 @@ namespace FFmpegDotnetWrapper.Utilities
 
         /// <summary>
         /// Calculates current progress percentage.
-        /// Uses items if available, otherwise uses bytes.
+        /// Uses items if available, otherwise bytes, otherwise duration.
         /// </summary>
         private double CalculateProgressPercentage()
         {
@@ -188,7 +224,13 @@ namespace FFmpegDotnetWrapper.Utilities
 
             if (_totalBytes > 0)
             {
-                return (_itemsProcessed * 100.0) / _totalItems; // Hotfix: calculate progress percentage based on items processed instead of bytes processed
+                // Hotfix: calculate progress percentage based on items processed instead of bytes processed
+                return (_itemsProcessed * 100.0) / _totalItems;
+            }
+
+            if (_totalDuration.TotalSeconds > 0)
+            {
+                return (_processedDuration.TotalSeconds / _totalDuration.TotalSeconds) * 100.0;
             }
 
             return 0;
@@ -227,6 +269,18 @@ namespace FFmpegDotnetWrapper.Utilities
                 return 0;
 
             return _bytesProcessed / elapsed.TotalSeconds;
+        }
+
+        /// <summary>
+        /// Exposes the current percent complete, clamped between 0 and 100.
+        /// </summary>
+        public double PercentComplete
+        {
+            get
+            {
+                var percent = CalculateProgressPercentage();
+                return Math.Max(0, Math.Min(100, percent));
+            }
         }
 
         public void Dispose()

@@ -61,10 +61,35 @@ public class FFmpegProgressUpdate
     public string? RawOutput { get; set; }
 
     /// <summary>
-    /// Returns a concise, human-readable summary of the current progress state.
+    /// Returns a concise, human‑readable summary of the current progress state.
     /// Example: <c>42.5% | 00:00:42.5 / 00:01:40.0 | 30 fps | 2.0x | ETA 00:01:17</c>
     /// </summary>
     public override string ToString() =>
         $"{ProgressPercentage:F1}% | {ProcessedDuration:hh\\:mm\\:ss\\.f} / {TotalDuration:hh\\:mm\\:ss\\.f} " +
         $"| {FramesPerSecond:F0} fps | {EncodingSpeed:F1}x | ETA {EstimatedTimeRemaining:hh\\:mm\\:ss}";
+
+    /// <summary>
+    /// PercentComplete is the clamped version of <see cref="ProgressPercentage"/> (0‑100).
+    /// </summary>
+    public double PercentComplete => Math.Max(0, Math.Min(100, ProgressPercentage));
+
+    /// <summary>
+    /// Recalculates <see cref="EstimatedTimeRemaining"/> based on the processed and total durations
+    /// and the elapsed wall‑clock time.
+    /// Call this after updating <see cref="ProcessedDuration"/>, <see cref="TotalDuration"/> or <see cref="ElapsedWallTime"/>.
+    /// </summary>
+    public void RecalculateEstimatedTimeRemaining()
+    {
+        if (ProcessedDuration.TotalSeconds <= 0 || TotalDuration.TotalSeconds <= 0)
+        {
+            EstimatedTimeRemaining = TimeSpan.Zero;
+            return;
+        }
+
+        // Factor = elapsed / processed duration
+        var factor = ElapsedWallTime.TotalSeconds / ProcessedDuration.TotalSeconds;
+        var remaining = TotalDuration - ProcessedDuration;
+        var seconds = Math.Max(0, factor * remaining.TotalSeconds);
+        EstimatedTimeRemaining = TimeSpan.FromSeconds(seconds);
+    }
 }
