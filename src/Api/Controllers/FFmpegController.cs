@@ -9,6 +9,7 @@ using FFmpegDotnetWrapper.Api.DTOs;
 using FFmpegDotnetWrapper.Services;
 using FFmpegDotnetWrapper.Models;
 using FFmpegDotnetWrapper.Constants;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace FFmpegDotnetWrapper.Api.Controllers
@@ -21,11 +22,13 @@ namespace FFmpegDotnetWrapper.Api.Controllers
     {
         private readonly IFFmpegService _ffmpegService;
         private readonly ILogger<FFmpegController> _logger;
+    private readonly MediaProbeService _mediaProbeService;
 
-        public FFmpegController(IFFmpegService ffmpegService, ILogger<FFmpegController> logger)
+        public FFmpegController(IFFmpegService ffmpegService, ILogger<FFmpegController> logger, MediaProbeService mediaProbeService)
         {
             _ffmpegService = ffmpegService ?? throw new ArgumentNullException(nameof(ffmpegService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _mediaProbeService = mediaProbeService ?? throw new ArgumentNullException(nameof(mediaProbeService));
         }
 
         /// <summary>
@@ -314,6 +317,62 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         {
             _logger.LogError(ex, "Audio extraction failed for {InputPath}", request.InputPath);
             return ApiResponse<ConversionResult>.Failure(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Probes a media file and returns its metadata using ffprobe.
+    /// </summary>
+    /// <param name="path">Path to the media file to probe.</param>
+    /// <returns>Media file information including duration, bitrate, codecs, and resolution.</returns>
+    [HttpGet("probe")]
+    public ApiResponse<MediaFile> Probe([FromQuery] string path)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                _logger.LogWarning("Probe request with missing path parameter");
+                return ApiResponse<MediaFile>.Failure("Path parameter is required", 400);
+            }
+
+            if (!System.IO.File.Exists(path))
+            {
+                _logger.LogWarning("Probe request for non-existent file: {Path}", path);
+                return ApiResponse<MediaFile>.Failure("File not found", 404);
+            }
+
+            // Probe the media file
+            var probeResult = _mediaProbeService.Probe(path);
+
+            // Create MediaFile from probe result
+            var mediaFile = new MediaFile(path);
+            mediaFile.Duration = probeResult.Duration;
+            mediaFile.Bitrate = probeResult.Bitrate;
+
+            // Extract video and audio information from streams
+            foreach (var stream in probeResult.Streams)
+            {
+                if (stream.Width.HasValue && stream.Height.HasValue)
+                {
+                    mediaFile.Width = stream.Width.Value;
+                    mediaFile.Height = stream.Height.Value;
+                    mediaFile.VideoCodec = stream.Codec;
+                }
+                else if (stream.Channels.HasValue)
+                {
+                    mediaFile.AudioChannels = stream.Channels.Value;
+                    mediaFile.AudioCodec = stream.Codec;
+                }
+            }
+
+            _logger.LogInformation("Media probe completed successfully for: {Path}", path);
+            return ApiResponse<MediaFile>.Ok(mediaFile, "Media file probed successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Media probe failed for path: {Path}", path);
+            return ApiResponse<MediaFile>.Failure(ex.Message, 500);
         }
     }
 }

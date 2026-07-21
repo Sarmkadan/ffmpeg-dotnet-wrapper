@@ -40,6 +40,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SubtitleService>();
         services.AddSingleton<ThumbnailService>();
             services.AddSingleton<IWatermarkService, WatermarkService>();
+            services.AddSingleton<MediaProbeService>();
 
         // Register options if they were configured
         if (configureOptions is not null)
