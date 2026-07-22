@@ -186,11 +186,15 @@ namespace FFmpegDotnetWrapper.Utilities
 
                 try
                 {
+                    // Capture output asynchronously to prevent deadlock
+                    var outputTask = process.StandardOutput.ReadToEndAsync();
+                    var errorTask = process.StandardError.ReadToEndAsync();
+
                     // Wait for completion with cancellation support
                     await process.WaitForExitAsync(cts.Token);
 
-                    var output = await process.StandardOutput.ReadToEndAsync();
-                    var error = await process.StandardError.ReadToEndAsync();
+                    var output = await outputTask;
+                    var error = await errorTask;
                     var executionTime = DateTime.UtcNow - startTime;
 
                     return new ProcessResult
