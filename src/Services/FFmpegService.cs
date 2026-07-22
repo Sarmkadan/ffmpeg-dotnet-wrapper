@@ -235,14 +235,20 @@ public class FFmpegService : IFFmpegService
 
             cancellationToken.ThrowIfCancellationRequested();
             process.Start();
-            var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
-            await process.WaitForExitAsync(cancellationToken);
 
-            if (process.ExitCode != 0)
-            {
-                var error = await process.StandardError.ReadToEndAsync(cancellationToken);
-                throw new FFmpegProcessException($"ffprobe failed with exit code {process.ExitCode}. Error: {error}", process.ExitCode);
-            }
+        // Read stdout and stderr concurrently to prevent deadlocks
+        var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+        var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
+
+        await process.WaitForExitAsync(cancellationToken);
+
+        var output = await outputTask;
+        var error = await errorTask;
+
+        if (process.ExitCode != 0)
+        {
+            throw new FFmpegProcessException($"ffprobe failed with exit code {process.ExitCode}. Error: {error}", process.ExitCode);
+        }
 
             var ffprobeResult = System.Text.Json.JsonDocument.Parse(output);
             var format = ffprobeResult.RootElement.GetProperty("format");
@@ -315,16 +321,24 @@ public class FFmpegService : IFFmpegService
                     Arguments = "-version",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
+            RedirectStandardError = true,
                     CreateNoWindow = true
                 }
             };
 
             cancellationToken.ThrowIfCancellationRequested();
-            process.Start();
-            var versionOutput = await process.StandardOutput.ReadLineAsync(cancellationToken);
-            await process.WaitForExitAsync(cancellationToken);
+        process.Start();
 
-            return versionOutput ?? "Unknown";
+        // Read both stdout and stderr to prevent deadlocks
+        var versionOutputTask = process.StandardOutput.ReadLineAsync(cancellationToken);
+        var errorOutputTask = process.StandardError.ReadToEndAsync(cancellationToken);
+
+        await process.WaitForExitAsync(cancellationToken);
+
+        var versionOutput = await versionOutputTask;
+        await errorOutputTask; // Ensure stderr is drained
+
+        return versionOutput ?? "Unknown";
         }
         catch (Exception ex)
         {
