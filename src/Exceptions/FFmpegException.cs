@@ -1,8 +1,3 @@
-// =============================================================================
-// Author: Vladyslav Zaiets | https://sarmkadan.com
-// CTO & Software Architect
-// =============================================================================
-
 namespace FFmpegDotnetWrapper.Exceptions;
 
 /// <summary>
@@ -19,16 +14,28 @@ public class FFmpegException : Exception
 
     public FFmpegException(string message) : base(message)
     {
+        if (string.IsNullOrEmpty(message))
+        {
+            throw new ArgumentException("Message cannot be null or empty", nameof(message));
+        }
     }
 
     public FFmpegException(string message, Exception innerException)
         : base(message, innerException)
     {
+        if (string.IsNullOrEmpty(message))
+        {
+            throw new ArgumentException("Message cannot be null or empty", nameof(message));
+        }
     }
 
     public FFmpegException(string message, int exitCode, string? errorOutput = null)
         : base(message)
     {
+        if (exitCode < 0)
+        {
+            throw new ArgumentException("Exit code cannot be less than 0", nameof(exitCode));
+        }
         ExitCode = exitCode;
         ErrorOutput = errorOutput;
     }
@@ -47,11 +54,19 @@ public class InvalidMediaFileException : FFmpegException
 
     public InvalidMediaFileException(string message) : base(message)
     {
+        if (string.IsNullOrEmpty(message))
+        {
+            throw new ArgumentException("Message cannot be null or empty", nameof(message));
+        }
     }
 
     public InvalidMediaFileException(string message, string filePath)
         : base(message)
     {
+        if (string.IsNullOrEmpty(message))
+        {
+            throw new ArgumentException("Message cannot be null or empty", nameof(message));
+        }
         FilePath = filePath;
     }
 }
@@ -69,11 +84,19 @@ public class FFmpegProcessException : FFmpegException
 
     public FFmpegProcessException(string message) : base(message)
     {
+        if (string.IsNullOrEmpty(message))
+        {
+            throw new ArgumentException("Message cannot be null or empty", nameof(message));
+        }
     }
 
     public FFmpegProcessException(string message, TimeSpan timeout)
         : base(message)
     {
+        if (timeout < TimeSpan.Zero)
+        {
+            throw new ArgumentException("Timeout cannot be less than 0", nameof(timeout));
+        }
         Timeout = timeout;
     }
 }
@@ -91,11 +114,19 @@ public class InvalidOperationConfigurationException : FFmpegException
 
     public InvalidOperationConfigurationException(string message) : base(message)
     {
+        if (string.IsNullOrEmpty(message))
+        {
+            throw new ArgumentException("Message cannot be null or empty", nameof(message));
+        }
     }
 
     public InvalidOperationConfigurationException(string message, string configKey)
         : base(message)
     {
+        if (string.IsNullOrEmpty(message))
+        {
+            throw new ArgumentException("Message cannot be null or empty", nameof(message));
+        }
         ConfigurationKey = configKey;
     }
 }
@@ -111,5 +142,9 @@ public class UnsupportedOperationException : FFmpegException
 
     public UnsupportedOperationException(string message) : base(message)
     {
+        if (string.IsNullOrEmpty(message))
+        {
+            throw new ArgumentException("Message cannot be null or empty", nameof(message));
+        }
     }
 }
