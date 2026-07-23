@@ -15,15 +15,30 @@ namespace FFmpegDotnetWrapper.Cli
     /// </summary>
     public class CliCommand
     {
+        /// <summary>
+        /// The command name (e.g., "transcode").
+        /// </summary>
         public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Positional arguments supplied to the command.
+        /// </summary>
         public List<string> Arguments { get; set; } = new();
+
+        /// <summary>
+        /// Named options (flags or parameters) supplied to the command.
+        /// </summary>
         public Dictionary<string, string?> Options { get; set; } = new();
+
+        /// <summary>
+        /// Optional sub‑command name.
+        /// </summary>
         public string? SubCommand { get; set; }
     }
 
     /// <summary>
     /// Parser for command-line arguments into structured command objects.
-    /// Supports commands, sub-commands, arguments, and named options.
+    /// Supports commands, sub‑commands, arguments, and named options.
     /// Provides help generation and validation.
     /// </summary>
     public class CliCommandParser
@@ -34,22 +49,27 @@ namespace FFmpegDotnetWrapper.Cli
         /// Registers a command that can be parsed from CLI arguments.
         /// Defines the command name and expected arguments/options.
         /// </summary>
+        /// <param name="definition">The definition to register.</param>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="definition"/> is null.</exception>
         public void RegisterCommand(CliCommandDefinition definition)
         {
-            if (definition == null)
-                throw new ArgumentNullException(nameof(definition));
-
+            ArgumentNullException.ThrowIfNull(definition);
             _commands[definition.Name] = definition;
         }
 
         /// <summary>
-        /// Parses raw command-line arguments into a structured CliCommand object.
+        /// Parses raw command-line arguments into a structured <see cref="CliCommand"/> object.
         /// Validates arguments against registered command definitions.
-        /// Returns null if command is not recognized.
+        /// Returns <c>null</c> if command is not recognized.
         /// </summary>
+        /// <param name="args">The raw argument array.</param>
+        /// <returns>A populated <see cref="CliCommand"/> or <c>null</c>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="args"/> is null.</exception>
         public CliCommand? ParseCommand(string[] args)
         {
-            if (args == null || args.Length == 0)
+            ArgumentNullException.ThrowIfNull(args);
+
+            if (args.Length == 0)
                 return null;
 
             var commandName = args[0].ToLowerInvariant();
@@ -114,9 +134,81 @@ namespace FFmpegDotnetWrapper.Cli
         }
 
         /// <summary>
+        /// Builds a safe argument list suitable for <see cref="System.Diagnostics.ProcessStartInfo.ArgumentList"/>.
+        /// It escapes whitespace, quotes and other shell‑sensitive characters and prefixes
+        /// positional arguments that start with a dash to avoid being interpreted as options.
+        /// </summary>
+        /// <param name="command">The parsed command.</param>
+        /// <returns>A list of escaped arguments ready for ProcessStartInfo.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="command"/> is null.</exception>
+        public List<string> BuildArgumentList(CliCommand command)
+        {
+            ArgumentNullException.ThrowIfNull(command);
+
+            var result = new List<string> { command.Name };
+
+            // Positional arguments
+            foreach (var rawArg in command.Arguments)
+            {
+                var safeArg = rawArg;
+
+                // If a positional argument looks like an option, treat it as a file path.
+                if (safeArg.StartsWith("-"))
+                {
+                    safeArg = "./" + safeArg;
+                }
+
+                result.Add(EscapeArgument(safeArg));
+            }
+
+            // Options
+            foreach (var kvp in command.Options)
+            {
+                var optName = kvp.Key;
+                var optValue = kvp.Value;
+
+                // Use long form (--) for names longer than one character, short form (-) otherwise.
+                var prefix = optName.Length == 1 ? "-" : "--";
+                result.Add($"{prefix}{optName}");
+
+                if (optValue != null)
+                {
+                    result.Add(EscapeArgument(optValue));
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Escapes a single argument so that it can be safely passed to a shell.
+        /// On Windows it wraps the argument in double quotes if it contains whitespace
+        /// or a double‑quote character, escaping internal double quotes with a backslash.
+        /// On Unix‑like systems it performs a similar quoting using single quotes.
+        /// </summary>
+        /// <param name="argument">The raw argument.</param>
+        /// <returns>The escaped argument.</returns>
+        private static string EscapeArgument(string argument)
+        {
+            if (string.IsNullOrEmpty(argument))
+                return argument;
+
+            // Detect characters that require quoting.
+            bool needsQuoting = argument.Any(ch => char.IsWhiteSpace(ch) || ch == '"' || ch == '\'');
+
+            if (!needsQuoting)
+                return argument;
+
+            // Simple cross‑platform quoting: wrap in double quotes and escape internal double quotes.
+            var escaped = argument.Replace("\"", "\\\"");
+            return $"\"{escaped}\"";
+        }
+
+        /// <summary>
         /// Generates help text for all registered commands.
         /// Includes descriptions, arguments, and options.
         /// </summary>
+        /// <returns>The formatted help text.</returns>
         public string GenerateHelpText()
         {
             var help = new StringBuilder();
@@ -146,6 +238,8 @@ namespace FFmpegDotnetWrapper.Cli
         /// Generates help text for a specific command.
         /// Includes detailed argument and option descriptions.
         /// </summary>
+        /// <param name="commandName">The name of the command.</param>
+        /// <returns>The formatted help text, or an error message if the command is unknown.</returns>
         public string GenerateCommandHelpText(string commandName)
         {
             if (!_commands.TryGetValue(commandName, out var definition))
@@ -185,6 +279,8 @@ namespace FFmpegDotnetWrapper.Cli
         /// Validates that a parsed command has all required arguments.
         /// Returns list of missing argument names if validation fails.
         /// </summary>
+        /// <param name="command">The command to validate.</param>
+        /// <returns>A list of missing argument names.</returns>
         public List<string> ValidateCommand(CliCommand command)
         {
             if (command == null)
@@ -213,9 +309,24 @@ namespace FFmpegDotnetWrapper.Cli
     /// </summary>
     public class CliCommandDefinition
     {
+        /// <summary>
+        /// The command name.
+        /// </summary>
         public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Human‑readable description.
+        /// </summary>
         public string Description { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Expected positional arguments.
+        /// </summary>
         public List<CliArgument> Arguments { get; set; } = new();
+
+        /// <summary>
+        /// Expected named options.
+        /// </summary>
         public List<CliOption> Options { get; set; } = new();
     }
 
@@ -224,9 +335,24 @@ namespace FFmpegDotnetWrapper.Cli
     /// </summary>
     public class CliArgument
     {
+        /// <summary>
+        /// Argument name.
+        /// </summary>
         public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Argument description.
+        /// </summary>
         public string Description { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Whether the argument is required.
+        /// </summary>
         public bool IsRequired { get; set; } = true;
+
+        /// <summary>
+        /// Default value if the argument is optional.
+        /// </summary>
         public string? DefaultValue { get; set; }
     }
 
@@ -235,10 +361,29 @@ namespace FFmpegDotnetWrapper.Cli
     /// </summary>
     public class CliOption
     {
+        /// <summary>
+        /// Long form name (e.g., "codec").
+        /// </summary>
         public string LongForm { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Optional short form (e.g., "c").
+        /// </summary>
         public string? ShortForm { get; set; }
+
+        /// <summary>
+        /// Description of the option.
+        /// </summary>
         public string Description { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Whether the option expects a value.
+        /// </summary>
         public bool RequiresValue { get; set; } = true;
+
+        /// <summary>
+        /// Default value if the option is optional.
+        /// </summary>
         public string? DefaultValue { get; set; }
     }
 }
