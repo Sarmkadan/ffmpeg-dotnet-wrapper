@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using FFmpegDotnetWrapper.Events;
 using FFmpegDotnetWrapper.Integration;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -14,12 +16,14 @@ namespace FFmpegDotnetWrapper.Tests;
 public class WebhookEndpointTests
 {
     private readonly Mock<ILogger<WebhookService>> _loggerMock = new();
-    private readonly Mock<HttpClient> _httpClientMock = new();
+    private readonly Mock<IHttpClientFactory> _httpClientFactoryMock = new();
     private readonly WebhookService _webhookService;
 
     public WebhookEndpointTests()
     {
-        _webhookService = new WebhookService(_loggerMock.Object, _httpClientMock.Object);
+        _httpClientFactoryMock.Setup(x => x.CreateClient(It.IsAny<string>()))
+            .Returns(new HttpClient());
+        _webhookService = new WebhookService(_loggerMock.Object, _httpClientFactoryMock.Object);
     }
 
     [Fact]

@@ -52,6 +52,9 @@ namespace FFmpegDotnetWrapper.Configuration
             // Register background jobs
             services.AddSingleton<IBackgroundJobService, BackgroundJobService>();
 
+            // Register HTTP clients
+            services.AddFFmpegHttpClients();
+
             // Register webhook service
             services.AddSingleton<IWebhookService, WebhookService>();
 

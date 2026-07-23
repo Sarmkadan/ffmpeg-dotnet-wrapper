@@ -1,7 +1,11 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
+// Service for delivering events to external systems via HTTP webhooks.
+// Handles retries, backoff, and failure tracking.
+// Integrates with event system to automatically deliver events.
+// =====================================================================
 
 using System;
 using System.Collections.Generic;
@@ -9,6 +13,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FFmpegDotnetWrapper.Events;
+using FFmpegDotnetWrapper.Policies;
 using Microsoft.Extensions.Logging;
 
 namespace FFmpegDotnetWrapper.Integration
@@ -60,14 +65,19 @@ namespace FFmpegDotnetWrapper.Integration
     public class WebhookService : IWebhookService, IEventHandler<OperationCompletedEvent>, IEventHandler<OperationFailedEvent>, IEventHandler<OperationStartedEvent>
     {
         private readonly ILogger<WebhookService> _logger;
-        private readonly HttpClient _httpClient;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IRetryPolicy _retryPolicy;
         private readonly Dictionary<string, WebhookEndpoint> _webhooks = new();
         private readonly object _lockObject = new();
 
-        public WebhookService(ILogger<WebhookService> logger, HttpClient? httpClient = null)
+        public WebhookService(
+            ILogger<WebhookService> logger,
+            IHttpClientFactory httpClientFactory,
+            IRetryPolicy? retryPolicy = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _httpClient = httpClient ?? new HttpClient();
+            _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            _retryPolicy = retryPolicy ?? new ExponentialBackoffRetryPolicy(maxAttempts: 3, initialDelayMilliseconds: 1000);
         }
 
         /// <summary>
@@ -173,10 +183,12 @@ namespace FFmpegDotnetWrapper.Integration
 
         /// <summary>
         /// Delivers an event to all registered webhooks that are interested in it.
-        /// Implements exponential backoff retry logic on failure.
+        /// Implements retry logic using configured policy.
         /// </summary>
         private async Task DeliverEventToWebhooksAsync<T>(T @event, string eventTypeName) where T : FFmpegEvent
         {
+            ArgumentNullException.ThrowIfNull(@event);
+
             List<WebhookEndpoint> webhooksToNotify;
 
             lock (_lockObject)
@@ -190,20 +202,26 @@ namespace FFmpegDotnetWrapper.Integration
                 return;
 
             var payload = JsonSerializer.Serialize(@event);
-            var tasks = webhooksToNotify.Select(wh => DeliverEventWithRetryAsync(wh, payload, eventTypeName));
+            var tasks = webhooksToNotify.Select(wh => DeliverEventWithPolicyAsync(wh, payload, eventTypeName));
 
             await Task.WhenAll(tasks);
         }
 
         /// <summary>
-        /// Delivers event payload to a webhook with retry logic.
-        /// Implements exponential backoff: 1s, 2s, 4s, etc.
+        /// Delivers event payload to a webhook with retry policy.
+        /// Uses the configured retry policy for handling transient failures.
         /// </summary>
-        private async Task DeliverEventWithRetryAsync(WebhookEndpoint webhook, string payload, string eventType)
+        private async Task DeliverEventWithPolicyAsync(WebhookEndpoint webhook, string payload, string eventType)
         {
-            for (int attempt = 0; attempt <= webhook.MaxRetries; attempt++)
+            ArgumentNullException.ThrowIfNull(webhook);
+            ArgumentException.ThrowIfNullOrWhiteSpace(payload);
+            ArgumentException.ThrowIfNullOrWhiteSpace(eventType);
+
+            var httpClient = _httpClientFactory.CreateClient("webhook");
+
+            try
             {
-                try
+                await _retryPolicy.ExecuteAsync(async _ =>
                 {
                     using var request = new HttpRequestMessage(HttpMethod.Post, webhook.Url);
                     request.Content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json");
@@ -224,7 +242,7 @@ namespace FFmpegDotnetWrapper.Integration
                     request.Headers.Add("X-Event-Type", eventType);
                     request.Headers.Add("X-Event-Id", Guid.NewGuid().ToString());
 
-                    using var response = await _httpClient.SendAsync(request);
+                    using var response = await httpClient.SendAsync(request, _);
 
                     if (response.IsSuccessStatusCode)
                     {
@@ -239,33 +257,19 @@ namespace FFmpegDotnetWrapper.Integration
                         "Webhook delivery failed: {WebhookId} ({StatusCode})",
                         webhook.WebhookId,
                         response.StatusCode);
-                }
-                catch (HttpRequestException ex)
-                {
-                    _logger.LogWarning(
-                        ex,
-                        "Webhook delivery exception (Attempt {Attempt}): {WebhookId}",
-                        attempt + 1,
-                        webhook.WebhookId);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Unexpected error delivering webhook: {WebhookId}", webhook.WebhookId);
-                    return; // Don't retry on unexpected errors
-                }
 
-                // Wait before retrying (exponential backoff)
-                if (attempt < webhook.MaxRetries)
-                {
-                    var delayMs = (int)Math.Pow(2, attempt) * 1000; // 1s, 2s, 4s, 8s
-                    await Task.Delay(delayMs);
-                }
+                    // Convert HTTP error to exception to trigger retry policy
+                    throw new HttpRequestException($"Webhook delivery failed with status code: {response.StatusCode}");
+                }, default);
             }
-
-            _logger.LogError(
-                "Webhook delivery failed after {MaxRetries} retries: {WebhookId}",
-                webhook.MaxRetries,
-                webhook.WebhookId);
+            catch (Exception ex) when (ex is HttpRequestException or TimeoutException)
+            {
+                _logger.LogError(ex, "Webhook delivery failed after retries: {WebhookId}", webhook.WebhookId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error delivering webhook: {WebhookId}", webhook.WebhookId);
+            }
         }
     }
 }
