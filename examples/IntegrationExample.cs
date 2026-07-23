@@ -1,10 +1,10 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =====================================================================
+// ===================================================================
 // Demonstrates how to integrate FFmpeg .NET Wrapper into ASP.NET Core applications
 // Shows dependency injection setup, service registration, and usage in controllers
-// =============================================================================
+// ===================================================================
 
 using FFmpegDotnetWrapper.Configuration;
 using FFmpegDotnetWrapper.Models;
@@ -149,18 +149,19 @@ public class IntegrationExample
                         success = true,
                         outputFile = request.OutputFile,
                         duration = result.Duration.TotalSeconds,
-                        size = result.OutputMedia?.FileSize
+                        size = result.OutputMedia?.FileSize,
+                        exitCode = result.ExitCode
                     });
                 }
-                else
+
+                logger.LogError("Transcode failed with exit code {ExitCode}: {Error}", result.ExitCode, result.ErrorMessage);
+                return Results.BadRequest(new
                 {
-                    logger.LogError("Transcode failed: {Error}", result.ErrorMessage);
-                    return Results.BadRequest(new
-                    {
-                        success = false,
-                        error = result.ErrorMessage
-                    });
-                }
+                    success = false,
+                    exitCode = result.ExitCode,
+                    error = result.ErrorMessage,
+                    errorOutput = result.ErrorOutput
+                });
             }
             catch (Exception ex)
             {

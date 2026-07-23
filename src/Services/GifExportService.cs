@@ -37,8 +37,8 @@ namespace FFmpegDotnetWrapper.Services
         /// <param name="sourcePath">Path to the source video file.</param>
         /// <param name="start">Start time of the segment.</param>
         /// <param name="duration">Length of the segment.</param>
-        /// <returns>The full path to the generated GIF file.</returns>
-        public async Task<string> ExportGifAsync(
+        /// <returns>A <see cref="ConversionResult"/> containing the path to the generated GIF file and operation status.</returns>
+        public async Task<ConversionResult> ExportGifAsync(
             string sourcePath,
             TimeSpan start,
             TimeSpan duration)
@@ -54,8 +54,8 @@ namespace FFmpegDotnetWrapper.Services
         /// <param name="start">Start time of the segment.</param>
         /// <param name="duration">Length of the segment.</param>
         /// <param name="settings">Configuration settings for the GIF export.</param>
-        /// <returns>The full path to the generated GIF file.</returns>
-        public async Task<string> ExportGifAsync(
+        /// <returns>A <see cref="ConversionResult"/> containing the path to the generated GIF file and operation status.</returns>
+        public async Task<ConversionResult> ExportGifAsync(
             string sourcePath,
             TimeSpan start,
             TimeSpan duration,
@@ -86,6 +86,8 @@ namespace FFmpegDotnetWrapper.Services
             File.Move(palettePath, palettePngPath);
             palettePath = palettePngPath;
 
+            var result = new ConversionResult { Duration = TimeSpan.Zero };
+
             try
             {
                 // ---------- First pass: generate palette with optimized stats mode ----------
@@ -93,7 +95,16 @@ namespace FFmpegDotnetWrapper.Services
                 string paletteArgs = $"-y -ss {start.TotalSeconds:F3} -t {duration.TotalSeconds:F3} -i \"{sourcePath}\" " +
                     $"-vf \"fps={fps},scale={width}:-1:flags=lanczos,palettegen=stats_mode=diff:max_colors=256\" \"{palettePath}\" -hide_banner -loglevel error";
 
-                await RunFfmpegAsync(paletteArgs).ConfigureAwait(false);
+                var paletteResult = await RunFfmpegAsync(paletteArgs).ConfigureAwait(false);
+
+                if (!paletteResult.IsSuccess)
+                {
+                    result.MarkAsFailed(
+                        $"Failed to generate color palette: {paletteResult.ErrorMessage}",
+                        paletteResult.ExitCode,
+                        paletteResult.ErrorOutput);
+                    return result;
+                }
 
                 // ---------- Second pass: create GIF using palette with selected dither mode ----------
                 string ditherValue = settings.DitherMode switch
@@ -115,7 +126,27 @@ namespace FFmpegDotnetWrapper.Services
                     $"-filter_complex \"fps={fps},scale={width}:-1:flags=lanczos[x];[x][1:v]paletteuse=dither={ditherValue}\" " +
                     $"-loop {(settings.Loop == -1 ? 0 : settings.Loop)} \"{outputGifPath}\" -hide_banner -loglevel error";
 
-                await RunFfmpegAsync(gifArgs).ConfigureAwait(false);
+                var gifResult = await RunFfmpegAsync(gifArgs).ConfigureAwait(false);
+
+                if (!gifResult.IsSuccess)
+                {
+                    result.MarkAsFailed(
+                        $"Failed to create GIF: {gifResult.ErrorMessage}",
+                        gifResult.ExitCode,
+                        gifResult.ErrorOutput);
+                    return result;
+                }
+
+                // Mark the overall operation as successful
+                result.MarkAsSuccess(outputGifPath, 0);
+                result.OutputFilePath = outputGifPath;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Programming/configuration errors should throw exceptions
+                result.MarkAsFailed($"GIF export failed: {ex.Message}");
+                throw;
             }
             finally
             {
@@ -130,32 +161,45 @@ namespace FFmpegDotnetWrapper.Services
                     // Swallow any exception – failure to delete a temp file should not break the caller.
                 }
             }
-
-            return outputGifPath;
         }
 
         /// <summary>
         /// Executes ffmpeg with the supplied argument string using the shared ProcessUtilities helper.
         /// </summary>
-        private Task RunFfmpegAsync(string arguments)
+        /// <param name="arguments">FFmpeg command arguments.</param>
+        /// <returns>A <see cref="ConversionResult"/> containing the execution status and error information.</returns>
+        private async Task<ConversionResult> RunFfmpegAsync(string arguments)
         {
-            return Task.Run(() =>
+            return await Task.Run(() =>
             {
-                var result = ProcessUtilities.ExecuteProcess(
+                var processResult = ProcessUtilities.ExecuteProcess(
                     fileName: _ffmpegExecutablePath,
                     arguments: arguments,
                     workingDirectory: null,
                     timeout: null);
 
-                if (result.ExitCode != 0)
+                var result = new ConversionResult
                 {
-                    // Include both stdout and stderr to aid debugging.
-                    string message = $"ffmpeg exited with code {result.ExitCode}. " +
-                        $"StdOut: {result.StandardOutput} " +
-                        $"StdErr: {result.StandardError}";
-                    throw new InvalidOperationException(message);
+                    Duration = processResult.ExecutionTime,
+                    ExitCode = processResult.ExitCode,
+                    ErrorOutput = processResult.StandardError,
+                    FFmpegOutput = $"StdOut: {processResult.StandardOutput}\nStdErr: {processResult.StandardError}"
+                };
+
+                if (processResult.Success)
+                {
+                    result.MarkAsSuccess(string.Empty, processResult.ExitCode);
                 }
-            });
+                else
+                {
+                    result.MarkAsFailed(
+                        $"ffmpeg exited with code {processResult.ExitCode}",
+                        processResult.ExitCode,
+                        processResult.StandardError);
+                }
+
+                return result;
+            }).ConfigureAwait(false);
         }
     }
 }

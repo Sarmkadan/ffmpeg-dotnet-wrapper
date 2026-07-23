@@ -567,14 +567,16 @@ public class FFmpegService : IFFmpegService
 
             if (process.ExitCode == 0)
             {
-                result.MarkAsSuccess(operation.OutputFile);
+                result.MarkAsSuccess(operation.OutputFile, process.ExitCode);
                 _logger.LogInformation("FFmpeg operation completed successfully: {Name}", operation.Name);
             }
             else
             {
-                result.MarkAsFailed($"FFmpeg exited with code {process.ExitCode}");
+                // Extract the tail of stderr (last 10 lines) for diagnostic purposes
+                var errorOutputTail = ExtractErrorOutputTail(errorOutput);
+                result.MarkAsFailed($"FFmpeg exited with code {process.ExitCode}", process.ExitCode, errorOutputTail);
                 result.FFmpegOutput = errorOutput;
-                _logger.LogError("FFmpeg operation failed: {Error}", errorOutput);
+                _logger.LogError("FFmpeg operation failed with exit code {ExitCode}: {Error}", process.ExitCode, errorOutputTail);
             }
 
             operation.ExecutedAt = DateTime.UtcNow;
@@ -927,5 +929,24 @@ public class FFmpegService : IFFmpegService
             if (!string.IsNullOrEmpty(settings.Language))
                 operation.AddArgument($"-metadata:s:s:0 language={settings.Language}");
         }
+    }
+
+    /// <summary>
+    /// Extracts the tail (last 10 lines) of FFmpeg error output for diagnostic purposes.
+    /// This prevents overwhelming callers with full FFmpeg output while providing the most
+    /// relevant error information.
+    /// </summary>
+    /// <param name="errorOutput">Full error output from FFmpeg.</param>
+    /// <returns>Tail of error output (last 10 lines), or the full output if shorter.</returns>
+    private string ExtractErrorOutputTail(string errorOutput)
+    {
+        if (string.IsNullOrWhiteSpace(errorOutput))
+            return errorOutput;
+
+        var lines = errorOutput.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+        // Return last 10 lines, or all lines if fewer than 10
+        var startIndex = Math.Max(0, lines.Length - 10);
+        return string.Join(Environment.NewLine, lines.Skip(startIndex));
     }
 }
