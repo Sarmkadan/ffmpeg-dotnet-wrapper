@@ -1,7 +1,11 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// =====================================================================
+// Factory for creating and configuring HttpClient instances for external integrations.
+// Manages named clients, retry policies, and timeout configurations.
+// Ensures consistent HTTP behavior across all external API calls.
+// =====================================================================
 
 using System;
 using System.Collections.Generic;
@@ -12,6 +16,8 @@ using Microsoft.Extensions.Logging;
 
 namespace FFmpegDotnetWrapper.Integration
 {
+    using Policies;
+
     /// <summary>
     /// Factory for creating and configuring HttpClient instances for external integrations.
     /// Manages named clients, retry policies, and timeout configurations.
@@ -198,36 +204,239 @@ namespace FFmpegDotnetWrapper.Integration
 
     /// <summary>
     /// Retry policy for HTTP requests with exponential backoff.
+    /// Implements IRetryPolicy for unified retry handling across the application.
     /// </summary>
-    public class ExponentialBackoffRetryPolicy
+    public class ExponentialBackoffRetryPolicy : IRetryPolicy
     {
-        private readonly int _maxRetries;
-        private readonly int _initialDelayMs;
+        private readonly int _maxAttempts;
+        private readonly int _initialDelayMilliseconds;
+        private readonly double _backoffFactor;
+        private readonly double _jitterFactor;
 
-        public ExponentialBackoffRetryPolicy(int maxRetries = 3, int initialDelayMs = 100)
+        /// <summary>
+        /// Creates a new instance of ExponentialBackoffRetryPolicy.
+        /// </summary>
+        /// <param name="maxAttempts">Maximum number of retry attempts (1 = no retry).</param>
+        /// <param name="initialDelayMilliseconds">Initial delay in milliseconds before first retry.</param>
+        /// <param name="backoffFactor">Multiplier for delay between retries (e.g., 2.0 for exponential).</param>
+        /// <param name="jitterFactor">Random factor to add jitter to delays (0.0-1.0).</param>
+        public ExponentialBackoffRetryPolicy(
+            int maxAttempts = 3,
+            int initialDelayMilliseconds = 100,
+            double backoffFactor = 2.0,
+            double jitterFactor = 0.5)
         {
-            _maxRetries = maxRetries;
-            _initialDelayMs = initialDelayMs;
+            if (maxAttempts < 1)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(maxAttempts),
+                    "Max attempts must be at least 1");
+            }
+
+            if (initialDelayMilliseconds <= 0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(initialDelayMilliseconds),
+                    "Initial delay must be positive");
+            }
+
+            if (backoffFactor <= 1.0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(backoffFactor),
+                    "Backoff factor must be greater than 1.0");
+            }
+
+            if (jitterFactor < 0.0 || jitterFactor > 1.0)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(jitterFactor),
+                    "Jitter factor must be between 0.0 and 1.0");
+            }
+
+            _maxAttempts = maxAttempts;
+            _initialDelayMilliseconds = initialDelayMilliseconds;
+            _backoffFactor = backoffFactor;
+            _jitterFactor = jitterFactor;
+        }
+
+        /// <summary>
+        /// Gets the maximum number of retry attempts.
+        /// </summary>
+        public int MaxAttempts => _maxAttempts;
+
+        /// <summary>
+        /// Gets the initial delay in milliseconds.
+        /// </summary>
+        public int InitialDelayMilliseconds => _initialDelayMilliseconds;
+
+        /// <summary>
+        /// Executes the specified operation with retry logic.
+        /// </summary>
+        /// <typeparam name="T">The type of result returned by the operation.</typeparam>
+        /// <param name="operation">The operation to execute.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The result of the operation.</returns>
+        public async Task<T> ExecuteAsync<T>(
+            Func<CancellationToken, Task<T>> operation,
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(operation);
+
+            var attempts = 0;
+            Exception? lastException = null;
+
+            while (attempts < _maxAttempts)
+            {
+                attempts++;
+
+                try
+                {
+                    return await operation(cancellationToken);
+                }
+                catch (Exception ex) when (ShouldRetry(ex))
+                {
+                    lastException = ex;
+
+                    // Don't retry on first attempt
+                    if (attempts >= _maxAttempts)
+                    {
+                        break;
+                    }
+
+                    var delay = CalculateDelay(attempts);
+
+                    try
+                    {
+                        await Task.Delay(delay, cancellationToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Re-throw cancellation if it occurred during delay
+                        throw;
+                    }
+                }
+            }
+
+            // All attempts failed - throw the last exception
+            throw new RetryFailedException(
+                $"Operation failed after {_maxAttempts} attempt(s). Last error: {lastException?.Message}",
+                lastException);
+        }
+
+        /// <summary>
+        /// Executes the specified operation with retry logic.
+        /// </summary>
+        /// <param name="operation">The operation to execute.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A task representing the operation.</returns>
+        public async Task ExecuteAsync(
+            Func<CancellationToken, Task> operation,
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(operation);
+
+            var attempts = 0;
+            Exception? lastException = null;
+
+            while (attempts < _maxAttempts)
+            {
+                attempts++;
+
+                try
+                {
+                    await operation(cancellationToken);
+                    return; // Success - exit the retry loop
+                }
+                catch (Exception ex) when (ShouldRetry(ex))
+                {
+                    lastException = ex;
+
+                    // Don't retry on first attempt
+                    if (attempts >= _maxAttempts)
+                    {
+                        break;
+                    }
+
+                    var delay = CalculateDelay(attempts);
+
+                    try
+                    {
+                        await Task.Delay(delay, cancellationToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Re-throw cancellation if it occurred during delay
+                        throw;
+                    }
+                }
+            }
+
+            // All attempts failed - throw the last exception
+            throw new RetryFailedException(
+                $"Operation failed after {_maxAttempts} attempt(s). Last error: {lastException?.Message}",
+                lastException);
+        }
+
+        /// <summary>
+        /// Determines if an exception should be retried.
+        /// </summary>
+        /// <param name="exception">The exception to check.</param>
+        /// <returns><c>true</c> if the exception should be retried; otherwise <c>false</c>.</returns>
+        public bool ShouldRetry(Exception exception)
+        {
+            ArgumentNullException.ThrowIfNull(exception);
+
+            // For backward compatibility with HttpClientUtilities.ShouldRetryOnException
+            return exception switch
+            {
+                HttpRequestException => true,
+                TimeoutException => true,
+                OperationCanceledException => false,
+                _ => false
+            };
         }
 
         /// <summary>
         /// Calculates the delay before the next retry attempt.
+        /// Uses exponential backoff with jitter to prevent thundering herd problems.
+        /// </summary>
+        /// <param name="attemptNumber">The current attempt number (1-based).</param>
+        /// <returns>The delay before the next retry.</returns>
+        protected virtual TimeSpan CalculateDelay(int attemptNumber)
+        {
+            // Base delay: initial * factor^(attempt-1)
+            var baseDelayMs = _initialDelayMilliseconds * Math.Pow(_backoffFactor, attemptNumber - 1);
+
+            // Add jitter: random factor between 0 and jitterFactor * baseDelay
+            var jitterRange = _jitterFactor * baseDelayMs;
+            var jitterMs = Random.Shared.NextDouble() * jitterRange;
+
+            var totalDelayMs = baseDelayMs + jitterMs;
+
+            return TimeSpan.FromMilliseconds(totalDelayMs);
+        }
+
+        /// <summary>
+        /// Gets the delay before the next retry attempt (for backward compatibility).
         /// Uses exponential backoff: 100ms, 200ms, 400ms, etc.
         /// </summary>
+        [Obsolete("Use CalculateDelay() or rely on automatic retry delays instead.")]
         public TimeSpan GetRetryDelay(int attemptNumber)
         {
-            var delayMs = _initialDelayMs * (int)Math.Pow(2, attemptNumber - 1);
+            var delayMs = _initialDelayMilliseconds * (int)Math.Pow(2, attemptNumber - 1);
             // Add jitter to prevent thundering herd
             var jitterMs = new Random().Next(0, delayMs / 2);
             return TimeSpan.FromMilliseconds(delayMs + jitterMs);
         }
 
         /// <summary>
-        /// Determines if another retry should be attempted.
+        /// Determines if another retry should be attempted (for backward compatibility).
         /// </summary>
+        [Obsolete("Use ShouldRetry(Exception) instead.")]
         public bool ShouldRetry(int attemptNumber)
         {
-            return attemptNumber < _maxRetries;
+            return attemptNumber < _maxAttempts;
         }
     }
 }

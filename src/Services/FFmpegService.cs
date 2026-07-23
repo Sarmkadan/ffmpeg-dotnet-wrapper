@@ -9,6 +9,7 @@ using System.Globalization;
 using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Models;
+using FFmpegDotnetWrapper.Policies;
 using FFmpegDotnetWrapper.Repository;
 using Microsoft.Extensions.Logging;
 
@@ -25,15 +26,18 @@ public class FFmpegService : IFFmpegService
     private readonly string _ffmpegPath;
     private readonly string _ffprobePath;
     private readonly TimeSpan _defaultTimeout;
+    private readonly IRetryPolicy _retryPolicy;
 
     public FFmpegService(
         IMediaRepository mediaRepository,
         IOperationRepository operationRepository,
-        ILogger<FFmpegService> logger)
+        ILogger<FFmpegService> logger,
+        IRetryPolicy? retryPolicy = null)
     {
         _mediaRepository = mediaRepository ?? throw new ArgumentNullException(nameof(mediaRepository));
         _operationRepository = operationRepository ?? throw new ArgumentNullException(nameof(operationRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _retryPolicy = retryPolicy ?? new ExponentialBackoffRetryPolicy(maxAttempts: 1); // No retry by default
 
         _ffmpegPath = ResolveExecutablePath(FFmpegConstants.FFmpegExecutableName);
         _ffprobePath = ResolveExecutablePath(FFmpegConstants.FFprobeExecutableName);
