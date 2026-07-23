@@ -1,7 +1,7 @@
 // =============================================================================
 // Author: Vladyslav Zaiets | https://sarmkadan.com
 // CTO & Software Architect
-// =============================================================================
+// ===================================================================
 
 using System;
 using System.IO;
@@ -61,8 +61,9 @@ namespace FFmpegDotnetWrapper.Services
             TimeSpan duration,
             GifExportSettings settings)
         {
-            if (settings == null)
-                throw new ArgumentNullException(nameof(settings));
+            ArgumentNullException.ThrowIfNull(settings);
+
+            settings.EnsureValid();
 
             if (string.IsNullOrWhiteSpace(sourcePath))
                 throw new ArgumentException("Source path must be provided.", nameof(sourcePath));
@@ -71,7 +72,7 @@ namespace FFmpegDotnetWrapper.Services
                 throw new FileNotFoundException("Source video file not found.", sourcePath);
 
             int fps = settings.Fps;
-            int width = settings.Width;
+            int width = settings.GetEffectiveWidth();
 
             // Build output file name next to the source file.
             string outputGifPath = Path.Combine(
@@ -87,17 +88,32 @@ namespace FFmpegDotnetWrapper.Services
 
             try
             {
-                // ---------- First pass: generate palette ----------
+                // ---------- First pass: generate palette with optimized stats mode ----------
+                // Use 'diff' stats mode for better palette generation on video segments
                 string paletteArgs = $"-y -ss {start.TotalSeconds:F3} -t {duration.TotalSeconds:F3} -i \"{sourcePath}\" " +
-                    $"-vf \"fps={fps},scale={width}:-1:flags=lanczos,palettegen\" \"{palettePath}\"";
+                    $"-vf \"fps={fps},scale={width}:-1:flags=lanczos,palettegen=stats_mode=diff:max_colors=256\" \"{palettePath}\" -hide_banner -loglevel error";
 
                 await RunFfmpegAsync(paletteArgs).ConfigureAwait(false);
 
-                // ---------- Second pass: create GIF using palette ----------
+                // ---------- Second pass: create GIF using palette with selected dither mode ----------
+                string ditherValue = settings.DitherMode switch
+                {
+                    DitherMode.None => "0",
+                    DitherMode.Bayer => "bayer",
+                    DitherMode.Heckbert => "heckbert",
+                    DitherMode.FloydSteinberg => "floyd_steinberg",
+                    DitherMode.Sierra2 => "sierra2",
+                    DitherMode.Sierra2_4a => "sierra2_4a",
+                    DitherMode.Sierra3 => "sierra3",
+                    DitherMode.Burkes => "burkes",
+                    DitherMode.Atkinson => "atkinson",
+                    _ => "sierra2_4a" // default
+                };
+
                 string gifArgs = $"-y -ss {start.TotalSeconds:F3} -t {duration.TotalSeconds:F3} -i \"{sourcePath}\" " +
                     $"-i \"{palettePath}\" " +
-                    $"-filter_complex \"fps={fps},scale={width}:-1:flags=lanczos[x];[x][1:v]paletteuse\" " +
-                    $"\"{outputGifPath}\"";
+                    $"-filter_complex \"fps={fps},scale={width}:-1:flags=lanczos[x];[x][1:v]paletteuse=dither={ditherValue}\" " +
+                    $"-loop {(settings.Loop == -1 ? 0 : settings.Loop)} \"{outputGifPath}\" -hide_banner -loglevel error";
 
                 await RunFfmpegAsync(gifArgs).ConfigureAwait(false);
             }
