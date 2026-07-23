@@ -48,6 +48,12 @@ public static class FFmpegExceptionExtensions
             sb.AppendLine($"Timeout: {processEx.Timeout.Value.TotalSeconds} seconds");
         }
 
+        // Include CLI command from exception data if available
+        if (exception.Data.Contains(nameof(Throw.WithCliContext)) && exception.Data[nameof(Throw.WithCliContext)] is string cliCommand)
+        {
+            sb.AppendLine($"Command: {cliCommand}");
+        }
+
         return sb.ToString().Trim();
     }
 
@@ -97,5 +103,133 @@ public static class FFmpegExceptionExtensions
     {
         ArgumentNullException.ThrowIfNull(exception);
         return exception is UnsupportedOperationException;
+    }
+
+    /// <summary>
+    /// Gets the CLI command that was being executed when this exception occurred.
+    /// Returns null if no CLI command context is available.
+    /// </summary>
+    /// <param name="exception">The FFmpeg exception to check.</param>
+    /// <returns>The CLI command string if available; otherwise, null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+    public static string? GetCliCommand(this FFmpegException exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        return exception.Data[nameof(Throw.WithCliContext)] as string;
+    }
+
+    /// <summary>
+    /// Gets the exit code from the process execution that caused this exception.
+    /// Returns null if no exit code is available.
+    /// </summary>
+    /// <param name="exception">The FFmpeg exception to check.</param>
+    /// <returns>The exit code if available; otherwise, null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+    public static int? GetExitCode(this FFmpegException exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        if (exception.Data[nameof(Throw.WithCliContext)] is int exitCode)
+        {
+            return exitCode;
+        }
+        return exception.ExitCode;
+    }
+
+    /// <summary>
+    /// Gets the error output from the process execution that caused this exception.
+    /// Returns null if no error output is available.
+    /// </summary>
+    /// <param name="exception">The FFmpeg exception to check.</param>
+    /// <returns>The error output if available; otherwise, null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+    public static string? GetErrorOutput(this FFmpegException exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        return exception.ErrorOutput ?? exception.Data[nameof(Throw.WithCliContext)] as string;
+    }
+
+    /// <summary>
+    /// Gets the configuration key that caused this configuration exception.
+    /// Returns null if no configuration key is available.
+    /// </summary>
+    /// <param name="exception">The FFmpeg exception to check.</param>
+    /// <returns>The configuration key if available; otherwise, null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+    public static string? GetConfigurationKey(this FFmpegException exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        if (exception is InvalidOperationConfigurationException configEx && !string.IsNullOrEmpty(configEx.ConfigurationKey))
+        {
+            return configEx.ConfigurationKey;
+        }
+        return exception.Data[nameof(Throw.WithConfigurationContext)] as string;
+    }
+
+    /// <summary>
+    /// Gets the file path involved in this file operation exception.
+    /// Returns null if no file path is available.
+    /// </summary>
+    /// <param name="exception">The FFmpeg exception to check.</param>
+    /// <returns>The file path if available; otherwise, null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+    public static string? GetFilePath(this FFmpegException exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        if (exception is FileOperationException fileEx && !string.IsNullOrEmpty(fileEx.FilePath))
+        {
+            return fileEx.FilePath;
+        }
+        return exception.Data[nameof(Throw.WithFileContext)] as string;
+    }
+
+    /// <summary>
+    /// Gets the repository name involved in this repository exception.
+    /// Returns null if no repository name is available.
+    /// </summary>
+    /// <param name="exception">The FFmpeg exception to check.</param>
+    /// <returns>The repository name if available; otherwise, null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+    public static string? GetRepositoryName(this FFmpegException exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        if (exception is RepositoryException repoEx && !string.IsNullOrEmpty(repoEx.RepositoryName))
+        {
+            return repoEx.RepositoryName;
+        }
+        return exception.Data[nameof(Throw.WithRepositoryContext)] as string;
+    }
+
+    /// <summary>
+    /// Gets the service name involved in this service exception.
+    /// Returns null if no service name is available.
+    /// </summary>
+    /// <param name="exception">The FFmpeg exception to check.</param>
+    /// <returns>The service name if available; otherwise, null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+    public static string? GetServiceName(this FFmpegException exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        if (exception is ServiceException serviceEx && !string.IsNullOrEmpty(serviceEx.ServiceName))
+        {
+            return serviceEx.ServiceName;
+        }
+        return exception.Data[nameof(Throw.WithServiceContext)] as string;
+    }
+
+    /// <summary>
+    /// Gets the media file path involved in this invalid media file exception.
+    /// Returns null if no file path is available.
+    /// </summary>
+    /// <param name="exception">The FFmpeg exception to check.</param>
+    /// <returns>The file path if available; otherwise, null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+    public static string? GetMediaFilePath(this FFmpegException exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        if (exception is InvalidMediaFileException mediaEx && !string.IsNullOrEmpty(mediaEx.FilePath))
+        {
+            return mediaEx.FilePath;
+        }
+        return exception.Data[nameof(Throw.WithMediaFileContext)] as string;
     }
 }
