@@ -4,6 +4,7 @@
 // =============================================================================
 
 using FFmpegDotnetWrapper.Exceptions;
+using FFmpegDotnetWrapper.Utilities;
 
 namespace FFmpegDotnetWrapper.Models;
 
@@ -29,9 +30,11 @@ public class MediaFile
             if (!File.Exists(value))
                 throw new InvalidMediaFileException($"File does not exist: {value}", value);
 
-            _filePath = Path.GetFullPath(value);
-            Name = Path.GetFileNameWithoutExtension(value);
-            _fileSize = new FileInfo(value).Length;
+            // Validate that the file path stays within the current directory
+            var baseDirectory = AppContext.BaseDirectory;
+            _filePath = PathValidation.ValidateExistingFileWithinBaseDirectory(value, baseDirectory, nameof(FilePath));
+            Name = Path.GetFileNameWithoutExtension(_filePath);
+            _fileSize = new FileInfo(_filePath).Length;
         }
     }
 
@@ -65,7 +68,11 @@ public class MediaFile
 
     public MediaFile(string filePath)
     {
-        FilePath = filePath;
+            // Validate that the file path stays within the current directory
+            var baseDirectory = AppContext.BaseDirectory;
+            _filePath = PathValidation.ValidateExistingFileWithinBaseDirectory(filePath, baseDirectory, nameof(filePath));
+            Name = Path.GetFileNameWithoutExtension(_filePath);
+            _fileSize = new FileInfo(_filePath).Length;
     }
 
     /// <summary>

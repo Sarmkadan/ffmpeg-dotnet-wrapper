@@ -65,6 +65,10 @@ namespace FFmpegDotnetWrapper.Services
 
             settings.EnsureValid();
 
+        // Validate that source path stays within the current directory
+        var baseDirectory = AppContext.BaseDirectory;
+        sourcePath = PathValidation.ValidateExistingFileWithinBaseDirectory(sourcePath, baseDirectory, nameof(sourcePath));
+
             if (string.IsNullOrWhiteSpace(sourcePath))
                 throw new ArgumentException("Source path must be provided.", nameof(sourcePath));
 

@@ -4,6 +4,7 @@
 // =============================================================================
 
 using FFmpegDotnetWrapper.Exceptions;
+using FFmpegDotnetWrapper.Utilities;
 
 namespace FFmpegDotnetWrapper.Models;
 
@@ -40,7 +41,10 @@ public class SubtitleSettings
                 throw new InvalidOperationConfigurationException(
                     $"Unsupported subtitle format '{ext}'. Supported: {string.Join(", ", SupportedExtensions)}");
 
-            _subtitlePath = Path.GetFullPath(value);
+            // Validate that the subtitle path stays within the current directory
+                // Use the executable's directory as a safe base directory
+                var baseDirectory = AppContext.BaseDirectory;
+                _subtitlePath = PathValidation.ValidateExistingFileWithinBaseDirectory(value, baseDirectory, nameof(SubtitlePath));
         }
     }
 
