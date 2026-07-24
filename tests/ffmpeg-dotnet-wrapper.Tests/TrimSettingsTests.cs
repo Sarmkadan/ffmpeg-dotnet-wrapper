@@ -11,17 +11,18 @@ namespace FFmpegDotnetWrapper.Tests;
 
 public class TrimSettingsTests
 {
-    // Helper to create a minimal MediaFile instance using reflection/dynamic.
+    // Helper to create a minimal MediaFile instance with required video properties.
     private static MediaFile CreateMediaFile(TimeSpan? duration)
     {
-        // Assume MediaFile has a parameterless constructor.
-        var mediaFile = (MediaFile)Activator.CreateInstance(typeof(MediaFile));
-        // Set the Duration property via reflection (in case it's read‑only).
-        var prop = typeof(MediaFile).GetProperty("Duration");
-        prop?.SetValue(mediaFile, duration);
-        // Ensure ValidateAsVideo does not throw for our test media.
-        var method = typeof(MediaFile).GetMethod("ValidateAsVideo");
-        method?.Invoke(mediaFile, null);
+        var mediaFile = new MediaFile();
+
+        // Set dummy video dimensions so ValidateAsVideo() succeeds.
+        mediaFile.Width = 1920;
+        mediaFile.Height = 1080;
+
+        // Set the duration (must be positive for the validation logic).
+        mediaFile.Duration = duration;
+
         return mediaFile;
     }
 
