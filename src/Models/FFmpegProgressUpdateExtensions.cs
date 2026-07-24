@@ -63,7 +63,7 @@ public static class FFmpegProgressUpdateExtensions
         ArgumentNullException.ThrowIfNull(update);
         ArgumentOutOfRangeException.ThrowIfNegative(decimalPlaces);
 
-        return update.ProgressPercentage.ToString($"F{decimalPlaces}%");
+        return update.ProgressPercentage.ToString($"F{decimalPlaces}") + "%";
     }
 
     /// <summary>
