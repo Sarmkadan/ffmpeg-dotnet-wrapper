@@ -48,6 +48,24 @@ namespace FFmpegDotnetWrapper.Exceptions
         }
 
         /// <summary>
+        /// Adds additional context to the exception's Context dictionary.
+        /// </summary>
+        /// <param name="exception">The repository exception to update.</param>
+        /// <param name="key">The context key to add.</param>
+        /// <param name="value">The context value to add.</param>
+        /// <returns>The same exception instance for fluent chaining.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+        public static RepositoryException WithContext(this RepositoryException exception, string key, string value)
+        {
+            ArgumentNullException.ThrowIfNull(exception);
+            ArgumentException.ThrowIfNullOrEmpty(key, nameof(key));
+            ArgumentException.ThrowIfNullOrEmpty(value, nameof(value));
+
+            exception.Context[key] = value;
+            return exception;
+        }
+
+        /// <summary>
         /// Creates a new RepositoryException with additional context while preserving the original exception.
         /// </summary>
         /// <param name="exception">The original repository exception.</param>
@@ -66,6 +84,18 @@ namespace FFmpegDotnetWrapper.Exceptions
                 $"{exception.Message} | Context: {additionalContext}",
                 exception.RepositoryName,
                 exception);
+        }
+
+        /// <summary>
+        /// Gets the repository name from the exception's Context dictionary.
+        /// </summary>
+        /// <param name="exception">The repository exception to check.</param>
+        /// <returns>The repository name if present; otherwise, null.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+        public static string? GetRepositoryName(this RepositoryException exception)
+        {
+            ArgumentNullException.ThrowIfNull(exception);
+            return exception.Context.TryGetValue(nameof(RepositoryException.RepositoryName), out var value) ? value : null;
         }
     }
 }

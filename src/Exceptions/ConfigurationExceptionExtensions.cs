@@ -21,6 +21,24 @@ namespace FFmpegDotnetWrapper.Exceptions
         }
 
         /// <summary>
+        /// Adds additional context to the exception's Context dictionary.
+        /// </summary>
+        /// <param name="exception">The configuration exception to update.</param>
+        /// <param name="key">The context key to add.</param>
+        /// <param name="value">The context value to add.</param>
+        /// <returns>The same exception instance for fluent chaining.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+        public static ConfigurationException WithContext(this ConfigurationException exception, string key, string value)
+        {
+            ArgumentNullException.ThrowIfNull(exception);
+            ArgumentException.ThrowIfNullOrEmpty(key, nameof(key));
+            ArgumentException.ThrowIfNullOrEmpty(value, nameof(value));
+
+            exception.Context[key] = value;
+            return exception;
+        }
+
+        /// <summary>
         /// Creates a new exception with additional context while preserving original state.
         /// </summary>
         /// <param name="exception">The original configuration exception.</param>
@@ -35,9 +53,13 @@ namespace FFmpegDotnetWrapper.Exceptions
             var baseMessage = exception.Message;
             var newMessage = $"{baseMessage} - Context: {context}";
 
-            return exception.InnerException != null
-                ? new ConfigurationException(newMessage, exception.ConfigurationKey, exception.InnerException)
-                : new ConfigurationException(newMessage, exception.ConfigurationKey);
+            return exception.ConfigurationKey != null
+                ? exception.InnerException != null
+                    ? new ConfigurationException(newMessage, exception.ConfigurationKey, exception.InnerException)
+                    : new ConfigurationException(newMessage, exception.ConfigurationKey)
+                : exception.InnerException != null
+                    ? new ConfigurationException(newMessage, exception.InnerException)
+                    : new ConfigurationException(newMessage);
         }
 
         /// <summary>
@@ -52,6 +74,18 @@ namespace FFmpegDotnetWrapper.Exceptions
             return exception.ConfigurationKey != null
                 ? $"{exception.Message} (Configuration Key: {exception.ConfigurationKey})"
                 : exception.Message;
+        }
+
+        /// <summary>
+        /// Gets the configuration key from the exception's Context dictionary.
+        /// </summary>
+        /// <param name="exception">The configuration exception to check.</param>
+        /// <returns>The configuration key if present; otherwise, null.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+        public static string? GetConfigurationKey(this ConfigurationException exception)
+        {
+            ArgumentNullException.ThrowIfNull(exception);
+            return exception.Context.TryGetValue(nameof(ConfigurationException.ConfigurationKey), out var value) ? value : null;
         }
     }
 }

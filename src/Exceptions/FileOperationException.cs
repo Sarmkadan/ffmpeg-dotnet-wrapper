@@ -11,23 +11,36 @@ namespace FFmpegDotnetWrapper.Exceptions;
 /// </summary>
 public class FileOperationException : FFmpegException
 {
+    /// <summary>
+    /// Gets the file path that caused this exception.
+    /// </summary>
     public string? FilePath { get; set; }
 
-    public FileOperationException(string message) : base(message)
+    public FileOperationException(string message)
+        : base(message)
     {
+        ArgumentException.ThrowIfNullOrEmpty(message);
     }
 
-    public FileOperationException(string message, string filePath) : base(message)
+    public FileOperationException(string message, string filePath)
+        : base(message)
     {
+        ArgumentException.ThrowIfNullOrEmpty(message);
         FilePath = filePath;
+        Context[nameof(FilePath)] = filePath ?? string.Empty;
     }
 
-    public FileOperationException(string message, string filePath, Exception innerException) : base(message, innerException)
+    public FileOperationException(string message, string filePath, Exception innerException)
+        : base(message, innerException)
     {
+        ArgumentException.ThrowIfNullOrEmpty(message);
         FilePath = filePath;
+        Context[nameof(FilePath)] = filePath ?? string.Empty;
     }
 
-    public FileOperationException(string message, Exception innerException) : base(message, innerException)
+    public FileOperationException(string message, Exception innerException)
+        : base(message, innerException)
     {
+        ArgumentException.ThrowIfNullOrEmpty(message);
     }
 }

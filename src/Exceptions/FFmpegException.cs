@@ -5,37 +5,41 @@ namespace FFmpegDotnetWrapper.Exceptions;
 /// </summary>
 public class FFmpegException : Exception
 {
+    /// <summary>
+    /// Gets the process exit code associated with this exception, if applicable.
+    /// </summary>
     public int? ExitCode { get; set; }
+
+    /// <summary>
+    /// Gets the error output from the process execution, if applicable.
+    /// </summary>
     public string? ErrorOutput { get; set; }
+
+    /// <summary>
+    /// Gets additional context information about the error.
+    /// </summary>
+    public Dictionary<string, string> Context { get; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
     public FFmpegException()
     {
     }
 
-    public FFmpegException(string message) : base(message)
+    public FFmpegException(string message)
+        : base(message)
     {
-        if (string.IsNullOrEmpty(message))
-        {
-            throw new ArgumentException("Message cannot be null or empty", nameof(message));
-        }
+        ArgumentException.ThrowIfNullOrEmpty(message);
     }
 
     public FFmpegException(string message, Exception innerException)
         : base(message, innerException)
     {
-        if (string.IsNullOrEmpty(message))
-        {
-            throw new ArgumentException("Message cannot be null or empty", nameof(message));
-        }
+        ArgumentException.ThrowIfNullOrEmpty(message);
     }
 
     public FFmpegException(string message, int exitCode, string? errorOutput = null)
         : base(message)
     {
-        if (exitCode < 0)
-        {
-            throw new ArgumentException("Exit code cannot be less than 0", nameof(exitCode));
-        }
+        ArgumentOutOfRangeException.ThrowIfNegative(exitCode);
         ExitCode = exitCode;
         ErrorOutput = errorOutput;
     }

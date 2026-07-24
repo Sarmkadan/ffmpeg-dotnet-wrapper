@@ -12,23 +12,36 @@ namespace FFmpegDotnetWrapper.Exceptions;
 /// </summary>
 public class ConfigurationException : FFmpegException
 {
+    /// <summary>
+    /// Gets the configuration key that caused this exception.
+    /// </summary>
     public string? ConfigurationKey { get; set; }
 
-    public ConfigurationException(string message) : base(message)
+    public ConfigurationException(string message)
+        : base(message)
     {
+        ArgumentException.ThrowIfNullOrEmpty(message);
     }
 
-    public ConfigurationException(string message, string configurationKey) : base(message)
+    public ConfigurationException(string message, string configurationKey)
+        : base(message)
     {
+        ArgumentException.ThrowIfNullOrEmpty(message);
         ConfigurationKey = configurationKey;
+        Context[nameof(ConfigurationKey)] = configurationKey ?? string.Empty;
     }
 
-    public ConfigurationException(string message, Exception innerException) : base(message, innerException)
+    public ConfigurationException(string message, Exception innerException)
+        : base(message, innerException)
     {
+        ArgumentException.ThrowIfNullOrEmpty(message);
     }
 
-    public ConfigurationException(string message, string configurationKey, Exception innerException) : base(message, innerException)
+    public ConfigurationException(string message, string configurationKey, Exception innerException)
+        : base(message, innerException)
     {
+        ArgumentException.ThrowIfNullOrEmpty(message);
         ConfigurationKey = configurationKey;
+        Context[nameof(ConfigurationKey)] = configurationKey ?? string.Empty;
     }
 }

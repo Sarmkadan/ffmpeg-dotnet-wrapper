@@ -70,5 +70,35 @@ namespace FFmpegDotnetWrapper.Exceptions
             var filePath = ex.FilePath ?? string.Empty;
             return new FileOperationException(combinedMessage, filePath, ex);
         }
+
+        /// <summary>
+        /// Adds additional context to the exception's Context dictionary.
+        /// </summary>
+        /// <param name="ex">The file operation exception to update.</param>
+        /// <param name="key">The context key to add.</param>
+        /// <param name="value">The context value to add.</param>
+        /// <returns>The same exception instance for fluent chaining.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="ex"/> is null.</exception>
+        public static FileOperationException WithContext(this FileOperationException ex, string key, string value)
+        {
+            ArgumentNullException.ThrowIfNull(ex);
+            ArgumentException.ThrowIfNullOrEmpty(key, nameof(key));
+            ArgumentException.ThrowIfNullOrEmpty(value, nameof(value));
+
+            ex.Context[key] = value;
+            return ex;
+        }
+
+        /// <summary>
+        /// Gets the file path from the exception's Context dictionary.
+        /// </summary>
+        /// <param name="ex">The file operation exception to check.</param>
+        /// <returns>The file path if available; otherwise, null.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="ex"/> is null.</exception>
+        public static string? GetFilePath(this FileOperationException ex)
+        {
+            ArgumentNullException.ThrowIfNull(ex);
+            return ex.Context.TryGetValue(nameof(FileOperationException.FilePath), out var value) ? value : null;
+        }
     }
 }

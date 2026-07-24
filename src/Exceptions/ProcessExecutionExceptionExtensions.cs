@@ -72,5 +72,47 @@ namespace FFmpegDotnetWrapper.Exceptions
             var innerExceptionMessage = ex.InnerException != null ? $"Inner exception: {ex.InnerException.Message}" : "No inner exception";
             return $"{detailedErrorMessage}{innerExceptionMessage}";
         }
+
+        /// <summary>
+        /// Adds additional context to the exception's Context dictionary.
+        /// </summary>
+        /// <param name="ex">The process execution exception to update.</param>
+        /// <param name="key">The context key to add.</param>
+        /// <param name="value">The context value to add.</param>
+        /// <returns>The same exception instance for fluent chaining.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="ex"/> is null.</exception>
+        public static ProcessExecutionException WithContext(this ProcessExecutionException ex, string key, string value)
+        {
+            ArgumentNullException.ThrowIfNull(ex);
+            ArgumentException.ThrowIfNullOrEmpty(key, nameof(key));
+            ArgumentException.ThrowIfNullOrEmpty(value, nameof(value));
+
+            ex.Context[key] = value;
+            return ex;
+        }
+
+        /// <summary>
+        /// Gets the exit code from the exception's Context dictionary.
+        /// </summary>
+        /// <param name="ex">The process execution exception to check.</param>
+        /// <returns>The exit code if available; otherwise, null.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="ex"/> is null.</exception>
+        public static int? GetExitCode(this ProcessExecutionException ex)
+        {
+            ArgumentNullException.ThrowIfNull(ex);
+            return ex.ExitCode;
+        }
+
+        /// <summary>
+        /// Gets the error output from the exception's Context dictionary.
+        /// </summary>
+        /// <param name="ex">The process execution exception to check.</param>
+        /// <returns>The error output if available; otherwise, null.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="ex"/> is null.</exception>
+        public static string? GetErrorOutput(this ProcessExecutionException ex)
+        {
+            ArgumentNullException.ThrowIfNull(ex);
+            return ex.ErrorOutput;
+        }
     }
 }

@@ -11,31 +11,40 @@ namespace FFmpegDotnetWrapper.Exceptions;
 /// </summary>
 public class ProcessExecutionException : FFmpegException
 {
-    public new int? ExitCode { get; set; }
-    public new string? ErrorOutput { get; set; }
-
-    public ProcessExecutionException(string message) : base(message)
+    public ProcessExecutionException(string message)
+        : base(message)
     {
+        ArgumentException.ThrowIfNullOrEmpty(message);
     }
 
-    public ProcessExecutionException(string message, int exitCode) : base(message)
+    public ProcessExecutionException(string message, int exitCode)
+        : base(message, exitCode)
     {
-        ExitCode = exitCode;
+        ArgumentException.ThrowIfNullOrEmpty(message);
+        Context[nameof(ExitCode)] = exitCode.ToString();
     }
 
-    public ProcessExecutionException(string message, int exitCode, string errorOutput) : base(message, exitCode, errorOutput)
+    public ProcessExecutionException(string message, int exitCode, string errorOutput)
+        : base(message, exitCode, errorOutput)
     {
+        ArgumentException.ThrowIfNullOrEmpty(message);
+        Context[nameof(ExitCode)] = exitCode.ToString();
+        Context[nameof(ErrorOutput)] = errorOutput ?? string.Empty;
+    }
+
+    public ProcessExecutionException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(message);
+    }
+
+    public ProcessExecutionException(string message, int exitCode, string errorOutput, Exception innerException)
+        : base(message, innerException)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(message);
         ExitCode = exitCode;
         ErrorOutput = errorOutput;
-    }
-
-    public ProcessExecutionException(string message, Exception innerException) : base(message, innerException)
-    {
-    }
-
-    public ProcessExecutionException(string message, int exitCode, string errorOutput, Exception innerException) : base(message, innerException)
-    {
-        ExitCode = exitCode;
-        ErrorOutput = errorOutput;
+        Context[nameof(ExitCode)] = exitCode.ToString();
+        Context[nameof(ErrorOutput)] = errorOutput ?? string.Empty;
     }
 }

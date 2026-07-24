@@ -24,6 +24,24 @@ namespace FFmpegDotnetWrapper.Exceptions
         }
 
         /// <summary>
+        /// Adds additional context to the exception's Context dictionary.
+        /// </summary>
+        /// <param name="exception">The service exception to update.</param>
+        /// <param name="key">The context key to add.</param>
+        /// <param name="value">The context value to add.</param>
+        /// <returns>The same exception instance for fluent chaining.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+        public static ServiceException WithContext(this ServiceException exception, string key, string value)
+        {
+            ArgumentNullException.ThrowIfNull(exception);
+            ArgumentException.ThrowIfNullOrEmpty(key, nameof(key));
+            ArgumentException.ThrowIfNullOrEmpty(value, nameof(value));
+
+            exception.Context[key] = value;
+            return exception;
+        }
+
+        /// <summary>
         /// Returns a formatted string containing both service name (if present) and message.
         /// </summary>
         /// <param name="exception">The exception to format.</param>
@@ -48,6 +66,18 @@ namespace FFmpegDotnetWrapper.Exceptions
         {
             ArgumentNullException.ThrowIfNull(exception);
             return !string.IsNullOrEmpty(exception.ServiceName);
+        }
+
+        /// <summary>
+        /// Gets the service name from the exception's Context dictionary.
+        /// </summary>
+        /// <param name="exception">The service exception to check.</param>
+        /// <returns>The service name if present; otherwise, null.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="exception"/> is null.</exception>
+        public static string? GetServiceName(this ServiceException exception)
+        {
+            ArgumentNullException.ThrowIfNull(exception);
+            return exception.Context.TryGetValue(nameof(ServiceException.ServiceName), out var value) ? value : null;
         }
     }
 }

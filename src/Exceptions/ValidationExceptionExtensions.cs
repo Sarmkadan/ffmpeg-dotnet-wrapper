@@ -72,7 +72,9 @@ namespace FFmpegDotnetWrapper.Exceptions
                 newDict[field] = new[] { errorMessage };
             }
 
-            return new ValidationException(ex.Message, newDict, ex.InnerException);
+            return ex.InnerException != null
+                ? new ValidationException(ex.Message, newDict, ex.InnerException)
+                : new ValidationException(ex.Message, newDict);
         }
 
         /// <summary>
@@ -97,6 +99,36 @@ namespace FFmpegDotnetWrapper.Exceptions
             }
 
             return sb.ToString().TrimEnd();
+        }
+
+        /// <summary>
+        /// Adds additional context to the exception's Context dictionary.
+        /// </summary>
+        /// <param name="ex">The validation exception to update.</param>
+        /// <param name="key">The context key to add.</param>
+        /// <param name="value">The context value to add.</param>
+        /// <returns>The same exception instance for fluent chaining.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="ex"/> is null.</exception>
+        public static ValidationException WithContext(this ValidationException ex, string key, string value)
+        {
+            ArgumentNullException.ThrowIfNull(ex);
+            ArgumentException.ThrowIfNullOrEmpty(key, nameof(key));
+            ArgumentException.ThrowIfNullOrEmpty(value, nameof(value));
+
+            ex.Context[key] = value;
+            return ex;
+        }
+
+        /// <summary>
+        /// Gets the validation errors count from the exception's Context dictionary.
+        /// </summary>
+        /// <param name="ex">The validation exception to check.</param>
+        /// <returns>The validation errors count if available; otherwise, 0.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="ex"/> is null.</exception>
+        public static int GetValidationErrorsCount(this ValidationException ex)
+        {
+            ArgumentNullException.ThrowIfNull(ex);
+            return ex.ValidationErrors?.Count ?? 0;
         }
     }
 }

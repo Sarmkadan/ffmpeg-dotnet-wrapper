@@ -149,7 +149,7 @@ public static class FFmpegExceptionExtensions
     }
 
     /// <summary>
-    /// Gets the configuration key that caused this configuration exception.
+    /// Gets the configuration key from the exception's Context dictionary.
     /// Returns null if no configuration key is available.
     /// </summary>
     /// <param name="exception">The FFmpeg exception to check.</param>
@@ -158,15 +158,15 @@ public static class FFmpegExceptionExtensions
     public static string? GetConfigurationKey(this FFmpegException exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
-        if (exception is InvalidOperationConfigurationException configEx && !string.IsNullOrEmpty(configEx.ConfigurationKey))
+        if (exception is ConfigurationException configEx)
         {
-            return configEx.ConfigurationKey;
+            return configEx.GetConfigurationKey();
         }
-        return exception.Data[nameof(Throw.WithConfigurationContext)] as string;
+        return exception.Context.TryGetValue(nameof(ConfigurationException.ConfigurationKey), out var value) ? value : null;
     }
 
     /// <summary>
-    /// Gets the file path involved in this file operation exception.
+    /// Gets the file path from the exception's Context dictionary.
     /// Returns null if no file path is available.
     /// </summary>
     /// <param name="exception">The FFmpeg exception to check.</param>
@@ -175,15 +175,19 @@ public static class FFmpegExceptionExtensions
     public static string? GetFilePath(this FFmpegException exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
-        if (exception is FileOperationException fileEx && !string.IsNullOrEmpty(fileEx.FilePath))
+        if (exception is FileOperationException fileEx)
         {
-            return fileEx.FilePath;
+            return fileEx.GetFilePath();
         }
-        return exception.Data[nameof(Throw.WithFileContext)] as string;
+        if (exception is InvalidMediaFileException mediaEx)
+        {
+            return mediaEx.FilePath;
+        }
+        return exception.Context.TryGetValue(nameof(FileOperationException.FilePath), out var value) ? value : null;
     }
 
     /// <summary>
-    /// Gets the repository name involved in this repository exception.
+    /// Gets the repository name from the exception's Context dictionary.
     /// Returns null if no repository name is available.
     /// </summary>
     /// <param name="exception">The FFmpeg exception to check.</param>
@@ -192,15 +196,15 @@ public static class FFmpegExceptionExtensions
     public static string? GetRepositoryName(this FFmpegException exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
-        if (exception is RepositoryException repoEx && !string.IsNullOrEmpty(repoEx.RepositoryName))
+        if (exception is RepositoryException repoEx)
         {
-            return repoEx.RepositoryName;
+            return repoEx.GetRepositoryName();
         }
-        return exception.Data[nameof(Throw.WithRepositoryContext)] as string;
+        return exception.Context.TryGetValue(nameof(RepositoryException.RepositoryName), out var value) ? value : null;
     }
 
     /// <summary>
-    /// Gets the service name involved in this service exception.
+    /// Gets the service name from the exception's Context dictionary.
     /// Returns null if no service name is available.
     /// </summary>
     /// <param name="exception">The FFmpeg exception to check.</param>
@@ -209,15 +213,15 @@ public static class FFmpegExceptionExtensions
     public static string? GetServiceName(this FFmpegException exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
-        if (exception is ServiceException serviceEx && !string.IsNullOrEmpty(serviceEx.ServiceName))
+        if (exception is ServiceException serviceEx)
         {
-            return serviceEx.ServiceName;
+            return serviceEx.GetServiceName();
         }
-        return exception.Data[nameof(Throw.WithServiceContext)] as string;
+        return exception.Context.TryGetValue(nameof(ServiceException.ServiceName), out var value) ? value : null;
     }
 
     /// <summary>
-    /// Gets the media file path involved in this invalid media file exception.
+    /// Gets the media file path from the exception's Context dictionary.
     /// Returns null if no file path is available.
     /// </summary>
     /// <param name="exception">The FFmpeg exception to check.</param>
@@ -226,10 +230,10 @@ public static class FFmpegExceptionExtensions
     public static string? GetMediaFilePath(this FFmpegException exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
-        if (exception is InvalidMediaFileException mediaEx && !string.IsNullOrEmpty(mediaEx.FilePath))
+        if (exception is InvalidMediaFileException mediaEx)
         {
             return mediaEx.FilePath;
         }
-        return exception.Data[nameof(Throw.WithMediaFileContext)] as string;
+        return exception.Context.TryGetValue(nameof(InvalidMediaFileException.FilePath), out var value) ? value : null;
     }
 }
