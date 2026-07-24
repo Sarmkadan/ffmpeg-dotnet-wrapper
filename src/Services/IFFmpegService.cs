@@ -31,6 +31,26 @@ public interface IFFmpegService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Transcodes a media file exactly like <see cref="TranscodeAsync(MediaFile, string, TranscodeSettings, CancellationToken)"/>,
+    /// while additionally streaming incremental <see cref="FFmpegProgressUpdate"/> snapshots to
+    /// <paramref name="progress"/> as FFmpeg reports them via its <c>-progress pipe:1</c> machine-readable
+    /// output. Progress lines are parsed one at a time as they arrive, so memory usage stays constant
+    /// regardless of job length.
+    /// </summary>
+    /// <param name="inputMedia">The source media file with pre-analyzed metadata, used to derive total duration for percentage calculation.</param>
+    /// <param name="outputPath">Destination file path for the transcoded output.</param>
+    /// <param name="settings">Transcoding settings including codec, bitrate, resolution, and audio parameters.</param>
+    /// <param name="progress">Receiver of incremental progress snapshots. Must not be <c>null</c>.</param>
+    /// <param name="cancellationToken">Token to cancel the FFmpeg process.</param>
+    /// <returns>A <see cref="ConversionResult"/> with output file info, duration, and success status.</returns>
+    Task<ConversionResult> TranscodeAsync(
+        MediaFile inputMedia,
+        string outputPath,
+        TranscodeSettings settings,
+        IProgress<FFmpegProgressUpdate> progress,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Trims a media file to the time range specified in <paramref name="settings"/>,
     /// using stream copy when possible to avoid re-encoding.
     /// </summary>

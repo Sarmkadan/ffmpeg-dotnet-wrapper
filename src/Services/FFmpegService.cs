@@ -89,6 +89,57 @@ public class FFmpegService : IFFmpegService
         }
     }
 
+    /// <inheritdoc/>
+    public async Task<ConversionResult> TranscodeAsync(
+        MediaFile inputMedia,
+        string outputPath,
+        TranscodeSettings settings,
+        IProgress<FFmpegProgressUpdate> progress,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(inputMedia);
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(progress);
+
+        var operation = new FFmpegOperation
+        {
+            Name = $"Transcode {inputMedia.Name}",
+            Type = FFmpegOperationType.Transcode,
+            OutputFile = outputPath,
+            Timeout = _defaultTimeout
+        };
+
+        operation.AddInputFile(inputMedia.FilePath);
+
+        try
+        {
+            inputMedia.ValidateAsVideo();
+            settings.Validate();
+
+            BuildTranscodeArguments(operation, settings);
+
+            _logger.LogInformation("Starting transcode operation with progress streaming for {File}", inputMedia.Name);
+            var result = await ExecuteFFmpegWithProgressAsync(operation, inputMedia.Duration, progress, cancellationToken);
+
+            if (result.IsSuccess)
+            {
+                var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken);
+                result.OutputMedia = outputMedia;
+                result.SetMetric("InputSize", inputMedia.FileSize);
+                result.SetMetric("OutputSize", outputMedia.FileSize);
+                result.SetMetric("SizeReduction", result.GetSizeReductionPercentage(inputMedia.FileSize));
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Transcode operation failed for {File}", inputMedia.Name);
+            throw;
+        }
+    }
+
     public async Task<ConversionResult> TrimAsync(
         MediaFile inputMedia,
         string outputPath,
@@ -595,6 +646,275 @@ public class FFmpegService : IFFmpegService
     }
 
 
+
+    /// <summary>
+    /// Maximum number of characters of ffmpeg stderr retained for diagnostic purposes while
+    /// streaming progress. Bounds memory usage on multi-hour transcodes that would otherwise
+    /// accumulate unbounded stderr text.
+    /// </summary>
+    private const int MaxRetainedStderrChars = 64 * 1024;
+
+    /// <summary>
+    /// Executes an FFmpeg operation while streaming incremental <see cref="FFmpegProgressUpdate"/>
+    /// snapshots parsed from FFmpeg's <c>-progress pipe:1</c> stdout stream. Each stdout line is
+    /// parsed and discarded immediately (no accumulation of the full output), and stderr is kept
+    /// bounded to the last <see cref="MaxRetainedStderrChars"/> characters for error reporting.
+    /// </summary>
+    /// <param name="operation">The operation to execute; <c>-progress pipe:1 -nostats</c> is appended to its arguments.</param>
+    /// <param name="totalDuration">Total media duration used to compute percentage completion; pass <see cref="TimeSpan.Zero"/> if unknown.</param>
+    /// <param name="progress">Receiver of incremental progress snapshots.</param>
+    /// <param name="cancellationToken">Token used to cancel the running process.</param>
+    /// <returns>A <see cref="ConversionResult"/> describing the outcome of the operation.</returns>
+    private async Task<ConversionResult> ExecuteFFmpegWithProgressAsync(
+        FFmpegOperation operation,
+        TimeSpan totalDuration,
+        IProgress<FFmpegProgressUpdate> progress,
+        CancellationToken cancellationToken)
+    {
+        var result = new ConversionResult
+        {
+            Duration = operation.Timeout ?? _defaultTimeout
+        };
+
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            await _operationRepository.AddAsync(operation, cancellationToken);
+
+            // Machine-readable progress on stdout; -nostats stops the human-readable
+            // progress banner from also being written to stderr on every frame.
+            operation.AddArgument("-progress pipe:1");
+            operation.AddArgument("-nostats");
+
+            using var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = _ffmpegPath,
+                    Arguments = operation.BuildCommandLine(),
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+
+            cancellationToken.ThrowIfCancellationRequested();
+            process.Start();
+
+            var stderrBuffer = new System.Text.StringBuilder(capacity: 4096);
+            var stderrLock = new object();
+
+            var stdErrTask = DrainStderrBoundedAsync(process, stderrBuffer, stderrLock, cancellationToken);
+            var stdOutTask = StreamProgressFromStdOutAsync(process, operation.Id, totalDuration, sw, progress, cancellationToken);
+
+            var timeout = operation.Timeout ?? _defaultTimeout;
+            if (!await process.WaitForExitAsync(timeout, cancellationToken))
+            {
+                process.Kill(entireProcessTree: true);
+                throw new FFmpegProcessException(
+                    $"FFmpeg process timed out after {timeout.TotalSeconds} seconds",
+                    timeout);
+            }
+
+            await stdOutTask;
+            await stdErrTask;
+
+            sw.Stop();
+            result.Duration = sw.Elapsed;
+
+            string retainedStderr;
+            lock (stderrLock)
+                retainedStderr = stderrBuffer.ToString();
+
+            if (process.ExitCode == 0)
+            {
+                result.MarkAsSuccess(operation.OutputFile, process.ExitCode);
+                _logger.LogInformation("FFmpeg operation completed successfully: {Name}", operation.Name);
+            }
+            else
+            {
+                var errorOutputTail = ExtractErrorOutputTail(retainedStderr);
+                result.MarkAsFailed($"FFmpeg exited with code {process.ExitCode}", process.ExitCode, errorOutputTail);
+                result.FFmpegOutput = retainedStderr;
+                _logger.LogError("FFmpeg operation failed with exit code {ExitCode}: {Error}", process.ExitCode, errorOutputTail);
+            }
+
+            operation.ExecutedAt = DateTime.UtcNow;
+            await _operationRepository.UpdateAsync(operation, cancellationToken);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+            result.Duration = sw.Elapsed;
+            result.MarkAsFailed(ex.Message);
+            _logger.LogError(ex, "FFmpeg execution error");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Reads FFmpeg's stderr stream line by line for the lifetime of the process, retaining only
+    /// the last <see cref="MaxRetainedStderrChars"/> characters. This avoids the unbounded memory
+    /// growth of buffering full stderr output on long-running or verbose FFmpeg invocations.
+    /// </summary>
+    private static async Task DrainStderrBoundedAsync(
+        Process process,
+        System.Text.StringBuilder buffer,
+        object bufferLock,
+        CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            string? line;
+            try
+            {
+                line = await process.StandardError.ReadLineAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+
+            if (line == null)
+                break;
+
+            lock (bufferLock)
+            {
+                buffer.Append(line).Append('\n');
+                if (buffer.Length > MaxRetainedStderrChars)
+                    buffer.Remove(0, buffer.Length - MaxRetainedStderrChars);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Reads FFmpeg's <c>-progress pipe:1</c> stdout stream line by line, accumulating one
+    /// <c>key=value</c> block at a time and emitting a parsed <see cref="FFmpegProgressUpdate"/> to
+    /// <paramref name="progress"/> whenever a <c>progress=continue</c>/<c>progress=end</c> terminator
+    /// line is seen. Parsing is entirely line-based; no regex over accumulated output is performed.
+    /// </summary>
+    private static async Task StreamProgressFromStdOutAsync(
+        Process process,
+        string operationId,
+        TimeSpan totalDuration,
+        Stopwatch stopwatch,
+        IProgress<FFmpegProgressUpdate> progress,
+        CancellationToken cancellationToken)
+    {
+        var fields = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        while (true)
+        {
+            string? line;
+            try
+            {
+                line = await process.StandardOutput.ReadLineAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+
+            if (line == null)
+                break;
+
+            var separatorIndex = line.IndexOf('=');
+            if (separatorIndex <= 0)
+                continue;
+
+            var key = line[..separatorIndex];
+            var value = line[(separatorIndex + 1)..].Trim();
+            fields[key] = value;
+
+            if (key != "progress")
+                continue;
+
+            progress.Report(BuildProgressUpdate(fields, operationId, totalDuration, stopwatch.Elapsed));
+            fields = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            if (value == "end")
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Builds an <see cref="FFmpegProgressUpdate"/> from a completed block of
+    /// <c>-progress pipe:1</c> key/value fields.
+    /// </summary>
+    private static FFmpegProgressUpdate BuildProgressUpdate(
+        IReadOnlyDictionary<string, string> fields,
+        string operationId,
+        TimeSpan totalDuration,
+        TimeSpan elapsed)
+    {
+        var processedDuration = fields.TryGetValue("out_time_us", out var outTimeUsRaw)
+            && long.TryParse(outTimeUsRaw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var outTimeUs)
+            && outTimeUs > 0
+                ? TimeSpan.FromMicroseconds(outTimeUs)
+                : TimeSpan.Zero;
+
+        var progressPercent = totalDuration.TotalSeconds > 0
+            ? Math.Clamp(processedDuration.TotalSeconds / totalDuration.TotalSeconds * 100.0, 0.0, 100.0)
+            : 0.0;
+
+        var update = new FFmpegProgressUpdate
+        {
+            OperationId = operationId,
+            ProgressPercentage = progressPercent,
+            ProcessedDuration = processedDuration,
+            TotalDuration = totalDuration,
+            ElapsedWallTime = elapsed,
+            FramesProcessed = ParseIntField(fields, "frame"),
+            FramesPerSecond = ParseDoubleField(fields, "fps"),
+            OutputSizeBytes = ParseLongField(fields, "total_size"),
+            BitrateKbps = ParseBitrateField(fields),
+            EncodingSpeed = ParseSpeedField(fields),
+            Timestamp = DateTime.UtcNow,
+            RawOutput = string.Join(' ', fields.Select(kv => $"{kv.Key}={kv.Value}"))
+        };
+
+        update.RecalculateEstimatedTimeRemaining();
+        return update;
+    }
+
+    private static int ParseIntField(IReadOnlyDictionary<string, string> fields, string key) =>
+        fields.TryGetValue(key, out var raw) && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
+            ? value
+            : 0;
+
+    private static long ParseLongField(IReadOnlyDictionary<string, string> fields, string key) =>
+        fields.TryGetValue(key, out var raw) && long.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
+            ? value
+            : 0L;
+
+    private static double ParseDoubleField(IReadOnlyDictionary<string, string> fields, string key) =>
+        fields.TryGetValue(key, out var raw) && double.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var value)
+            ? value
+            : 0.0;
+
+    /// <summary>Parses the <c>bitrate</c> field (e.g. <c>"1234.5kbits/s"</c> or <c>"N/A"</c>) into kbps.</summary>
+    private static double ParseBitrateField(IReadOnlyDictionary<string, string> fields)
+    {
+        if (!fields.TryGetValue("bitrate", out var raw))
+            return 0.0;
+
+        var numeric = raw.Replace("kbits/s", string.Empty, StringComparison.OrdinalIgnoreCase).Trim();
+        return double.TryParse(numeric, NumberStyles.Any, CultureInfo.InvariantCulture, out var value) ? value : 0.0;
+    }
+
+    /// <summary>Parses the <c>speed</c> field (e.g. <c>"2.05x"</c> or <c>"N/A"</c>) into a multiplier.</summary>
+    private static double ParseSpeedField(IReadOnlyDictionary<string, string> fields)
+    {
+        if (!fields.TryGetValue("speed", out var raw))
+            return 0.0;
+
+        var numeric = raw.TrimEnd('x', 'X');
+        return double.TryParse(numeric, NumberStyles.Any, CultureInfo.InvariantCulture, out var value) ? value : 0.0;
+    }
 
     private void BuildTranscodeArguments(FFmpegOperation operation, TranscodeSettings settings)
     {
