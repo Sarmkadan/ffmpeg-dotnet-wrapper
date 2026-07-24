@@ -22,8 +22,8 @@ public static class ServiceExceptionValidation
 
         var problems = new List<string>();
 
-        // Validate ServiceName - can be null for base ServiceException, but should be validated if set
-        if (!string.IsNullOrWhiteSpace(value.ServiceName) && string.IsNullOrWhiteSpace(value.ServiceName))
+        // Validate ServiceName - if set, should not be whitespace-only
+        if (value.ServiceName is not null && string.IsNullOrWhiteSpace(value.ServiceName))
         {
             problems.Add("ServiceName cannot be empty or whitespace when set.");
         }

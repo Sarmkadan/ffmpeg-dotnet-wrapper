@@ -33,7 +33,7 @@ public class ServiceExceptionValidationTests
     public void Validate_WithWhitespaceMessage_ReturnsValidationProblem()
     {
         // Arrange
-        var exception = new ServiceException("   ", "FFmpeg.Core");
+        var exception = new ServiceException(" ", "FFmpeg.Core");
 
         // Act
         var result = exception.Validate();
@@ -57,7 +57,7 @@ public class ServiceExceptionValidationTests
     }
 
     [Fact]
-    public void Validate_WithEmptyServiceName_ValidatesSuccessfully()
+    public void Validate_WithEmptyServiceName_ReturnsValidationProblem()
     {
         // Arrange
         var exception = new ServiceException("Valid error message", serviceName: string.Empty);
@@ -66,20 +66,22 @@ public class ServiceExceptionValidationTests
         var result = exception.Validate();
 
         // Assert
-        Assert.Empty(result);
+        Assert.Single(result);
+        Assert.Contains("ServiceName cannot be empty or whitespace when set", result[0]);
     }
 
     [Fact]
-    public void Validate_WithWhitespaceServiceName_ValidatesSuccessfully()
+    public void Validate_WithWhitespaceServiceName_ReturnsValidationProblem()
     {
         // Arrange
-        var exception = new ServiceException("Valid error message", "   ");
+        var exception = new ServiceException("Valid message", "   ");
 
         // Act
         var result = exception.Validate();
 
         // Assert
-        Assert.Empty(result);
+        Assert.Single(result);
+        Assert.Contains("ServiceName cannot be empty or whitespace when set", result[0]);
     }
 
     [Fact]
@@ -114,6 +116,33 @@ public class ServiceExceptionValidationTests
     {
         // Arrange
         var exception = new ProcessExecutionException("Valid error message", 0, "Error output");
+
+        // Act
+        var result = exception.Validate();
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void Validate_WithBaseServiceException_ReturnsEmptyList()
+    {
+        // Arrange
+        var exception = new ServiceException("Valid error message");
+
+        // Act
+        var result = exception.Validate();
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void Validate_WithServiceExceptionWithInnerException_ReturnsEmptyList()
+    {
+        // Arrange
+        var innerException = new InvalidOperationException("Inner error");
+        var exception = new ServiceException("Valid error message", "FFmpeg.Core", innerException);
 
         // Act
         var result = exception.Validate();
@@ -196,61 +225,6 @@ public class ServiceExceptionValidationTests
     }
 
     [Fact]
-    public void Validate_WithBaseServiceException_ReturnsEmptyList()
-    {
-        // Arrange
-        var exception = new ServiceException("Valid error message");
-
-        // Act
-        var result = exception.Validate();
-
-        // Assert
-        Assert.Empty(result);
-    }
-
-    [Fact]
-    public void Validate_WithServiceExceptionWithInnerException_ReturnsEmptyList()
-    {
-        // Arrange
-        var innerException = new InvalidOperationException("Inner error");
-        var exception = new ServiceException("Valid error message", "FFmpeg.Core", innerException);
-
-        // Act
-        var result = exception.Validate();
-
-        // Assert
-        Assert.Empty(result);
-    }
-
-    [Fact]
-    public void IsValid_WithServiceExceptionWithInnerException_ReturnsTrue()
-    {
-        // Arrange
-        var innerException = new InvalidOperationException("Inner error");
-        var exception = new ServiceException("Valid error message", "FFmpeg.Core", innerException);
-
-        // Act
-        var result = exception.IsValid();
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    public void EnsureValid_WithServiceExceptionWithInnerException_DoesNotThrow()
-    {
-        // Arrange
-        var innerException = new InvalidOperationException("Inner error");
-        var exception = new ServiceException("Valid error message", "FFmpeg.Core", innerException);
-
-        // Act
-        var exceptionResult = Record.Exception(() => exception.EnsureValid());
-
-        // Assert
-        Assert.Null(exceptionResult);
-    }
-
-    [Fact]
     public void Validate_ReturnsReadOnlyCollection()
     {
         // Arrange
@@ -261,6 +235,19 @@ public class ServiceExceptionValidationTests
 
         // Assert
         Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void Validate_ReturnsReadOnlyCollection_WithCorrectType()
+    {
+        // Arrange
+        var exception = new ServiceException("Valid error message", "FFmpeg.Core");
+
+        // Act
+        var result = exception.Validate();
+
+        // Assert
+        Assert.IsAssignableFrom<IReadOnlyList<string>>(result);
     }
 
     [Fact]
@@ -301,5 +288,16 @@ public class ServiceExceptionValidationTests
 
         // Assert
         Assert.Null(exceptionResult);
+    }
+
+    [Fact]
+    public void EnsureValid_WithWhitespaceServiceName_ThrowsArgumentException()
+    {
+        // Arrange
+        var exception = new ServiceException("Valid message", "   ");
+
+        // Act & Assert
+        var ex = Assert.Throws<ArgumentException>(() => exception.EnsureValid());
+        Assert.Contains("is invalid", ex.Message);
     }
 }
