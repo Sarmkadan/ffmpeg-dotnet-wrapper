@@ -14,7 +14,7 @@ namespace FFmpegDotnetWrapper.Services;
 /// <summary>
 /// Specialized service for handling transcoding operations.
 /// </summary>
-public class TranscodeService
+public class TranscodeService : ITranscodeService
 {
     private readonly IFFmpegService _ffmpegService;
     private readonly ILogger<TranscodeService> _logger;
