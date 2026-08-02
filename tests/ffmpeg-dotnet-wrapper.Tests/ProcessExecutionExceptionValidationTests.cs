@@ -5,6 +5,9 @@ using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests
 {
+    /// <summary>
+    /// Contains unit tests for validating the <see cref="ProcessExecutionException"/> class.
+    /// </summary>
     public class ProcessExecutionExceptionValidationTests
     {
         private ProcessExecutionException CreateException(
