@@ -5,8 +5,14 @@ using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests.Exceptions;
 
+/// <summary>
+/// Contains unit tests for the FileOperationExceptionExtensions class.
+/// </summary>
 public class FileOperationExceptionExtensionsTests
 {
+    /// <summary>
+    /// Tests that GetFileName returns the file name when a valid file path is provided.
+    /// </summary>
     [Fact]
     public void GetFileName_WithValidFilePath_ReturnsFileName()
     {
@@ -20,6 +26,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().Be("file.txt");
     }
 
+    /// <summary>
+    /// Tests that GetFileName returns an empty string when the file path is null.
+    /// </summary>
     [Fact]
     public void GetFileName_WithNullFilePath_ReturnsEmptyString()
     {
@@ -33,6 +42,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that GetFileName returns an empty string when the file path is empty.
+    /// </summary>
     [Fact]
     public void GetFileName_WithEmptyFilePath_ReturnsEmptyString()
     {
@@ -46,6 +58,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that GetFileName returns an empty string when the file path contains only whitespace.
+    /// </summary>
     [Fact]
     public void GetFileName_WithWhitespaceFilePath_ReturnsEmptyString()
     {
@@ -59,6 +74,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that GetFileName returns an empty string when the path does not contain a file name.
+    /// </summary>
     [Fact]
     public void GetFileName_WithPathWithoutFileName_ReturnsEmptyString()
     {
@@ -72,6 +90,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that GetFileName returns the file name from a deeply nested path.
+    /// </summary>
     [Fact]
     public void GetFileName_WithNestedPath_ReturnsFileName()
     {
@@ -85,6 +106,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().Be("file.log");
     }
 
+    /// <summary>
+    /// Tests that GetFileName throws an ArgumentNullException when the exception is null.
+    /// </summary>
     [Fact]
     public void GetFileName_WithNullException_ThrowsArgumentNullException()
     {
@@ -95,6 +119,9 @@ public class FileOperationExceptionExtensionsTests
         Assert.Throws<ArgumentNullException>(() => exception.GetFileName());
     }
 
+    /// <summary>
+    /// Tests that HasFilePath returns true when a valid file path is provided.
+    /// </summary>
     [Fact]
     public void HasFilePath_WithValidFilePath_ReturnsTrue()
     {
@@ -108,6 +135,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that HasFilePath returns false when the file path is null.
+    /// </summary>
     [Fact]
     public void HasFilePath_WithNullFilePath_ReturnsFalse()
     {
@@ -121,6 +151,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that HasFilePath returns false when the file path is empty.
+    /// </summary>
     [Fact]
     public void HasFilePath_WithEmptyFilePath_ReturnsFalse()
     {
@@ -134,6 +167,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that HasFilePath returns false when the file path contains only whitespace.
+    /// </summary>
     [Fact]
     public void HasFilePath_WithWhitespaceFilePath_ReturnsFalse()
     {
@@ -147,6 +183,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that HasFilePath throws an ArgumentNullException when the exception is null.
+    /// </summary>
     [Fact]
     public void HasFilePath_WithNullException_ThrowsArgumentNullException()
     {
@@ -157,6 +196,9 @@ public class FileOperationExceptionExtensionsTests
         Assert.Throws<ArgumentNullException>(() => exception.HasFilePath());
     }
 
+    /// <summary>
+    /// Tests that ToLogString returns a formatted string including the file path when it is provided.
+    /// </summary>
     [Fact]
     public void ToLogString_WithFilePath_ReturnsFormattedStringWithFilePath()
     {
@@ -170,6 +212,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().Be("Error: File not found (File: /path/to/missing.txt)");
     }
 
+    /// <summary>
+    /// Tests that ToLogString returns a formatted string without the file path when it is not provided.
+    /// </summary>
     [Fact]
     public void ToLogString_WithoutFilePath_ReturnsFormattedStringWithoutFilePath()
     {
@@ -183,6 +228,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().Be("Error: Generic error");
     }
 
+    /// <summary>
+    /// Tests that ToLogString returns a formatted string without the file path when it is null.
+    /// </summary>
     [Fact]
     public void ToLogString_WithNullFilePath_ReturnsFormattedStringWithoutFilePath()
     {
@@ -196,6 +244,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().Be("Error: Generic error");
     }
 
+    /// <summary>
+    /// Tests that ToLogString returns a formatted string without the file path when it is empty.
+    /// </summary>
     [Fact]
     public void ToLogString_WithEmptyFilePath_ReturnsFormattedStringWithoutFilePath()
     {
@@ -209,6 +260,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().Be("Error: Generic error");
     }
 
+    /// <summary>
+    /// Tests that ToLogString returns a formatted string without the file path when it contains only whitespace.
+    /// </summary>
     [Fact]
     public void ToLogString_WithWhitespaceFilePath_ReturnsFormattedStringWithoutFilePath()
     {
@@ -222,6 +276,9 @@ public class FileOperationExceptionExtensionsTests
         result.Should().Be("Error: Generic error");
     }
 
+    /// <summary>
+    /// Tests that ToLogString throws an ArgumentNullException when the exception is null.
+    /// </summary>
     [Fact]
     public void ToLogString_WithNullException_ThrowsArgumentNullException()
     {
@@ -232,6 +289,9 @@ public class FileOperationExceptionExtensionsTests
         Assert.Throws<ArgumentNullException>(() => exception.ToLogString());
     }
 
+    /// <summary>
+    /// Tests that WithAdditionalInfo returns a new exception with a combined message when valid additional info is provided.
+    /// </summary>
     [Fact]
     public void WithAdditionalInfo_WithValidAdditionalInfo_ReturnsNewExceptionWithCombinedMessage()
     {
@@ -249,6 +309,9 @@ public class FileOperationExceptionExtensionsTests
         result.InnerException.Should().BeSameAs(originalException);
     }
 
+    /// <summary>
+    /// Tests that WithAdditionalInfo preserves an empty file path when provided.
+    /// </summary>
     [Fact]
     public void WithAdditionalInfo_WithNullFilePath_PreservesNullFilePath()
     {
@@ -263,6 +326,9 @@ public class FileOperationExceptionExtensionsTests
         result.FilePath.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that WithAdditionalInfo preserves an empty file path when provided.
+    /// </summary>
     [Fact]
     public void WithAdditionalInfo_WithEmptyFilePath_PreservesEmptyFilePath()
     {
@@ -277,6 +343,9 @@ public class FileOperationExceptionExtensionsTests
         result.FilePath.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that WithAdditionalInfo throws an ArgumentNullException when additional info is null.
+    /// </summary>
     [Fact]
     public void WithAdditionalInfo_WithNullAdditionalInfo_ThrowsArgumentNullException()
     {
@@ -288,6 +357,9 @@ public class FileOperationExceptionExtensionsTests
         Assert.Throws<ArgumentNullException>(() => originalException.WithAdditionalInfo(additionalInfo));
     }
 
+    /// <summary>
+    /// Tests that WithAdditionalInfo throws an ArgumentNullException when the exception is null.
+    /// </summary>
     [Fact]
     public void WithAdditionalInfo_WithNullException_ThrowsArgumentNullException()
     {
@@ -299,6 +371,9 @@ public class FileOperationExceptionExtensionsTests
         Assert.Throws<ArgumentNullException>(() => originalException.WithAdditionalInfo(additionalInfo));
     }
 
+    /// <summary>
+    /// Tests that WithAdditionalInfo preserves the original inner exception when creating a new exception.
+    /// </summary>
     [Fact]
     public void WithAdditionalInfo_WithInnerException_PreservesInnerException()
     {
@@ -314,6 +389,9 @@ public class FileOperationExceptionExtensionsTests
         result.InnerException.Should().BeSameAs(originalException);
     }
 
+    /// <summary>
+    /// Tests that WithAdditionalInfo correctly combines complex messages.
+    /// </summary>
     [Fact]
     public void WithAdditionalInfo_WithComplexMessage_CombinesMessagesCorrectly()
     {
