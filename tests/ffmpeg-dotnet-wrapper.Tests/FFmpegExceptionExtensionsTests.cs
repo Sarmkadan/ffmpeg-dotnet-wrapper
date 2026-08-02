@@ -4,8 +4,14 @@ using FFmpegDotnetWrapper.Exceptions;
 
 namespace FFmpegDotnetWrapper.Tests;
 
+/// <summary>
+/// Provides unit tests for <see cref="FFmpegExceptionExtensions"/>.
+/// </summary>
 public class FFmpegExceptionExtensionsTests
 {
+    /// <summary>
+    /// Verifies that <see cref="FFmpegExceptionExtensions.ToDetailedErrorMessage(FFmpegException)"/> returns a formatted error message for a general <see cref="FFmpegException"/>.
+    /// </summary>
     [Fact]
     public void ToDetailedErrorMessage_FFmpegException_ReturnsFormattedMessage()
     {
@@ -19,6 +25,9 @@ public class FFmpegExceptionExtensionsTests
         result.Should().Contain("Error Output: Error Output");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="FFmpegExceptionExtensions.ToDetailedErrorMessage(InvalidMediaFileException)"/> returns a formatted error message including the file path.
+    /// </summary>
     [Fact]
     public void ToDetailedErrorMessage_InvalidMediaFileException_ReturnsFormattedMessageWithFilePath()
     {
@@ -30,6 +39,9 @@ public class FFmpegExceptionExtensionsTests
         result.Should().Contain("File Path: path/to/file.mp4");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="FFmpegExceptionExtensions.ToDetailedErrorMessage(InvalidOperationConfigurationException)"/> returns a formatted error message including the configuration key.
+    /// </summary>
     [Fact]
     public void ToDetailedErrorMessage_InvalidOperationConfigurationException_ReturnsFormattedMessageWithConfigKey()
     {
@@ -41,6 +53,9 @@ public class FFmpegExceptionExtensionsTests
         result.Should().Contain("Configuration Key: myKey");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="FFmpegExceptionExtensions.ToDetailedErrorMessage(FFmpegProcessException)"/> returns a formatted error message including the timeout duration.
+    /// </summary>
     [Fact]
     public void ToDetailedErrorMessage_FFmpegProcessException_ReturnsFormattedMessageWithTimeout()
     {
@@ -52,6 +67,9 @@ public class FFmpegExceptionExtensionsTests
         result.Should().Contain("Timeout: 30 seconds");
     }
 
+    /// <summary>
+    /// Verifies that <see cref="FFmpegExceptionExtensions.ToDetailedErrorMessage(FFmpegException)"/> throws an <see cref="ArgumentNullException"/> when the input is null.
+    /// </summary>
     [Fact]
     public void ToDetailedErrorMessage_NullInput_ThrowsArgumentNullException()
     {
@@ -62,6 +80,9 @@ public class FFmpegExceptionExtensionsTests
         act.Should().Throw<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="FFmpegExceptionExtensions.IsProcessFailure(FFmpegException)"/> returns true for a <see cref="FFmpegProcessException"/>.
+    /// </summary>
     [Fact]
     public void IsProcessFailure_FFmpegProcessException_ReturnsTrue()
     {
@@ -69,6 +90,9 @@ public class FFmpegExceptionExtensionsTests
         ex.IsProcessFailure().Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="FFmpegExceptionExtensions.IsProcessFailure(FFmpegException)"/> returns false for a general <see cref="FFmpegException"/>.
+    /// </summary>
     [Fact]
     public void IsProcessFailure_OtherException_ReturnsFalse()
     {
@@ -76,6 +100,9 @@ public class FFmpegExceptionExtensionsTests
         ex.IsProcessFailure().Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="FFmpegExceptionExtensions.IsInvalidMediaFileError(FFmpegException)"/> returns true for an <see cref="InvalidMediaFileException"/>.
+    /// </summary>
     [Fact]
     public void IsInvalidMediaFileError_InvalidMediaFileException_ReturnsTrue()
     {
@@ -83,6 +110,9 @@ public class FFmpegExceptionExtensionsTests
         ex.IsInvalidMediaFileError().Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="FFmpegExceptionExtensions.IsInvalidConfigurationError(FFmpegException)"/> returns true for an <see cref="InvalidOperationConfigurationException"/>.
+    /// </summary>
     [Fact]
     public void IsInvalidConfigurationError_InvalidOperationConfigurationException_ReturnsTrue()
     {
@@ -90,6 +120,9 @@ public class FFmpegExceptionExtensionsTests
         ex.IsInvalidConfigurationError().Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="FFmpegExceptionExtensions.IsUnsupportedOperationError(FFmpegException)"/> returns true for an <see cref="UnsupportedOperationException"/>.
+    /// </summary>
     [Fact]
     public void IsUnsupportedOperationError_UnsupportedOperationException_ReturnsTrue()
     {
