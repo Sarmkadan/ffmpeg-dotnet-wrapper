@@ -8,6 +8,9 @@ using Xunit;
 
 namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
 {
+    /// <summary>
+    /// Tests for the <see cref="JobQueue"/> class, covering job enqueueing, dequeueing, priority handling, tags, delays, concurrency, and job requeuing.
+    /// </summary>
     public class JobQueueTests
     {
         private readonly ILogger<JobQueue> _logger;
@@ -17,6 +20,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             _logger = new NullLogger<JobQueue>();
         }
 
+        /// <summary>
+        /// Tests that enqueuing a valid payload returns a non-empty job ID that is a valid GUID.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task EnqueueAsync_WithValidPayload_ReturnsJobId()
         {
@@ -31,6 +38,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             Guid.TryParse(jobId, out _).Should().BeTrue();
         }
 
+        /// <summary>
+        /// Tests that enqueuing an empty payload throws an <see cref="ArgumentException"/>.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task EnqueueAsync_WithEmptyPayload_ThrowsArgumentException()
         {
@@ -44,6 +55,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             await act.Should().ThrowAsync<ArgumentException>();
         }
 
+        /// <summary>
+        /// Tests that enqueuing a null payload throws an <see cref="ArgumentException"/>.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task EnqueueAsync_WithNullPayload_ThrowsArgumentException()
         {
@@ -57,6 +72,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             await act.Should().ThrowAsync<ArgumentException>();
         }
 
+        /// <summary>
+        /// Tests that enqueuing jobs with different priorities respects the priority order when dequeuing (lower number = higher priority).
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task EnqueueAsync_WithPriority_RespectsPriorityOrder()
         {
@@ -82,6 +101,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             dequeued3!.JobId.Should().Be(lowPriorityJob);
         }
 
+        /// <summary>
+        /// Tests that enqueuing a job with a priority outside the valid range (1-10) clamps the priority to the nearest valid value.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task EnqueueAsync_WithClampedPriority_UsesClampedValue()
         {
@@ -107,6 +130,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             job3!.Priority.Should().Be(5);
         }
 
+        /// <summary>
+        /// Tests that dequeuing from an empty queue returns null.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task DequeueAsync_FromEmptyQueue_ReturnsNull()
         {
@@ -120,6 +147,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             job.Should().BeNull();
         }
 
+        /// <summary>
+        /// Tests that dequeuing from a queue with a single job returns that job and removes it from the queue.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task DequeueAsync_FromSingleJobQueue_ReturnsJob()
         {
@@ -136,6 +167,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             dequeuedJob.Payload.Should().Be("test payload");
         }
 
+        /// <summary>
+        /// Tests that dequeuing a job removes it from the queue, decreasing the queue count by one.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task DequeueAsync_RemovesJobFromQueue()
         {
@@ -151,6 +186,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             (await queue.GetQueueCountAsync()).Should().Be(0);
         }
 
+        /// <summary>
+        /// Tests that retrieving a job by its ID returns the job when it exists in the queue.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task GetJobAsync_WithExistingJob_ReturnsJob()
         {
@@ -167,6 +206,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             job.Payload.Should().Be("test payload");
         }
 
+        /// <summary>
+        /// Tests that retrieving a job by its ID returns null when the job does not exist in the queue.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task GetJobAsync_WithNonExistingJob_ReturnsNull()
         {
@@ -180,6 +223,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             job.Should().BeNull();
         }
 
+        /// <summary>
+        /// Tests that retrieving pending jobs returns them in priority order (lowest priority number first).
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task GetPendingJobsAsync_ReturnsJobsInPriorityOrder()
         {
@@ -201,6 +248,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             pendingJobs[3].Priority.Should().Be(5);
         }
 
+        /// <summary>
+        /// Tests that removing an existing job by its ID returns true and removes the job from the queue.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task RemoveJobAsync_WithExistingJob_RemovesAndReturnsTrue()
         {
@@ -216,6 +267,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             (await queue.GetJobAsync(jobId)).Should().BeNull();
         }
 
+        /// <summary>
+        /// Tests that removing a non-existing job by its ID returns false and does not affect the queue.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task RemoveJobAsync_WithNonExistingJob_ReturnsFalse()
         {
@@ -229,6 +284,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             result.Should().BeFalse();
         }
 
+        /// <summary>
+        /// Tests that getting the count of jobs in an empty queue returns zero.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task GetQueueCountAsync_WithEmptyQueue_ReturnsZero()
         {
@@ -242,6 +301,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             count.Should().Be(0);
         }
 
+        /// <summary>
+        /// Tests that getting the count of jobs in a queue with multiple jobs returns the correct count.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task GetQueueCountAsync_WithMultipleJobs_ReturnsCorrectCount()
         {
@@ -258,6 +321,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             count.Should().Be(3);
         }
 
+        /// <summary>
+        /// Tests that enqueuing a job with tags stores the tags correctly and they can be retrieved.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task EnqueueAsync_WithTags_StoresTags()
         {
@@ -276,6 +343,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             job.Tags["format"].Should().Be("mp4");
         }
 
+        /// <summary>
+        /// Tests that enqueuing a job with a delay sets the DueAt property to approximately the current time plus the delay.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task EnqueueAsync_WithDelay_DueAtIsSet()
         {
@@ -292,6 +363,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             job.DueAt.Should().BeCloseTo(DateTime.UtcNow.AddSeconds(10), TimeSpan.FromMilliseconds(100));
         }
 
+        /// <summary>
+        /// Tests that dequeuing a delayed job returns null because the job is not yet available for processing.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task DequeueAsync_WithDelayedJob_ReturnsNull()
         {
@@ -306,6 +381,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             job.Should().BeNull(); // Delayed job should not be dequeued
         }
 
+        /// <summary>
+        /// Tests that calling Clear removes all jobs from the queue, leaving it empty.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task Clear_RemovesAllJobs()
         {
@@ -323,6 +402,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             (await queue.GetPendingJobsAsync()).Should().BeEmpty();
         }
 
+        /// <summary>
+        /// Tests that jobs with the same priority are dequeued in first-in-first-out (FIFO) order.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task FIFO_Order_WithSamePriority()
         {
@@ -343,6 +426,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             dequeued3.Should().NotBeNull();
         }
 
+        /// <summary>
+        /// Tests that concurrent enqueue and dequeue operations from multiple threads are thread-safe and do not lose jobs.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task ConcurrentEnqueueDequeue_MultipleThreads_ThreadSafe()
         {
@@ -396,6 +483,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             dequeuedJobs.Select(j => j.JobId).Should().BeEquivalentTo(enqueuedIds);
         }
 
+        /// <summary>
+        /// Tests that requeuing a job increments its retry count and keeps the priority unchanged (only the enqueue priority differs).
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task RequeuJobAsync_WithRetryCount_UpdatesRetryAndPriority()
         {
@@ -419,6 +510,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             retrievedJob.Priority.Should().Be(5); // Priority field not modified, only enqueue priority differs
         }
 
+        /// <summary>
+        /// Tests that requeuing a job that has reached its maximum retry count does not requeue the job and logs a warning.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task RequeuJobAsync_WithMaxRetries_LogsWarning()
         {
@@ -439,6 +534,10 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             (await queue.GetQueueCountAsync()).Should().Be(0);
         }
 
+        /// <summary>
+        /// Tests that requeuing a null job throws an <see cref="ArgumentNullException"/>.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         [Fact]
         public async Task RequeuJobAsync_WithNullJob_ThrowsArgumentNullException()
         {
