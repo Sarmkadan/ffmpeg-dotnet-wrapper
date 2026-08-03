@@ -356,6 +356,34 @@ long fileSize = 157286400; // 150MB
 Console.WriteLine($"File size: {FileUtilities.GetHumanReadableFileSize(fileSize)}"); // Output: 150 MB
 ```
 
+## MediaProbeService
+
+The `MediaProbeService` class probes media files using `ffprobe` and returns a strongly-typed result containing information about its duration, bitrate, and streams. It provides an efficient way to analyze media file properties without manual parsing of command-line output.
+
+Here is an example usage of the `MediaProbeService` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Services;
+using System;
+
+// Initialize the service
+var probeService = new MediaProbeService();
+
+// Probe a media file
+var probeResult = probeService.Probe(@"/videos/input.mp4");
+
+Console.WriteLine($"Duration: {probeResult.Duration}");
+Console.WriteLine($"Bitrate: {probeResult.Bitrate} bps");
+
+// Iterate through media streams
+foreach (var stream in probeResult.Streams)
+{
+    Console.WriteLine($"Stream: {stream.Codec}, " +
+                      $"Resolution: {stream.Width}x{stream.Height}, " +
+                      $"Channels: {stream.Channels}");
+}
+```
+
 ## ApplicationStartupJsonExtensions
 
 The `ApplicationStartupJsonExtensions` class provides JSON serialization and deserialization extensions for the `ApplicationStartup` configuration record. It enables converting application startup configurations to and from JSON strings, making it easy to save and load configuration settings for the FFmpeg wrapper library.
