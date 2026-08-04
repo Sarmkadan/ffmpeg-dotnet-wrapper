@@ -94,7 +94,7 @@ namespace FFmpegDotnetWrapper.Middleware
             if (policy == null)
                 throw new ArgumentNullException(nameof(policy));
 
-            lock (_lockObject)
+            lock (_lockObject) // atomic update
             {
                 _policies[policy.PolicyName] = policy;
             }
@@ -109,7 +109,7 @@ namespace FFmpegDotnetWrapper.Middleware
             if (string.IsNullOrEmpty(identifier))
                 throw new ArgumentException("Identifier cannot be empty", nameof(identifier));
 
-            lock (_lockObject)
+            lock (_lockObject) // atomic update
             {
                 if (!_policies.TryGetValue(policyName, out var policy))
                 {
@@ -184,7 +184,7 @@ namespace FFmpegDotnetWrapper.Middleware
         /// </summary>
         public RateLimitStatus GetStatus(string identifier, string policyName = "default")
         {
-            lock (_lockObject)
+            lock (_lockObject) // atomic update
             {
                 if (!_policies.TryGetValue(policyName, out var policy))
                 {
@@ -227,7 +227,7 @@ namespace FFmpegDotnetWrapper.Middleware
         /// </summary>
         public void Reset(string identifier, string policyName = "default")
         {
-            lock (_lockObject)
+            lock (_lockObject) // atomic update
             {
                 var windowKey = $"{identifier}:{policyName}";
                 _windows.Remove(windowKey);
@@ -241,7 +241,7 @@ namespace FFmpegDotnetWrapper.Middleware
         /// </summary>
         public void ResetAll()
         {
-            lock (_lockObject)
+            lock (_lockObject) // atomic update
             {
                 var count = _windows.Count;
                 _windows.Clear();
