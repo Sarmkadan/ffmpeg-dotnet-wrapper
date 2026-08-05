@@ -29,6 +29,10 @@ public class FFmpegService : IFFmpegService
     private readonly IRetryPolicy _retryPolicy;
     private readonly IFFmpegProcessRunner _processRunner;
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="FFmpegService"/>, resolving the <c>ffmpeg</c>
+    /// and <c>ffprobe</c> executable paths and configuring the default operation timeout.
+    /// </summary>
     /// <param name="mediaRepository">Repository used to persist analyzed media file metadata.</param>
     /// <param name="operationRepository">Repository used to persist FFmpeg operation records.</param>
     /// <param name="logger">Logger for operation lifecycle and error reporting.</param>
@@ -59,6 +63,7 @@ public class FFmpegService : IFFmpegService
         _defaultTimeout = TimeSpan.FromSeconds(FFmpegConstants.DefaultTimeoutSeconds);
     }
 
+    /// <inheritdoc/>
     public async Task<ConversionResult> TranscodeAsync(
         MediaFile inputMedia,
         string outputPath,
@@ -155,6 +160,7 @@ public class FFmpegService : IFFmpegService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<ConversionResult> TrimAsync(
         MediaFile inputMedia,
         string outputPath,
@@ -196,6 +202,7 @@ public class FFmpegService : IFFmpegService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<ConversionResult> MergeAsync(
         IEnumerable<string> inputFiles,
         string outputPath,
@@ -236,6 +243,7 @@ public class FFmpegService : IFFmpegService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<ConversionResult> AddWatermarkAsync(
         MediaFile inputMedia,
         string outputPath,
@@ -277,6 +285,7 @@ public class FFmpegService : IFFmpegService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<MediaFile> AnalyzeMediaAsync(string filePath, CancellationToken cancellationToken = default)
     {
         if (!File.Exists(filePath))
@@ -360,6 +369,7 @@ public class FFmpegService : IFFmpegService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<ConversionResult> ExecuteCustomOperationAsync(
         FFmpegOperation operation,
         CancellationToken cancellationToken = default)
@@ -379,6 +389,7 @@ public class FFmpegService : IFFmpegService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<string> GetFFmpegVersionAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -417,6 +428,7 @@ public class FFmpegService : IFFmpegService
         }
     }
 
+    /// <inheritdoc/>
     public Task<bool> IsFFmpegAvailableAsync(CancellationToken cancellationToken = default)
     {
         bool available = File.Exists(_ffmpegPath) && File.Exists(_ffprobePath);
@@ -424,6 +436,7 @@ public class FFmpegService : IFFmpegService
         return Task.FromResult(available);
     }
 
+    /// <inheritdoc/>
     public async Task<ConversionResult> ExtractAudioAsync(
         MediaFile inputMedia,
         string outputPath,
@@ -469,6 +482,7 @@ public class FFmpegService : IFFmpegService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<List<ConversionResult>> BatchTranscodeAsync(
         IEnumerable<MediaFile> inputFiles,
         string outputDirectory,
@@ -504,6 +518,15 @@ public class FFmpegService : IFFmpegService
         return results;
     }
 
+    /// <summary>
+    /// Encodes a media file into an HTTP Live Streaming (HLS) playlist with segmented
+    /// output, using the codec, bitrate, segmentation, and playlist options in <paramref name="settings"/>.
+    /// </summary>
+    /// <param name="inputMedia">The source media file with pre-analyzed metadata.</param>
+    /// <param name="playlistPath">Destination file path for the generated <c>.m3u8</c> playlist; segment files are written alongside it.</param>
+    /// <param name="settings">HLS settings including codecs, bitrates, segment duration, and playlist type.</param>
+    /// <param name="cancellationToken">Token to cancel the FFmpeg process.</param>
+    /// <returns>A <see cref="ConversionResult"/> describing the outcome of the HLS encode.</returns>
     public async Task<ConversionResult> CreateHlsAsync(
         MediaFile inputMedia,
         string playlistPath,
@@ -884,6 +907,7 @@ public class FFmpegService : IFFmpegService
         return executableName;
     }
 
+    /// <inheritdoc/>
     public async Task<ConversionResult> EmbedSubtitlesAsync(
         MediaFile inputMedia,
         string outputPath,
@@ -929,6 +953,7 @@ public class FFmpegService : IFFmpegService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<ThumbnailResult> ExtractThumbnailsAsync(
         MediaFile inputMedia,
         string outputPattern,
