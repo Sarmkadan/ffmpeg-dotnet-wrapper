@@ -26,22 +26,26 @@ public class ValidationException : FFmpegException
         : base(message)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
+        ArgumentNullException.ThrowIfNull(validationErrors);
         ValidationErrors = validationErrors;
-        Context[nameof(ValidationErrors)] = $"Count: {validationErrors?.Count ?? 0}";
+        Context[nameof(ValidationErrors)] = $"Count: {validationErrors.Count}";
     }
 
     public ValidationException(string message, Exception innerException)
         : base(message, innerException)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
+        ArgumentNullException.ThrowIfNull(innerException);
     }
 
     public ValidationException(string message, Dictionary<string, string[]> validationErrors, Exception innerException)
         : base(message, innerException)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
+        ArgumentNullException.ThrowIfNull(validationErrors);
+        ArgumentNullException.ThrowIfNull(innerException);
         ValidationErrors = validationErrors;
-        Context[nameof(ValidationErrors)] = $"Count: {validationErrors?.Count ?? 0}";
+        Context[nameof(ValidationErrors)] = $"Count: {validationErrors.Count}";
     }
 
     /// <summary>
