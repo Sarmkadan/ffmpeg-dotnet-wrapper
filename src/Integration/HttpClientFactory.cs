@@ -33,6 +33,8 @@ namespace FFmpegDotnetWrapper.Integration
             this IServiceCollection services,
             Action<HttpClientConfig>? config = null)
         {
+            ArgumentNullException.ThrowIfNull(services);
+
             var httpConfig = new HttpClientConfig();
             config?.Invoke(httpConfig);
 
@@ -74,6 +76,9 @@ namespace FFmpegDotnetWrapper.Integration
             TimeSpan? timeout = null,
             Dictionary<string, string>? defaultHeaders = null)
         {
+            ArgumentNullException.ThrowIfNull(services);
+            ArgumentException.ThrowIfNullOrEmpty(clientName);
+
             var builder = services.AddHttpClient(clientName);
 
             builder.ConfigureHttpClient(client =>
