@@ -32,7 +32,8 @@ namespace FFmpegDotnetWrapper.Cli
         /// </summary>
         public string FormatSuccess(string message)
         {
-            return _useColors ? $"[32m✓ {message}[0m" : $"✓ {message}";
+            ArgumentException.ThrowIfNullOrEmpty(message);
+            return _useColors ? $"✓ {message}" : $"✓ {message}";
         }
 
         /// <summary>
