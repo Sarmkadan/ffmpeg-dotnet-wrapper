@@ -124,7 +124,12 @@ public class ConversionResult
     /// <summary>
     /// Sets a metric for the operation result.
     /// </summary>
-    public void SetMetric(string key, object value) => Metrics[key] = value;
+    public void SetMetric(string key, object value)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(key);
+        ArgumentNullException.ThrowIfNull(value);
+        Metrics[key] = value;
+    }
 
     /// <summary>
     /// Gets a metric value if it exists.
