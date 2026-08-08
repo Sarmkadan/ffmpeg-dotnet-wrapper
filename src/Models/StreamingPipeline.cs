@@ -297,9 +297,17 @@ public sealed class StreamingPipelineResult
 
     /// <summary>Appends a completed segment to the result collection.</summary>
     /// <param name="segment">The segment to record.</param>
-    public void AddSegment(StreamingSegment segment) => _segments.Add(segment);
+    public void AddSegment(StreamingSegment segment) 
+    {
+        ArgumentNullException.ThrowIfNull(nameof(segment));
+        _segments.Add(segment);
+    }
 
     /// <summary>Records that the pipeline switched to a different quality profile.</summary>
     /// <param name="bitrateSwitch">The switch event to log.</param>
-    public void RecordSwitch(BitrateSwitch bitrateSwitch) => _bitrateSwitches.Add(bitrateSwitch);
+    public void RecordSwitch(BitrateSwitch bitrateSwitch) 
+    {
+        ArgumentNullException.ThrowIfNull(nameof(bitrateSwitch));
+        _bitrateSwitches.Add(bitrateSwitch);
+    }
 }
