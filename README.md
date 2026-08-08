@@ -2385,3 +2385,35 @@ Console.WriteLine($"Thumbnail extraction result: {thumbnailResponse.Success}, St
 ```
 
 ```
+## JobQueueTests
+
+The `JobQueueTests` class provides comprehensive unit tests for the `JobQueue` service, ensuring reliable background job management. It covers various scenarios including priority handling, delayed job execution, tag support, and critical lifecycle operations like enqueuing, dequeuing, fetching, and removing jobs.
+
+Here is an example usage of the `JobQueue` class, demonstrating the functionality verified by these tests:
+
+```csharp
+using FFmpegDotnetWrapper.BackgroundJobs;
+using System.Threading.Tasks;
+
+// Initialize the job queue
+var queue = new JobQueue();
+
+// Enqueue a job with a payload
+var payload = new { Action = "Transcode", File = "input.mp4" };
+var jobId = await queue.EnqueueAsync(payload);
+
+// Get the job details
+var job = await queue.GetJobAsync(jobId);
+
+// Dequeue the next job
+var nextJob = await queue.DequeueAsync();
+
+// Get the current queue count
+var count = await queue.GetQueueCountAsync();
+
+// Remove a job by ID
+var removed = await queue.RemoveJobAsync(jobId);
+
+// Clear all pending jobs from the queue
+await queue.Clear();
+```
