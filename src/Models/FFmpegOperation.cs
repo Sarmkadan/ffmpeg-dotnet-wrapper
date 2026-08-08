@@ -46,6 +46,7 @@ public class FFmpegOperation
     /// </summary>
     public void AddArguments(params string[] arguments)
     {
+        ArgumentNullException.ThrowIfNull(arguments);
         foreach (var arg in arguments)
             AddArgument(arg);
     }
