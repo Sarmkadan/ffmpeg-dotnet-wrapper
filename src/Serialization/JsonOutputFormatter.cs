@@ -43,6 +43,7 @@ namespace FFmpegDotnetWrapper.Serialization
         /// </summary>
         public string Format<T>(ApiResponse<T> response)
         {
+            ArgumentNullException.ThrowIfNull(response);
             try
             {
                 return JsonSerializer.Serialize(response, _options);
@@ -61,6 +62,7 @@ namespace FFmpegDotnetWrapper.Serialization
         /// </summary>
         public string Format(ApiResponse response)
         {
+            ArgumentNullException.ThrowIfNull(response);
             try
             {
                 return JsonSerializer.Serialize(response, _options);
@@ -78,6 +80,7 @@ namespace FFmpegDotnetWrapper.Serialization
         /// </summary>
         public string Format<T>(T obj)
         {
+            ArgumentNullException.ThrowIfNull(obj);
             try
             {
                 return JsonSerializer.Serialize(obj, _options);
@@ -96,6 +99,7 @@ namespace FFmpegDotnetWrapper.Serialization
         /// </summary>
         public ApiResponse<T>? DeserializeApiResponse<T>(string json)
         {
+            ArgumentException.ThrowIfNullOrEmpty(json);
             try
             {
                 return JsonSerializer.Deserialize<ApiResponse<T>>(json, _options);
