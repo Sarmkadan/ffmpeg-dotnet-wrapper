@@ -24,8 +24,7 @@ namespace FFmpegDotnetWrapper.Services
         /// </exception>
         public MediaProbeResult Probe(string filePath)
         {
-            if (string.IsNullOrWhiteSpace(filePath))
-                throw new ArgumentException("File path must be provided.", nameof(filePath));
+            ArgumentException.ThrowIfNullOrEmpty(filePath);
 
             // Build ffprobe arguments
             var arguments = $"-v error -print_format json -show_streams -show_format \"{filePath}\"";
