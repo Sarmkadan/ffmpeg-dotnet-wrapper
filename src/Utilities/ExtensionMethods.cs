@@ -41,6 +41,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static StringBuilder AppendArguments(this StringBuilder sb, params string?[] arguments)
         {
+            ArgumentNullException.ThrowIfNull(arguments);
             foreach (var arg in arguments.Where(a => !string.IsNullOrEmpty(a)))
             {
                 sb.AppendArgument(arg);
@@ -72,6 +73,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static string Repeat(this string value, int count)
         {
+            ArgumentException.ThrowIfNullOrEmpty(value);
             if (count <= 0)
                 return string.Empty;
             if (count == 1)
@@ -91,6 +93,8 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static string Join<T>(this IEnumerable<T> values, string separator = ", ")
         {
+            ArgumentNullException.ThrowIfNull(values);
+            ArgumentException.ThrowIfNullOrEmpty(separator);
             return string.Join(separator, values);
         }
 
@@ -100,6 +104,9 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static string Join<T>(this IEnumerable<T> values, Func<T, string> selector, string separator = ", ")
         {
+            ArgumentNullException.ThrowIfNull(values);
+            ArgumentNullException.ThrowIfNull(selector);
+            ArgumentException.ThrowIfNullOrEmpty(separator);
             return string.Join(separator, values.Select(selector));
         }
 
@@ -109,6 +116,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static T? SingleOrNull<T>(this IEnumerable<T?> source) where T : class
         {
+            ArgumentNullException.ThrowIfNull(source);
             return source.Where(x => x != null).SingleOrDefault();
         }
 
@@ -126,6 +134,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static IEnumerable<List<T>> Batch<T>(this IEnumerable<T> source, int batchSize)
         {
+            ArgumentNullException.ThrowIfNull(source);
             var batch = new List<T>(batchSize);
             foreach (var item in source)
             {
@@ -198,6 +207,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static string GetFileName(this string filePath)
         {
+            ArgumentException.ThrowIfNullOrEmpty(filePath);
             return System.IO.Path.GetFileName(filePath);
         }
 
@@ -206,6 +216,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static string GetDirectoryPath(this string filePath)
         {
+            ArgumentException.ThrowIfNullOrEmpty(filePath);
             return System.IO.Path.GetDirectoryName(filePath) ?? string.Empty;
         }
 
@@ -214,6 +225,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static string GetFileExtension(this string filePath)
         {
+            ArgumentException.ThrowIfNullOrEmpty(filePath);
             var ext = System.IO.Path.GetExtension(filePath);
             return ext.StartsWith(".") ? ext.Substring(1) : ext;
         }
@@ -224,6 +236,8 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static ApiResponse<T> WithRequestId<T>(this ApiResponse<T> response, string requestId)
         {
+            ArgumentNullException.ThrowIfNull(response);
+            ArgumentException.ThrowIfNullOrEmpty(requestId);
             response.RequestId ??= requestId;
             return response;
         }
@@ -234,6 +248,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static ApiResponse<T> WithTimestamp<T>(this ApiResponse<T> response, DateTime timestamp)
         {
+            ArgumentNullException.ThrowIfNull(response);
             response.Timestamp = timestamp;
             return response;
         }
@@ -244,6 +259,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static ApiResponse<T> WithStackTrace<T>(this ApiResponse<T> response, string? stackTrace)
         {
+            ArgumentNullException.ThrowIfNull(response);
             response.StackTrace = stackTrace;
             return response;
         }
