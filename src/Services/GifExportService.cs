@@ -43,6 +43,9 @@ namespace FFmpegDotnetWrapper.Services
             TimeSpan start,
             TimeSpan duration)
         {
+            if (string.IsNullOrWhiteSpace(sourcePath))
+                throw new ArgumentException("Parameter cannot be null or empty", nameof(sourcePath));
+
             var settings = new GifExportSettings();
             return await ExportGifAsync(sourcePath, start, duration, settings).ConfigureAwait(false);
         }
