@@ -21,6 +21,7 @@ public class RestApiServerExample
 {
     public static async Task Main(string[] args)
     {
+        ArgumentNullException.ThrowIfNull(args);
         var builder = WebApplication.CreateBuilder(args);
 
         // Add logging
@@ -212,7 +213,14 @@ public record TranscodeRequest(
     bool? EnableAutoScale = null,
     int? MaxWidth = null,
     int? MaxHeight = null,
-    bool? PreserveAspectRatio = null);
+    bool? PreserveAspectRatio = null)
+{
+    ArgumentException.ThrowIfNullOrEmpty(InputPath);
+    ArgumentException.ThrowIfNullOrEmpty(OutputPath);
+    ArgumentException.ThrowIfNullOrEmpty(VideoCodec);
+    ArgumentException.ThrowIfNullOrEmpty(AudioCodec);
+    ArgumentException.ThrowIfNullOrEmpty(Container);
+}
 
 public record TrimRequest(
     string InputPath,
@@ -221,4 +229,8 @@ public record TrimRequest(
     double? DurationSeconds = null,
     bool? PreserveAudio = null,
     bool? PreserveVideo = null,
-    bool? Keyframe = null);
+    bool? Keyframe = null)
+{
+    ArgumentException.ThrowIfNullOrEmpty(InputPath);
+    ArgumentException.ThrowIfNullOrEmpty(OutputPath);
+}
