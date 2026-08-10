@@ -71,6 +71,9 @@ namespace FFmpegDotnetWrapper.Utilities
             TimeSpan? timeout = null,
             string? input = null)
         {
+            if (fileName == null) throw new ArgumentNullException(nameof(fileName));
+            if (arguments == null) throw new ArgumentNullException(nameof(arguments));
+
             timeout ??= TimeSpan.FromMinutes(10); // Default 10-minute timeout
 
             var startTime = DateTime.UtcNow;
