@@ -77,6 +77,7 @@ public sealed class StreamingPipelineMetrics
     /// <param name="fileSizeBytes">The segment's file size in bytes.</param>
     public void RecordSegmentProduced(StreamingProfile profile, long fileSizeBytes)
     {
+        ArgumentNullException.ThrowIfNull(profile);
         Interlocked.Increment(ref _totalSegmentsProduced);
         Interlocked.Add(ref _totalBytesProduced, fileSizeBytes);
 
@@ -108,6 +109,7 @@ public sealed class StreamingPipelineMetrics
     /// <param name="elapsed">The total wall-clock duration of the completed run.</param>
     public void RecordPipelineCompleted(string pipelineId, TimeSpan elapsed)
     {
+        ArgumentException.ThrowIfNullOrEmpty(pipelineId);
         Interlocked.Increment(ref _completedPipelines);
         Interlocked.Add(ref _cumulativeDurationTicks, elapsed.Ticks);
     }
@@ -116,8 +118,11 @@ public sealed class StreamingPipelineMetrics
     /// Records that a pipeline run ended with an error.
     /// </summary>
     /// <param name="pipelineId">The pipeline identifier (used for diagnostics only).</param>
-    public void RecordPipelineFailed(string pipelineId) =>
+    public void RecordPipelineFailed(string pipelineId)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(pipelineId);
         Interlocked.Increment(ref _failedPipelines);
+    }
 
     // ── Reporting ────────────────────────────────────────────────────────────
 
