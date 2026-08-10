@@ -311,6 +311,8 @@ public class VideoProcessingService
         IFFmpegService ffmpegService,
         ILogger<VideoProcessingService> logger)
     {
+        ArgumentNullException.ThrowIfNull(ffmpegService);
+        ArgumentNullException.ThrowIfNull(logger);
         _ffmpegService = ffmpegService;
         _logger = logger;
     }
@@ -319,6 +321,8 @@ public class VideoProcessingService
         string inputFile,
         string outputFile)
     {
+        ArgumentException.ThrowIfNullOrEmpty(inputFile);
+        ArgumentException.ThrowIfNullOrEmpty(outputFile);
         _logger.LogInformation("Converting {Input} to web-optimized format", inputFile);
 
         var settings = new TranscodeSettings
@@ -343,6 +347,8 @@ public class VideoProcessingService
         string outputFile,
         TimeSpan? timestamp = null)
     {
+        ArgumentException.ThrowIfNullOrEmpty(inputFile);
+        ArgumentException.ThrowIfNullOrEmpty(outputFile);
         _logger.LogInformation("Creating thumbnail from {Input}", inputFile);
 
         var settings = new ThumbnailSettings
@@ -374,18 +380,22 @@ public class MediaAnalysisService
         IFFmpegService ffmpegService,
         ILogger<MediaAnalysisService> logger)
     {
+        ArgumentNullException.ThrowIfNull(ffmpegService);
+        ArgumentNullException.ThrowIfNull(logger);
         _ffmpegService = ffmpegService;
         _logger = logger;
     }
 
     public async Task<MediaFile> GetMediaInfoAsync(string filePath)
     {
+        ArgumentException.ThrowIfNullOrEmpty(filePath);
         _logger.LogInformation("Analyzing media file: {FilePath}", filePath);
         return await _ffmpegService.AnalyzeMediaAsync(filePath);
     }
 
     public async Task<bool> IsVideoAsync(string filePath)
     {
+        ArgumentException.ThrowIfNullOrEmpty(filePath);
         try
         {
             var media = await _ffmpegService.AnalyzeMediaAsync(filePath);
