@@ -63,6 +63,7 @@ public class ValidationUtilitiesTests
     [InlineData("av1")]
     public void IsValidCodec_SupportedCodec_ReturnsTrue(string codec)
     {
+        ArgumentException.ThrowIfNullOrEmpty(codec);
         ValidationUtilities.IsValidCodec(codec).Should().BeTrue();
     }
 
@@ -78,6 +79,10 @@ public class ValidationUtilitiesTests
     [InlineData("divx")]
     public void IsValidCodec_UnsupportedOrEmpty_ReturnsFalse(string? codec)
     {
+        if (codec != null)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(codec);
+        }
         ValidationUtilities.IsValidCodec(codec).Should().BeFalse();
     }
 
@@ -97,6 +102,7 @@ public class ValidationUtilitiesTests
     [InlineData("ts")]
     public void IsValidOutputFormat_SupportedFormat_ReturnsTrue(string format)
     {
+        ArgumentException.ThrowIfNullOrEmpty(format);
         ValidationUtilities.IsValidOutputFormat(format).Should().BeTrue();
     }
 
@@ -106,6 +112,7 @@ public class ValidationUtilitiesTests
     [Fact]
     public void IsValidOutputFormat_UnrecognizedFormat_ReturnsFalse()
     {
+        ArgumentException.ThrowIfNullOrEmpty("xyz");
         ValidationUtilities.IsValidOutputFormat("xyz").Should().BeFalse();
     }
 
@@ -124,6 +131,7 @@ public class ValidationUtilitiesTests
     [InlineData("02:00:30", 7230.0)]
     public void ParseTimeToSeconds_HhMmSsFormat_ReturnsCorrectSeconds(string timeString, double expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(timeString);
         var result = ValidationUtilities.ParseTimeToSeconds(timeString);
 
         result.Should().NotBeNull();
@@ -141,6 +149,7 @@ public class ValidationUtilitiesTests
     [InlineData("0", 0.0)]
     public void ParseTimeToSeconds_PureSecondsString_ReturnsValue(string timeString, double expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(timeString);
         var result = ValidationUtilities.ParseTimeToSeconds(timeString);
 
         result.Should().NotBeNull();
