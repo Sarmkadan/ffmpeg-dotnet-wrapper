@@ -131,6 +131,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// </summary>
         public static ApiResponse<T> Failure(string message, string errorCode, int statusCode = 400)
         {
+            ArgumentException.ThrowIfNullOrEmpty(message);
             return new ApiResponse<T>
             {
                 Success = false,
