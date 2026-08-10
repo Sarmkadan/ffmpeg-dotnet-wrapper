@@ -50,8 +50,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static bool IsValidInputFile(string? path)
         {
-            if (!IsValidFilePath(path))
-                return false;
+            ArgumentException.ThrowIfNullOrEmpty(path);
 
             if (!File.Exists(path))
                 return false;
@@ -85,8 +84,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static bool IsValidOutputPath(string? path, bool createDirectoryIfNeeded = true)
         {
-            if (!IsValidFilePath(path))
-                return false;
+            ArgumentException.ThrowIfNullOrEmpty(path);
 
             try
             {
@@ -131,8 +129,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static string GetFileExtension(string filePath)
         {
-            if (string.IsNullOrEmpty(filePath))
-                return string.Empty;
+            ArgumentException.ThrowIfNullOrEmpty(filePath);
 
             var extension = Path.GetExtension(filePath);
             return string.IsNullOrEmpty(extension) ? string.Empty : extension.TrimStart('.').ToLowerInvariant();
@@ -163,6 +160,8 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static long GetFileSize(string filePath)
         {
+            ArgumentException.ThrowIfNullOrEmpty(filePath);
+
             try
             {
                 if (File.Exists(filePath))
@@ -185,6 +184,8 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static bool SafeDeleteFile(string filePath, int maxRetries = 3)
         {
+            ArgumentException.ThrowIfNullOrEmpty(filePath);
+
             if (!File.Exists(filePath))
                 return true;
 
