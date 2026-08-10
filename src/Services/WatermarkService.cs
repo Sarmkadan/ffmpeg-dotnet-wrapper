@@ -45,6 +45,8 @@ public class WatermarkService : IWatermarkService
         double scale = 0.2,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("ApplyWatermarkAsync called for file {FileName}", inputMedia.Name);
+
         var settings = CreateSettings(position, margin, opacity, scale);
         settings.WatermarkPath = watermarkPath;
 
@@ -56,7 +58,17 @@ public class WatermarkService : IWatermarkService
             opacity,
             scale * 100);
 
-        return await _ffmpegService.AddWatermarkAsync(inputMedia, outputPath, settings, cancellationToken);
+        try
+        {
+            var result = await _ffmpegService.AddWatermarkAsync(inputMedia, outputPath, settings, cancellationToken);
+            _logger.LogInformation("ApplyWatermarkAsync completed successfully for {FileName}", inputMedia.Name);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ApplyWatermarkAsync failed for file {FileName}", inputMedia.Name);
+            throw;
+        }
     }
 
     /// <summary>
@@ -80,6 +92,8 @@ public class WatermarkService : IWatermarkService
 
         settings.Validate(inputMedia);
 
+        _logger.LogInformation("ApplyWatermarkAsync called for file {FileName} with custom settings", inputMedia.Name);
+
         _logger.LogInformation(
             "Applying watermark to {File} with custom settings: position={Position}, margin=({XOffset},{YOffset}), opacity={Opacity}, scale={Scale}",
             inputMedia.Name,
@@ -89,7 +103,17 @@ public class WatermarkService : IWatermarkService
             settings.Opacity,
             settings.Scale);
 
-        return await _ffmpegService.AddWatermarkAsync(inputMedia, outputPath, settings, cancellationToken);
+        try
+        {
+            var result = await _ffmpegService.AddWatermarkAsync(inputMedia, outputPath, settings, cancellationToken);
+            _logger.LogInformation("ApplyWatermarkAsync completed successfully for {FileName}", inputMedia.Name);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ApplyWatermarkAsync failed for file {FileName}", inputMedia.Name);
+            throw;
+        }
     }
 
     /// <summary>
