@@ -168,11 +168,6 @@ public class ValidationUtilitiesTests
     /// Invalid inputs include: null, empty strings, whitespace, malformed time strings, and negative numbers.
     /// </summary>
     /// <param name="timeString">The invalid time string to test.</param>
-    /// <summary>
-    /// Tests that <see cref="ValidationUtilities.ParseTimeToSeconds"/> returns null for invalid or empty time strings.
-    /// Invalid inputs include: null, empty strings, whitespace, malformed time strings, and negative numbers.
-    /// </summary>
-    /// <param name="timeString">The invalid time string to test.</param>
     public void ParseTimeToSeconds_InvalidOrEmpty_ReturnsNull(string? timeString)
     {
         ValidationUtilities.ParseTimeToSeconds(timeString).Should().BeNull();

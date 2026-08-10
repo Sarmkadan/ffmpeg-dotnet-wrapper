@@ -149,6 +149,7 @@ public class FormattingUtilitiesTests
     [InlineData("")]
     public void TruncateString_NullOrEmpty_ReturnsEmptyString(string? input)
     {
+        ArgumentException.ThrowIfNullOrEmpty(input);
         FormattingUtilities.TruncateString(input).Should().BeEmpty();
     }
 
@@ -167,6 +168,8 @@ public class FormattingUtilitiesTests
     [InlineData("transcode", "Transcode")]
     public void TitleCase_KebabOrSnakeCase_ReturnsTitleCase(string input, string expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(input);
+        ArgumentException.ThrowIfNullOrEmpty(expected);
         FormattingUtilities.TitleCase(input).Should().Be(expected);
     }
 
@@ -185,6 +188,7 @@ public class FormattingUtilitiesTests
     [InlineData(100.0, "100.0%")]
     public void FormatPercentage_VariousValues_ReturnsOneDecimalPlace(double percentage, string expected)
     {
+        ArgumentException.ThrowIfNullOrEmpty(expected);
         FormattingUtilities.FormatPercentage(percentage).Should().Be(expected);
     }
 
