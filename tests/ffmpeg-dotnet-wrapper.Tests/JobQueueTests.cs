@@ -36,6 +36,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             // Assert
             jobId.Should().NotBeNullOrEmpty();
             Guid.TryParse(jobId, out _).Should().BeTrue();
+            _logger.LogInformation("Enqueued job {JobId}", jobId);
         }
 
         /// <summary>
@@ -53,6 +54,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
 
             // Assert
             await act.Should().ThrowAsync<ArgumentException>();
+            _logger.LogWarning("Empty payload attempted to be enqueued");
         }
 
         /// <summary>
@@ -62,6 +64,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
         [Fact]
         public async Task EnqueueAsync_WithNullPayload_ThrowsArgumentException()
         {
+            _logger.LogInformation("Starting test: EnqueueAsync_WithNullPayload_ThrowsArgumentException");
             // Arrange
             var queue = new JobQueue(_logger);
 
@@ -70,6 +73,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
 
             // Assert
             await act.Should().ThrowAsync<ArgumentException>();
+            _logger.LogInformation("Finished test: EnqueueAsync_WithNullPayload_ThrowsArgumentException");
         }
 
         /// <summary>
@@ -79,6 +83,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
         [Fact]
         public async Task EnqueueAsync_WithPriority_RespectsPriorityOrder()
         {
+            _logger.LogInformation("Starting test: EnqueueAsync_WithPriority_RespectsPriorityOrder");
             // Arrange
             var queue = new JobQueue(_logger);
 
@@ -99,6 +104,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs.Tests
             var dequeued3 = await queue.DequeueAsync();
             dequeued3.Should().NotBeNull();
             dequeued3!.JobId.Should().Be(lowPriorityJob);
+            _logger.LogInformation("Finished test: EnqueueAsync_WithPriority_RespectsPriorityOrder");
         }
 
         /// <summary>
