@@ -68,6 +68,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// </summary>
         public static ApiResponse<T> Ok(T data, string message = "Operation completed successfully")
         {
+            ArgumentException.ThrowIfNullOrEmpty(message);
             return new ApiResponse<T>
             {
                 Success = true,
@@ -83,6 +84,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// </summary>
         public static ApiResponse<T> Ok(T data, int statusCode, string message = "Operation completed successfully")
         {
+            ArgumentException.ThrowIfNullOrEmpty(message);
             return new ApiResponse<T>
             {
                 Success = true,
@@ -98,6 +100,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// </summary>
         public static ApiResponse<T> Failure(string message, int statusCode = 400)
         {
+            ArgumentException.ThrowIfNullOrEmpty(message);
             return new ApiResponse<T>
             {
                 Success = false,
@@ -112,6 +115,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// </summary>
         public static ApiResponse<T> Failure(string message, List<ApiError> errors, int statusCode = 400)
         {
+            ArgumentException.ThrowIfNullOrEmpty(message);
             return new ApiResponse<T>
             {
                 Success = false,
@@ -182,6 +186,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
 
         public static ApiResponse Ok(string message = "Operation completed successfully")
         {
+            ArgumentException.ThrowIfNullOrEmpty(message);
             return new ApiResponse
             {
                 Success = true,
