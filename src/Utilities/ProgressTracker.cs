@@ -71,6 +71,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public void ReportItemProgress(string? statusMessage = null)
         {
+            ArgumentException.ThrowIfNullOrEmpty(statusMessage);
             lock (_lockObject)
             {
                 _itemsProcessed++;
@@ -87,6 +88,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public void ReportBytesProgress(long bytesProcessed, string? statusMessage = null)
         {
+            ArgumentException.ThrowIfNullOrEmpty(statusMessage);
             lock (_lockObject)
             {
                 _bytesProcessed = bytesProcessed;
