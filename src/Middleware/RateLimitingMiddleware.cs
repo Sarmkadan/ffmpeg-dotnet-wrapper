@@ -27,6 +27,11 @@ namespace FFmpegDotnetWrapper.Middleware
 
         /// <summary>Identifier for this policy (e.g., "transcode", "watermark").</summary>
         public string PolicyName { get; set; } = "default";
+
+        public override string ToString()
+        {
+            return $"RateLimitPolicy {{ MaxRequests = {MaxRequests}, WindowSeconds = {WindowSeconds}, PerUserLimit = {PerUserLimit}, PolicyName = {PolicyName} }}";
+        }
     }
 
     /// <summary>
