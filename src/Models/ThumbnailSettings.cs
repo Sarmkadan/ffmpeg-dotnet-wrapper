@@ -82,6 +82,8 @@ public class ThumbnailSettings
         }
     }
 
+    public override string ToString() => $"ThumbnailSettings {{ Times = [{string.Join(", ", Times)}], Format = {Format}, Width = {Width}, Height = {Height} }}";
+
     /// <summary>
     /// Validates the settings against the source video before an operation is executed.
     /// </summary>
