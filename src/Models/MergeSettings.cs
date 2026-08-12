@@ -32,6 +32,8 @@ public class MergeSettings
     public bool Crossfade { get; set; } = false;
     public double CrossfadeDuration { get; set; } = 1.0; // seconds
 
+    public override string ToString() => $"MergeSettings {{ PreserveAudio = {PreserveAudio}, PreserveVideo = {PreserveVideo}, TranscodeOnMerge = {TranscodeOnMerge}, TranscodeSettings = {TranscodeSettings}, Crossfade = {Crossfade}, CrossfadeDuration = {CrossfadeDuration} }}";
+
     /// <summary>
     /// Adds an input file to the merge list.
     /// </summary>
