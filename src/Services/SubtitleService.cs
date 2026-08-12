@@ -48,7 +48,14 @@ public class SubtitleService
         };
 
         _logger.LogInformation("Soft-embedding subtitles from {Sub} into {File}", subtitlePath, inputMedia.Name);
-        return await _ffmpegService.EmbedSubtitlesAsync(inputMedia, outputPath, settings, cancellationToken);
+        var result = await _ffmpegService.EmbedSubtitlesAsync(inputMedia, outputPath, settings, cancellationToken);
+
+        if (result.IsSuccess)
+            _logger.LogInformation("Soft-embedding completed for {File}", inputMedia.Name);
+        else
+            _logger.LogWarning("Soft-embedding failed for {File}: {Error}", inputMedia.Name, result.ErrorMessage);
+
+        return result;
     }
 
     /// <summary>
