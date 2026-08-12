@@ -128,4 +128,6 @@ public class SubtitleSettings
             SubtitleStreamIndex = SubtitleStreamIndex,
             Language = Language
         };
+
+    public override string ToString() => $"SubtitleSettings {{ HardEmbed = {HardEmbed}, FontName = {FontName}, FontSize = {FontSize}, SubtitleStreamIndex = {SubtitleStreamIndex}, Language = {Language} }}";
 }
