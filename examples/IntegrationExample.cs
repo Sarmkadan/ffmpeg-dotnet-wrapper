@@ -282,6 +282,8 @@ public class TranscodeRequest
     public int VideoBitrate { get; set; } = 2500;
     public int AudioBitrate { get; set; } = 128;
     public QualityPreset Quality { get; set; } = QualityPreset.Medium;
+
+    public override string ToString() => $"TranscodeRequest {{ InputFile = {InputFile}, OutputFile = {OutputFile}, VideoCodec = {VideoCodec}, AudioCodec = {AudioCodec}, Container = {Container}, VideoBitrate = {VideoBitrate} }}";
 }
 
 /// <summary>
