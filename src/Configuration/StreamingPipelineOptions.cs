@@ -109,6 +109,8 @@ public sealed class StreamingPipelineOptions
     /// When this list is empty, <see cref="StreamingProfile.DefaultLadder"/> is used.
     /// </summary>
     public IList<StreamingProfileOptions> DefaultProfiles { get; set; } = [];
+
+    public override string ToString() => $"StreamingPipelineOptions {{ Enabled = {Enabled}, DefaultSegmentDurationSeconds = {DefaultSegmentDurationSeconds}, DefaultPlaylistWindowSize = {DefaultPlaylistWindowSize}, DefaultFormat = {DefaultFormat}, DefaultEncodeProfilesConcurrently = {DefaultEncodeProfilesConcurrently}, MaxConcurrentPipelines = {MaxConcurrentPipelines} }}";
 }
 
 /// <summary>
