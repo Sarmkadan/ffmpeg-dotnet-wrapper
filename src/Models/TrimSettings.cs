@@ -15,6 +15,10 @@ public class TrimSettings
     private TimeSpan _startTime = TimeSpan.Zero;
     private TimeSpan? _duration;
 
+    /// <summary>
+    /// Start time for trimming. Defaults to <see cref="TimeSpan.Zero"/>.
+    /// Must be non-negative.
+    /// </summary>
     public TimeSpan StartTime
     {
         get => _startTime;
@@ -26,6 +30,10 @@ public class TrimSettings
         }
     }
 
+    /// <summary>
+    /// Duration of the trimmed segment. If set, <see cref="EndTime"/> is ignored if both are provided.
+    /// Must be greater than zero.
+    /// </summary>
     public TimeSpan? Duration
     {
         get => _duration;
@@ -37,10 +45,22 @@ public class TrimSettings
         }
     }
 
+    /// <summary>
+    /// End time for trimming. If set, takes precedence over <see cref="Duration"/>.
+    /// </summary>
     public TimeSpan? EndTime { get; set; }
 
+    /// <summary>
+    /// Whether to include audio in the trimmed output. Defaults to <c>true</c>.
+    /// </summary>
     public bool PreserveAudio { get; set; } = true;
+    /// <summary>
+    /// Whether to include video in the trimmed output. Defaults to <c>true</c>.
+    /// </summary>
     public bool PreserveVideo { get; set; } = true;
+    /// <summary>
+    /// Whether to perform keyframe-based trimming for faster processing. Defaults to <c>true</c>.
+    /// </summary>
     public bool Keyframe { get; set; } = true;
 
     /// <summary>
