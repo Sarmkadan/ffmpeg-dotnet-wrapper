@@ -17,10 +17,24 @@ public class TranscodeSettings
     private int _audioBitrate = FFmpegConstants.DefaultAudioBitrate;
     private int _frameRate = FFmpegConstants.DefaultFrameRate;
 
+    /// <summary>
+    /// Video codec to use for encoding. Defaults to <see cref="VideoCodec.H264"/>.
+    /// </summary>
     public VideoCodec VideoCodec { get; set; } = VideoCodec.H264;
+    /// <summary>
+    /// Audio codec to use for encoding. Defaults to <see cref="AudioCodec.AAC"/>.
+    /// </summary>
     public AudioCodec AudioCodec { get; set; } = AudioCodec.AAC;
+    /// <summary>
+    /// Container format for the output file. Defaults to <see cref="ContainerFormat.MP4"/>.
+    /// </summary>
     public ContainerFormat Container { get; set; } = ContainerFormat.MP4;
 
+    /// <summary>
+    /// Target video bitrate in kbps.
+    /// Must be between <see cref="FFmpegConstants.MinBitrate"/> and <see cref="FFmpegConstants.MaxBitrate"/>.
+    /// Defaults to <see cref="FFmpegConstants.DefaultBitrate"/>.
+    /// </summary>
     public int VideoBitrate
     {
         get => _videoBitrate;
@@ -33,6 +47,11 @@ public class TranscodeSettings
         }
     }
 
+    /// <summary>
+    /// Target audio bitrate in kbps.
+    /// Must be between <see cref="FFmpegConstants.MinAudioBitrate"/> and <see cref="FFmpegConstants.MaxAudioBitrate"/>.
+    /// Defaults to <see cref="FFmpegConstants.DefaultAudioBitrate"/>.
+    /// </summary>
     public int AudioBitrate
     {
         get => _audioBitrate;
@@ -45,6 +64,11 @@ public class TranscodeSettings
         }
     }
 
+    /// <summary>
+    /// Target frame rate (fps).
+    /// Must be between <see cref="FFmpegConstants.MinFrameRate"/> and <see cref="FFmpegConstants.MaxFrameRate"/>.
+    /// Defaults to <see cref="FFmpegConstants.DefaultFrameRate"/>.
+    /// </summary>
     public int FrameRate
     {
         get => _frameRate;
@@ -57,17 +81,55 @@ public class TranscodeSettings
         }
     }
 
+    /// <summary>
+    /// Optional output width in pixels. If null, the source width is used.
+    /// </summary>
     public int? Width { get; set; }
+    /// <summary>
+    /// Optional output height in pixels. If null, the source height is used.
+    /// </summary>
     public int? Height { get; set; }
+    /// <summary>
+    /// Encoding quality preset. Defaults to <see cref="QualityPreset.Medium"/>.
+    /// </summary>
     public QualityPreset Quality { get; set; } = QualityPreset.Medium;
+    /// <summary>
+    /// Whether to automatically scale the output to fit within <see cref="MaxWidth"/> and <see cref="MaxHeight"/>.
+    /// Defaults to <c>true</c>.
+    /// </summary>
     public bool EnableAutoScale { get; set; } = true;
+    /// <summary>
+    /// Maximum width for auto-scaling. Defaults to <c>1920</c>.
+    /// </summary>
     public int? MaxWidth { get; set; } = 1920;
+    /// <summary>
+    /// Maximum height for auto-scaling. Defaults to <c>1080</c>.
+    /// </summary>
     public int? MaxHeight { get; set; } = 1080;
+    /// <summary>
+    /// Scaling algorithm to use when resizing. Defaults to <see cref="ScalingMode.Lanczos"/>.
+    /// </summary>
     public ScalingMode ScalingMode { get; set; } = ScalingMode.Lanczos;
+    /// <summary>
+    /// Whether to preserve the source aspect ratio when resizing. Defaults to <c>true</c>.
+    /// </summary>
     public bool PreserveAspectRatio { get; set; } = true;
+    /// <summary>
+    /// Whether to enable audio normalization. Defaults to <c>false</c>.
+    /// </summary>
     public bool EnableAudioNormalization { get; set; } = false;
+    /// <summary>
+    /// Target loudness in LUFS for audio normalization. Defaults to <c>-23.0</c>.
+    /// Only applies when <see cref="EnableAudioNormalization"/> is <c>true</c>.
+    /// </summary>
     public double? TargetLoudness { get; set; } = -23.0;
+    /// <summary>
+    /// Whether to use two-pass encoding for better quality. Defaults to <c>false</c>.
+    /// </summary>
     public bool TwoPass { get; set; } = false;
+    /// <summary>
+    /// Additional custom FFmpeg command-line arguments to pass to the encoder.
+    /// </summary>
     public string? CustomFFmpegArgs { get; set; }
 
     /// <summary>
