@@ -43,6 +43,11 @@ public class FFmpegException : Exception
         ExitCode = exitCode;
         ErrorOutput = errorOutput;
     }
+
+    public override string ToString()
+    {
+        return $"FFmpegException {{ ExitCode = {ExitCode}, ErrorOutput = {ErrorOutput} }}";
+    }
 }
 
 /// <summary>
