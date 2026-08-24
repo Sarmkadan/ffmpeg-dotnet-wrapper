@@ -1,8 +1,3 @@
-// =============================================================================
-// Author: Vladyslav Zaiets | https://sarmkadan.com
-// CTO & Software Architect
-// =============================================================================
-
 namespace FFmpegDotnetWrapper.Exceptions;
 
 /// <summary>
@@ -12,20 +7,20 @@ namespace FFmpegDotnetWrapper.Exceptions;
 public class ProcessExecutionException : FFmpegException
 {
     public ProcessExecutionException(string message)
-        : base(message)
+    : base(message)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
     }
 
     public ProcessExecutionException(string message, int exitCode)
-        : base(message, exitCode)
+    : base(message, exitCode)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
         Context[nameof(ExitCode)] = exitCode.ToString();
     }
 
     public ProcessExecutionException(string message, int exitCode, string errorOutput)
-        : base(message, exitCode, errorOutput)
+    : base(message, exitCode, errorOutput)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
         Context[nameof(ExitCode)] = exitCode.ToString();
@@ -33,13 +28,13 @@ public class ProcessExecutionException : FFmpegException
     }
 
     public ProcessExecutionException(string message, Exception innerException)
-        : base(message, innerException)
+    : base(message, innerException)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
     }
 
     public ProcessExecutionException(string message, int exitCode, string errorOutput, Exception innerException)
-        : base(message, innerException)
+    : base(message, innerException)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
         ExitCode = exitCode;
@@ -47,4 +42,6 @@ public class ProcessExecutionException : FFmpegException
         Context[nameof(ExitCode)] = exitCode.ToString();
         Context[nameof(ErrorOutput)] = errorOutput ?? string.Empty;
     }
+
+    public override string ToString() => $"ProcessExecutionException {{ ExitCode = {ExitCode}, ErrorOutput = {ErrorOutput} }}";
 }
