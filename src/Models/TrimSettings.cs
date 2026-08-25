@@ -122,4 +122,10 @@ public class TrimSettings
             Keyframe = Keyframe
         };
     }
+
+    /// <summary>
+    /// Returns a concise, informative representation of the trim settings.
+    /// </summary>
+    public override string ToString() =>
+        $"TrimSettings {{ EndTime = {EndTime}, PreserveAudio = {PreserveAudio}, PreserveVideo = {PreserveVideo}, Keyframe = {Keyframe} }}";
 }
