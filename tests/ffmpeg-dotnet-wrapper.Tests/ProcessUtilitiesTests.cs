@@ -12,8 +12,16 @@ using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests
 {
+    /// <summary>
+    /// Unit tests for <see cref="ProcessUtilities"/> covering argument escaping,
+    /// synchronous and asynchronous process execution, timeouts, cancellation,
+    /// executable availability checks, and command injection prevention.
+    /// </summary>
     public class ProcessUtilitiesTests
     {
+        /// <summary>
+        /// Verifies that escaping an empty string argument produces a quoted empty string.
+        /// </summary>
         [Fact]
         public void EscapeArgument_EmptyString_ReturnsQuotedEmptyString()
         {
@@ -27,6 +35,9 @@ namespace FFmpegDotnetWrapper.Tests
             result.Should().Be("\"\"");
         }
 
+        /// <summary>
+        /// Verifies that escaping a null string argument produces a quoted empty string.
+        /// </summary>
         [Fact]
         public void EscapeArgument_NullString_ReturnsQuotedEmptyString()
         {
@@ -40,6 +51,9 @@ namespace FFmpegDotnetWrapper.Tests
             result.Should().Be("\"\"");
         }
 
+        /// <summary>
+        /// Verifies that plain text containing no spaces is returned unchanged by the escaper.
+        /// </summary>
         [Fact]
         public void EscapeArgument_PlainTextWithoutSpaces_ReturnsUnchanged()
         {
@@ -53,6 +67,9 @@ namespace FFmpegDotnetWrapper.Tests
             result.Should().Be("plaintext");
         }
 
+        /// <summary>
+        /// Verifies that text containing spaces is wrapped in double quotes when escaped.
+        /// </summary>
         [Fact]
         public void EscapeArgument_TextWithSpaces_ReturnsQuoted()
         {
@@ -66,6 +83,10 @@ namespace FFmpegDotnetWrapper.Tests
             result.Should().Be("\"text with spaces\"");
         }
 
+        /// <summary>
+        /// Verifies that embedded double quotes are escaped with backslashes and the
+        /// whole argument is wrapped in double quotes.
+        /// </summary>
         [Fact]
         public void EscapeArgument_TextWithQuotes_ReturnsEscapedAndQuoted()
         {
@@ -79,6 +100,10 @@ namespace FFmpegDotnetWrapper.Tests
             result.Should().Be("\"text with \\\"quotes\\\"\"");
         }
 
+        /// <summary>
+        /// Verifies that a path-like argument containing backslashes is wrapped in
+        /// double quotes while preserving its backslash separators.
+        /// </summary>
         [Fact]
         public void EscapeArgument_TextWithBackslashes_ReturnsQuoted()
         {
@@ -93,6 +118,10 @@ namespace FFmpegDotnetWrapper.Tests
             result.Should().Contain("\\").And.Contain("to");
         }
 
+        /// <summary>
+        /// Verifies that an argument combining spaces, double quotes and backslashes
+        /// is wrapped in quotes with its special characters preserved.
+        /// </summary>
         [Fact]
         public void EscapeArgument_TextWithMultipleSpecialChars_ReturnsProperlyEscaped()
         {
@@ -109,6 +138,11 @@ namespace FFmpegDotnetWrapper.Tests
             result.Should().Contain("backslashes");
         }
 
+        /// <summary>
+        /// Verifies that running "echo" synchronously yields exit code zero, captures the
+        /// echoed text on standard output, leaves standard error empty, reports no timeout,
+        /// and marks the result as successful.
+        /// </summary>
         [Fact]
         public void ExecuteProcess_SuccessfulCommand_ReturnsProcessResultWithExitCodeZero()
         {
@@ -128,6 +162,10 @@ namespace FFmpegDotnetWrapper.Tests
             result.Success.Should().BeTrue();
         }
 
+        /// <summary>
+        /// Verifies that a synchronous process started with an explicit working directory
+        /// completes successfully with exit code zero.
+        /// </summary>
         [Fact]
         public void ExecuteProcess_CommandWithWorkingDirectory_ReturnsProcessResult()
         {
@@ -145,6 +183,10 @@ namespace FFmpegDotnetWrapper.Tests
             result.Success.Should().BeTrue();
         }
 
+        /// <summary>
+        /// Verifies that a command exiting with a failure status ("cmd.exe /c exit 1" on
+        /// Windows, "false" elsewhere) reports a non-zero exit code and is marked unsuccessful.
+        /// </summary>
         [Fact]
         public void ExecuteProcess_NonZeroExitCode_ReturnsCorrectExitCode()
         {
@@ -162,6 +204,10 @@ namespace FFmpegDotnetWrapper.Tests
             result.Success.Should().BeFalse();
         }
 
+        /// <summary>
+        /// Verifies that standard input supplied to a synchronous process ("cat") is echoed
+        /// back on standard output with exit code zero.
+        /// </summary>
         [Fact]
         public void ExecuteProcess_CommandWithInput_ReturnsProcessResultWithInput()
         {
@@ -179,6 +225,12 @@ namespace FFmpegDotnetWrapper.Tests
             result.StandardOutput.Should().Contain("test input data");
         }
 
+        /// <summary>
+        /// Verifies that running "echo" asynchronously yields exit code zero, captures the
+        /// echoed text on standard output, leaves standard error empty, reports no timeout,
+        /// and marks the result as successful.
+        /// </summary>
+        /// <returns>A task representing the asynchronous test operation.</returns>
         [Fact]
         public async Task ExecuteProcessAsync_SuccessfulCommand_ReturnsProcessResultWithExitCodeZero()
         {
@@ -198,6 +250,12 @@ namespace FFmpegDotnetWrapper.Tests
             result.Success.Should().BeTrue();
         }
 
+        /// <summary>
+        /// Verifies that an asynchronous command exiting with a failure status
+        /// ("cmd.exe /c exit 2" on Windows, "false" elsewhere) reports a non-zero
+        /// exit code and is marked unsuccessful.
+        /// </summary>
+        /// <returns>A task representing the asynchronous test operation.</returns>
         [Fact]
         public async Task ExecuteProcessAsync_NonZeroExitCode_ReturnsCorrectExitCode()
         {
@@ -214,6 +272,12 @@ namespace FFmpegDotnetWrapper.Tests
             result.Success.Should().BeFalse();
         }
 
+        /// <summary>
+        /// Verifies that cancelling a long-running asynchronous "sleep" command via a
+        /// cancellation token produces a timed-out result with exit code -1 and a
+        /// non-empty standard error.
+        /// </summary>
+        /// <returns>A task representing the asynchronous test operation.</returns>
         [Fact]
         public async Task ExecuteProcessAsync_WithCancellationToken_CancelsExecution()
         {
@@ -232,6 +296,10 @@ namespace FFmpegDotnetWrapper.Tests
             result.StandardError.Should().NotBeEmpty();
         }
 
+        /// <summary>
+        /// Verifies that a synchronous "sleep" command exceeding its timeout limit is
+        /// reported as timed out with exit code -1.
+        /// </summary>
         [Fact]
         public void ExecuteProcess_Timeout_ReturnsTimedOutProcessResult()
         {
@@ -249,6 +317,10 @@ namespace FFmpegDotnetWrapper.Tests
             result.ExitCode.Should().Be(-1);
         }
 
+        /// <summary>
+        /// Verifies that attempting to execute a non-existent executable synchronously
+        /// throws an <see cref="InvalidOperationException"/>.
+        /// </summary>
         [Fact]
         public void ExecuteProcess_InvalidCommand_ThrowsInvalidOperationException()
         {
@@ -260,6 +332,10 @@ namespace FFmpegDotnetWrapper.Tests
             Assert.Throws<InvalidOperationException>(() => ProcessUtilities.ExecuteProcess(fileName, arguments));
         }
 
+        /// <summary>
+        /// Verifies that "echo", available on all supported platforms, is reported as
+        /// an existing executable.
+        /// </summary>
         [Fact]
         public void IsExecutableAvailable_ExistingExecutable_ReturnsTrue()
         {
@@ -273,6 +349,9 @@ namespace FFmpegDotnetWrapper.Tests
             result.Should().BeTrue();
         }
 
+        /// <summary>
+        /// Verifies that a made-up executable name is reported as unavailable.
+        /// </summary>
         [Fact]
         public void IsExecutableAvailable_NonExistingExecutable_ReturnsFalse()
         {
@@ -286,6 +365,10 @@ namespace FFmpegDotnetWrapper.Tests
             result.Should().BeFalse();
         }
 
+        /// <summary>
+        /// Verifies that a command injection attempt ("file.txt && rm -rf /") is neutralized
+        /// by wrapping the entire argument in double quotes.
+        /// </summary>
         [Fact]
         public void EscapeArgument_CommandLineInjectionAttempt_ReturnsSafeArgument()
         {
@@ -299,6 +382,10 @@ namespace FFmpegDotnetWrapper.Tests
             result.Should().Be("\"file.txt && rm -rf /\"");
         }
 
+        /// <summary>
+        /// Verifies that a synchronous "echo" run captures its message on standard output
+        /// while leaving standard error empty.
+        /// </summary>
         [Fact]
         public void ExecuteProcess_CapturesBothStdoutAndStderr()
         {
@@ -315,6 +402,11 @@ namespace FFmpegDotnetWrapper.Tests
             result.StandardError.Should().BeEmpty();
         }
 
+        /// <summary>
+        /// Verifies that an asynchronous "echo" run captures its message on standard output
+        /// while leaving standard error empty.
+        /// </summary>
+        /// <returns>A task representing the asynchronous test operation.</returns>
         [Fact]
         public async Task ExecuteProcessAsync_CapturesBothStdoutAndStderr()
         {
