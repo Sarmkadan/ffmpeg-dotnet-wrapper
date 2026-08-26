@@ -28,4 +28,7 @@ public class ThumbnailResult
 
     /// <summary>Returns the first extracted thumbnail path, or <c>null</c> if none.</summary>
     public string? FirstThumbnail => Thumbnails.Count > 0 ? Thumbnails[0] : null;
+
+    /// <summary>Returns a concise representation of the thumbnail extraction result.</summary>
+    public override string ToString() => $"ThumbnailResult {{ IsSuccess = {IsSuccess}, Thumbnails = {Thumbnails}, Duration = {Duration}, ErrorMessage = {ErrorMessage} }}";
 }
