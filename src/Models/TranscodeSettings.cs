@@ -225,4 +225,5 @@ public class TranscodeSettings
             HardwareAcceleration = HardwareAcceleration
         };
     }
+    public override string ToString() => $"TranscodeSettings {{ VideoCodec = {VideoCodec}, AudioCodec = {AudioCodec}, Container = {Container}, Width = {Width}, Height = {Height}, Quality = {Quality} }}";
 }
