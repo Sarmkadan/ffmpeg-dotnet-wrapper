@@ -57,6 +57,11 @@ namespace FFmpegDotnetWrapper.Utilities
             /// Indicates successful execution (exit code == 0).
             /// </summary>
             public bool Success => ExitCode == 0 && !TimedOut;
+
+            public override string ToString()
+            {
+                return $"ProcessResult {{ ExitCode = {ExitCode}, StandardOutput = {StandardOutput}, StandardError = {StandardError}, ExecutionTime = {ExecutionTime}, TimedOut = {TimedOut} }}";
+            }
         }
 
         /// <summary>
