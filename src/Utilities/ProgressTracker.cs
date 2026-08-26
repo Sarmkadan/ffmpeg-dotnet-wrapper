@@ -37,6 +37,7 @@ namespace FFmpegDotnetWrapper.Utilities
 
         /// <summary>Data throughput (bytes per second).</summary>
         public double ThroughputBytesPerSecond { get; set; }
+        public override string ToString() => $"ProgressReport {{ ProgressPercentage = {ProgressPercentage}, ItemsCompleted = {ItemsCompleted}, TotalItems = {TotalItems}, ElapsedTime = {ElapsedTime}, EstimatedTimeRemaining = {EstimatedTimeRemaining}, StatusMessage = {StatusMessage} }}";
     }
 
     /// <summary>
