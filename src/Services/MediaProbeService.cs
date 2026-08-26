@@ -14,6 +14,8 @@ namespace FFmpegDotnetWrapper.Services
     {
         private const string FFprobeExecutable = "ffprobe";
 
+        public override string ToString() => $"MediaProbeService {{ FFprobeExecutable = {FFprobeExecutable} }}";
+
         /// <summary>
         /// Probes the specified media file and returns information about its duration, bitrate and streams.
         /// </summary>
