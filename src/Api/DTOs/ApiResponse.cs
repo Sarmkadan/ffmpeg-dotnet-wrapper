@@ -140,6 +140,15 @@ namespace FFmpegDotnetWrapper.Api.DTOs
                 Errors = [new ApiError { Code = errorCode, Message = message }]
             };
         }
+
+        /// <summary>
+        /// Returns a string representation of the ApiResponse object.
+        /// </summary>
+        /// <returns>A string containing the Success, StatusCode, Message, Data, Errors, and Timestamp properties.</returns>
+        public override string ToString()
+        {
+            return $"ApiResponse {{ Success = {Success}, StatusCode = {StatusCode}, Message = {Message}, Data = {Data}, Errors = {Errors}, Timestamp = {Timestamp} }}";
+        }
     }
 
     /// <summary>
