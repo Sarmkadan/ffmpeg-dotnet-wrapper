@@ -75,6 +75,10 @@ namespace FFmpegDotnetWrapper.Configuration
 
         /// <summary>Delay between retry attempts in milliseconds.</summary>
         public int RetryDelayMs { get; set; } = 1000;
+        public override string ToString()
+        {
+            return $"FFmpegOptions {{ FFmpegPath = {FFmpegPath}, FFprobePath = {FFprobePath}, OperationTimeoutSeconds = {OperationTimeoutSeconds}, MaxFileSizeBytes = {MaxFileSizeBytes}, EnableHardwareAcceleration = {EnableHardwareAcceleration}, EncodingPreset = {EncodingPreset} }}";
+        }
     }
 
     /// <summary>
