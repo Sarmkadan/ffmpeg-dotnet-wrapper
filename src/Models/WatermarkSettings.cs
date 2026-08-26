@@ -55,6 +55,8 @@ public class WatermarkSettings
     public bool AnimateIn { get; set; } = false;
     public TimeSpan? AnimateInDuration { get; set; }
 
+    public override string ToString() => $"WatermarkSettings {{ Position = {Position}, XOffset = {XOffset}, YOffset = {YOffset}, Scale = {Scale}, PreserveAspectRatio = {PreserveAspectRatio}, StartTime = {StartTime} }}";
+
     /// <summary>
     /// Validates the watermark settings.
     /// </summary>
