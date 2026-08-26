@@ -268,6 +268,9 @@ public class BatchOperationResult
 
     public TimeSpan GetDuration() => CompletedAt.HasValue ? CompletedAt.Value - CreatedAt : TimeSpan.Zero;
     public double GetSuccessRate() => TotalFiles > 0 ? (SuccessfulCount / (double)TotalFiles) * 100 : 0;
+
+    public override string ToString() =>
+        $"BatchOperationResult {{ OperationType = {OperationType}, TotalFiles = {TotalFiles}, SuccessfulCount = {SuccessfulCount}, FailedCount = {FailedCount}, IsCancelled = {IsCancelled}, CreatedAt = {CreatedAt} }}";
 }
 
 /// <summary>
