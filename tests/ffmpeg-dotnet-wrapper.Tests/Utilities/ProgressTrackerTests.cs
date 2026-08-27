@@ -12,8 +12,14 @@ using FFmpegDotnetWrapper.Utilities;
 
 namespace ffmpeg_dotnet_wrapper_tests.Utilities
 {
-    public class ProgressTrackerTests
+    /// <summary>
+/// Class containing unit tests for the ProgressTracker class.
+/// </summary>
+public class ProgressTrackerTests
     {
+        /// <summary>
+        /// Tests that the ProgressTracker constructor correctly initializes when provided with total items count.
+        /// </summary>
         [Fact]
         public void Constructor_WithTotalItems_InitializesCorrectly()
         {
@@ -28,6 +34,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.ElapsedTime.TotalMilliseconds.Should().BeGreaterThan(0);
         }
 
+        /// <summary>
+        /// Tests that the ProgressTracker constructor correctly initializes when provided with total bytes count.
+        /// </summary>
         [Fact]
         public void Constructor_WithTotalBytes_InitializesCorrectly()
         {
@@ -41,6 +50,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.ProgressPercentage.Should().Be(0);
         }
 
+        /// <summary>
+        /// Tests that the ProgressTracker constructor correctly initializes when provided with zero values for both total items and total bytes.
+        /// </summary>
         [Fact]
         public void Constructor_WithZeroValues_InitializesCorrectly()
         {
@@ -54,6 +66,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.ProgressPercentage.Should().Be(0);
         }
 
+        /// <summary>
+        /// Tests that calling ReportItemProgress increments the items completed count correctly.
+        /// </summary>
         [Fact]
         public void ReportItemProgress_IncrementsItemsCompleted()
         {
@@ -71,6 +86,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.ProgressPercentage.Should().BeApproximately(3.0, 0.001);
         }
 
+        /// <summary>
+        /// Tests that ReportItemProgress with a status message correctly sets the status message in the progress report.
+        /// </summary>
         [Fact]
         public void ReportItemProgress_WithStatusMessage_SetsStatusMessage()
         {
@@ -86,6 +104,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.StatusMessage.Should().Be("Processing frame 42");
         }
 
+        /// <summary>
+        /// Tests that calling ReportItemProgress multiple times calculates the correct percentage based on items completed.
+        /// </summary>
         [Fact]
         public void ReportItemProgress_MultipleTimes_CalculatesCorrectPercentage()
         {
@@ -104,6 +125,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.ProgressPercentage.Should().BeApproximately(20.0, 0.001);
         }
 
+        /// <summary>
+        /// Tests that ReportBytesProgress correctly updates the bytes processed and calculates throughput.
+        /// </summary>
         [Fact]
         public void ReportBytesProgress_UpdatesBytesProcessed()
         {
@@ -120,6 +144,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.StatusMessage.Should().Be("Downloaded 768KB");
         }
 
+        /// <summary>
+        /// Tests that ReportPercentageProgress correctly calculates items completed from percentage and sets the status message.
+        /// </summary>
         [Fact]
         public void ReportPercentageProgress_SetsCorrectPercentage()
         {
@@ -136,6 +163,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.StatusMessage.Should().Be("25% complete");
         }
 
+        /// <summary>
+        /// Tests that ReportPercentageProgress clamps negative percentages to zero.
+        /// </summary>
         [Fact]
         public void ReportPercentageProgress_ClampsToZero()
         {
@@ -150,6 +180,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.ProgressPercentage.Should().Be(0);
         }
 
+        /// <summary>
+        /// Tests that ReportPercentageProgress clamps percentages over 100 to 100.
+        /// </summary>
         [Fact]
         public void ReportPercentageProgress_ClampsToHundred()
         {
@@ -164,6 +197,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.ProgressPercentage.Should().Be(100);
         }
 
+        /// <summary>
+        /// Tests that ReportDurationProgress correctly calculates percentage based on processed duration relative to total duration.
+        /// </summary>
         [Fact]
         public void ReportDurationProgress_CalculatesCorrectPercentage()
         {
@@ -181,6 +217,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.StatusMessage.Should().Be("Processing video");
         }
 
+        /// <summary>
+        /// Tests that ReportDurationProgress returns zero percentage when total duration is zero.
+        /// </summary>
         [Fact]
         public void ReportDurationProgress_WithZeroTotalDuration_ReturnsZero()
         {
@@ -197,6 +236,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.ProgressPercentage.Should().Be(0);
         }
 
+        /// <summary>
+        /// Tests that GetProgressReport returns a report with all fields properly populated when progress has been made.
+        /// </summary>
         [Fact]
         public void GetProgressReport_ReturnsAllFieldsPopulated()
         {
@@ -216,6 +258,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.ThroughputItemsPerSecond.Should().BeGreaterThanOrEqualTo(0);
         }
 
+        /// <summary>
+        /// Tests that the PercentComplete property returns the correct value based on items completed.
+        /// </summary>
         [Fact]
         public void PercentComplete_Property_ReturnsCorrectValue()
         {
@@ -232,6 +277,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             tracker.PercentComplete.Should().BeApproximately(50.0, 0.001);
         }
 
+        /// <summary>
+        /// Tests that the PercentComplete property clamps negative values to zero.
+        /// </summary>
         [Fact]
         public void PercentComplete_Property_ClampsToZero()
         {
@@ -243,6 +291,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             tracker.PercentComplete.Should().Be(0);
         }
 
+        /// <summary>
+        /// Tests that the PercentComplete property clamps values over 100 to 100.
+        /// </summary>
         [Fact]
         public void PercentComplete_Property_ClampsToHundred()
         {
@@ -254,6 +305,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             tracker.PercentComplete.Should().Be(100);
         }
 
+        /// <summary>
+        /// Tests that Reset clears all state including items completed, progress percentage, and status message.
+        /// </summary>
         [Fact]
         public void Reset_ClearsAllState()
         {
@@ -277,6 +331,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.StatusMessage.Should().BeEmpty();
         }
 
+        /// <summary>
+        /// Tests that Reset resets the stopwatch, resulting in a smaller elapsed time after reset.
+        /// </summary>
         [Fact]
         public void Reset_ResetsStopwatch()
         {
@@ -295,6 +352,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report2.ElapsedTime.Should().BeLessThan(report1.ElapsedTime);
         }
 
+        /// <summary>
+        /// Tests that GetFormattedProgress returns a formatted string containing percentage, items count, and status message.
+        /// </summary>
         [Fact]
         public void GetFormattedProgress_ReturnsExpectedFormat()
         {
@@ -312,6 +372,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             formatted.Should().Contain("Processing frames");
         }
 
+        /// <summary>
+        /// Tests that GetFormattedProgress shows only percentage when no total items are specified.
+        /// </summary>
         [Fact]
         public void GetFormattedProgress_WithoutTotalItems_ShowsOnlyPercentage()
         {
@@ -327,6 +390,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             formatted.Should().NotContain("/"); // No items count
         }
 
+        /// <summary>
+        /// Tests that CalculateETA returns zero when progress is at zero percent.
+        /// </summary>
         [Fact]
         public void CalculateETA_ReturnsZeroAtZeroPercent()
         {
@@ -344,6 +410,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             eta.Should().Be(TimeSpan.Zero);
         }
 
+        /// <summary>
+        /// Tests that CalculateETA returns zero when progress is at hundred percent.
+        /// </summary>
         [Fact]
         public void CalculateETA_ReturnsZeroAtHundredPercent()
         {
@@ -362,6 +431,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             eta.Should().Be(TimeSpan.Zero);
         }
 
+        /// <summary>
+        /// Tests that CalculateETA returns a positive time value for partial progress.
+        /// </summary>
         [Fact]
         public void CalculateETA_ReturnsPositiveTimeForPartialProgress()
         {
@@ -380,6 +452,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             eta.Should().BeGreaterThan(TimeSpan.Zero);
         }
 
+        /// <summary>
+        /// Tests that ReportItemProgress is thread-safe when called from multiple threads simultaneously.
+        /// </summary>
         [Fact]
         public void ThreadSafety_ReportItemProgress_IsThreadSafe()
         {
@@ -409,6 +484,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.ProgressPercentage.Should().BeLessThanOrEqualTo(110);
         }
 
+        /// <summary>
+        /// Tests that ReportPercentageProgress is thread-safe when called from multiple threads simultaneously.
+        /// </summary>
         [Fact]
         public void ThreadSafety_ReportPercentageProgress_IsThreadSafe()
         {
@@ -438,6 +516,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.ProgressPercentage.Should().BeLessThanOrEqualTo(100);
         }
 
+        /// <summary>
+        /// Tests that Throughput calculates correct values based on items processed over time.
+        /// </summary>
         [Fact]
         public void Throughput_CalculatesCorrectValues()
         {
@@ -452,6 +533,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             report.ElapsedTime.TotalSeconds.Should().BeGreaterThan(0.04); // Should be at least ~50ms
         }
 
+        /// <summary>
+        /// Tests that calling Dispose multiple times on a ProgressTracker instance does not throw an exception.
+        /// </summary>
         [Fact]
         public void Dispose_CanBeCalledMultipleTimes()
         {
@@ -467,8 +551,14 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
         }
     }
 
-    public class ObservableProgressTrackerTests
+    /// <summary>
+/// Class containing unit tests for the ObservableProgressTracker class.
+/// </summary>
+public class ObservableProgressTrackerTests
     {
+        /// <summary>
+        /// Tests that the ObservableProgressTracker constructor initializes correctly with specified threshold.
+        /// </summary>
         [Fact]
         public void Constructor_WithThreshold_InitializesCorrectly()
         {
@@ -479,6 +569,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             tracker.Should().NotBeNull();
         }
 
+        /// <summary>
+        /// Tests that ReportItemProgress raises the ProgressChanged event when the reporting threshold is exceeded.
+        /// </summary>
         [Fact]
         public void ReportItemProgress_RaisesEventWhenThresholdExceeded()
         {
@@ -506,6 +599,9 @@ namespace ffmpeg_dotnet_wrapper_tests.Utilities
             lastReport.ProgressPercentage.Should().BeApproximately(15.0, 0.001);
         }
 
+        /// <summary>
+        /// Tests that ReportItemProgress does not raise the ProgressChanged event when below the reporting threshold.
+        /// </summary>
         [Fact]
         public void ReportItemProgress_DoesNotRaiseEventBelowThreshold()
         {
