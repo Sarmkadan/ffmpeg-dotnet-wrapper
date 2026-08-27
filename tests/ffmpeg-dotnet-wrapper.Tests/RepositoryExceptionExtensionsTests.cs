@@ -5,8 +5,14 @@ using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests.Exceptions;
 
+/// <summary>
+/// Tests for the RepositoryExceptionExtensions class, which provides extension methods for RepositoryException to check specific error conditions and add context.
+/// </summary>
 public class RepositoryExceptionExtensionsTests
 {
+    /// <summary>
+    /// Verifies that IsRepositoryNotFound returns true when the exception message contains "Repository not found".
+    /// </summary>
     [Fact]
     public void IsRepositoryNotFound_WithNotFoundMessage_ReturnsTrue()
     {
@@ -20,6 +26,9 @@ public class RepositoryExceptionExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that IsRepositoryNotFound returns true when the exception message contains "Repository does not exist".
+    /// </summary>
     [Fact]
     public void IsRepositoryNotFound_WithDoesNotExistMessage_ReturnsTrue()
     {
@@ -33,6 +42,9 @@ public class RepositoryExceptionExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that IsRepositoryNotFound returns true when the exception message matches case-insensitively.
+    /// </summary>
     [Fact]
     public void IsRepositoryNotFound_WithCaseInsensitiveMessage_ReturnsTrue()
     {
@@ -46,6 +58,9 @@ public class RepositoryExceptionExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that IsRepositoryNotFound returns false when the exception message does not indicate a not found error.
+    /// </summary>
     [Fact]
     public void IsRepositoryNotFound_WithDifferentMessage_ReturnsFalse()
     {
@@ -59,6 +74,9 @@ public class RepositoryExceptionExtensionsTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that IsRepositoryNotFound throws ArgumentNullException when the exception is null.
+    /// </summary>
     [Fact]
     public void IsRepositoryNotFound_WithNullException_ThrowsArgumentNullException()
     {
@@ -69,6 +87,9 @@ public class RepositoryExceptionExtensionsTests
         Assert.Throws<ArgumentNullException>(() => exception.IsRepositoryNotFound());
     }
 
+    /// <summary>
+    /// Verifies that IsRepositoryAlreadyExists returns true when the exception message contains "Repository already exists".
+    /// </summary>
     [Fact]
     public void IsRepositoryAlreadyExists_WithAlreadyExistsMessage_ReturnsTrue()
     {
@@ -82,6 +103,9 @@ public class RepositoryExceptionExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that IsRepositoryAlreadyExists returns true when the exception message contains "Repository already present".
+    /// </summary>
     [Fact]
     public void IsRepositoryAlreadyExists_WithAlreadyPresentMessage_ReturnsTrue()
     {
@@ -95,6 +119,9 @@ public class RepositoryExceptionExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that IsRepositoryAlreadyExists returns true when the exception message matches case-insensitively.
+    /// </summary>
     [Fact]
     public void IsRepositoryAlreadyExists_WithCaseInsensitiveMessage_ReturnsTrue()
     {
@@ -108,6 +135,9 @@ public class RepositoryExceptionExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that IsRepositoryAlreadyExists returns false when the exception message does not indicate an already exists error.
+    /// </summary>
     [Fact]
     public void IsRepositoryAlreadyExists_WithDifferentMessage_ReturnsFalse()
     {
@@ -121,6 +151,9 @@ public class RepositoryExceptionExtensionsTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that IsRepositoryAlreadyExists throws ArgumentNullException when the exception is null.
+    /// </summary>
     [Fact]
     public void IsRepositoryAlreadyExists_WithNullException_ThrowsArgumentNullException()
     {
@@ -131,6 +164,9 @@ public class RepositoryExceptionExtensionsTests
         Assert.Throws<ArgumentNullException>(() => exception.IsRepositoryAlreadyExists());
     }
 
+    /// <summary>
+    /// Verifies that IsAccessDenied returns true when the exception message contains "Access denied to repository".
+    /// </summary>
     [Fact]
     public void IsAccessDenied_WithAccessDeniedMessage_ReturnsTrue()
     {
@@ -144,6 +180,9 @@ public class RepositoryExceptionExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that IsAccessDenied returns true when the exception message contains "Permission denied for repository operation".
+    /// </summary>
     [Fact]
     public void IsAccessDenied_WithPermissionDeniedMessage_ReturnsTrue()
     {
@@ -157,6 +196,9 @@ public class RepositoryExceptionExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that IsAccessDenied returns true when the exception message contains "Insufficient permissions to access repository".
+    /// </summary>
     [Fact]
     public void IsAccessDenied_WithInsufficientPermissionsMessage_ReturnsTrue()
     {
@@ -170,6 +212,9 @@ public class RepositoryExceptionExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that IsAccessDenied returns true when the exception message matches case-insensitively.
+    /// </summary>
     [Fact]
     public void IsAccessDenied_WithCaseInsensitiveMessage_ReturnsTrue()
     {
@@ -183,6 +228,9 @@ public class RepositoryExceptionExtensionsTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that IsAccessDenied returns false when the exception message does not indicate an access denied error.
+    /// </summary>
     [Fact]
     public void IsAccessDenied_WithDifferentMessage_ReturnsFalse()
     {
@@ -196,6 +244,9 @@ public class RepositoryExceptionExtensionsTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that IsAccessDenied throws ArgumentNullException when the exception is null.
+    /// </summary>
     [Fact]
     public void IsAccessDenied_WithNullException_ThrowsArgumentNullException()
     {
@@ -206,6 +257,9 @@ public class RepositoryExceptionExtensionsTests
         Assert.Throws<ArgumentNullException>(() => exception.IsAccessDenied());
     }
 
+    /// <summary>
+    /// Verifies that WithContext creates a new exception with the combined message and preserves the original exception as inner exception when given valid additional context.
+    /// </summary>
     [Fact]
     public void WithContext_WithValidAdditionalContext_ReturnsNewExceptionWithCombinedMessage()
     {
@@ -223,6 +277,9 @@ public class RepositoryExceptionExtensionsTests
         result.InnerException.Should().BeSameAs(originalException);
     }
 
+    /// <summary>
+    /// Verifies that WithContext creates a new exception with an empty context part when given an empty string.
+    /// </summary>
     [Fact]
     public void WithContext_WithEmptyAdditionalContext_ReturnsNewExceptionWithEmptyContext()
     {
@@ -240,6 +297,9 @@ public class RepositoryExceptionExtensionsTests
         result.InnerException.Should().BeSameAs(originalException);
     }
 
+    /// <summary>
+    /// Verifies that WithContext preserves whitespace in the additional context.
+    /// </summary>
     [Fact]
     public void WithContext_WithWhitespaceAdditionalContext_ReturnsNewExceptionWithWhitespaceContext()
     {
@@ -257,6 +317,9 @@ public class RepositoryExceptionExtensionsTests
         result.InnerException.Should().BeSameAs(originalException);
     }
 
+    /// <summary>
+    /// Verifies that WithContext throws ArgumentNullException when the additional context is null.
+    /// </summary>
     [Fact]
     public void WithContext_WithNullAdditionalContext_ThrowsArgumentNullException()
     {
@@ -268,6 +331,9 @@ public class RepositoryExceptionExtensionsTests
         Assert.Throws<ArgumentNullException>(() => originalException.WithContext(additionalContext));
     }
 
+    /// <summary>
+    /// Verifies that WithContext throws ArgumentNullException when the original exception is null.
+    /// </summary>
     [Fact]
     public void WithContext_WithNullException_ThrowsArgumentNullException()
     {
@@ -279,6 +345,9 @@ public class RepositoryExceptionExtensionsTests
         Assert.Throws<ArgumentNullException>(() => originalException.WithContext(additionalContext));
     }
 
+    /// <summary>
+    /// Verifies that WithContext preserves the inner exception of the original exception.
+    /// </summary>
     [Fact]
     public void WithContext_WithInnerException_PreservesInnerException()
     {
@@ -294,6 +363,9 @@ public class RepositoryExceptionExtensionsTests
         result.InnerException.Should().BeSameAs(originalException);
     }
 
+    /// <summary>
+    /// Verifies that WithContext correctly combines complex original messages with additional context.
+    /// </summary>
     [Fact]
     public void WithContext_WithComplexMessage_CombinesMessagesCorrectly()
     {
