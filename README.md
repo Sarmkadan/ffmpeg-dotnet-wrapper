@@ -2587,3 +2587,46 @@ exception9.ValidationErrors["NewField"] = new[] { "New error" };
 var exception10 = new ValidationException("Test message");
 // exception10.ValidationErrors == null
 ```
+
+## ProcessUtilitiesTests
+
+The `ProcessUtilitiesTests` class provides unit tests for the `ProcessUtilities` class, verifying argument escaping, synchronous and asynchronous process execution, timeout handling, cancellation, executable availability checks, and command injection prevention.
+
+Here is an example usage of the `ProcessUtilities` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Utilities;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+// Escape command-line arguments to prevent injection
+string escaped = ProcessUtilities.EscapeArgument("file with spaces && rm -rf /");
+Console.WriteLine($"Escaped argument: {escaped}");
+// Output: "file with spaces && rm -rf /"
+
+// Check if an executable is available in PATH
+bool ffmpegExists = ProcessUtilities.IsExecutableAvailable("ffmpeg");
+Console.WriteLine($"FFmpeg available: {ffmpegExists}");
+
+// Execute a process synchronously and capture output
+var result = ProcessUtilities.ExecuteProcess("echo", "Hello World");
+Console.WriteLine($"Exit code: {result.ExitCode}");
+Console.WriteLine($"Output: {result.StandardOutput}");
+
+// Execute a process asynchronously with timeout
+var asyncResult = await ProcessUtilities.ExecuteProcessAsync(
+    "ping", 
+    "-n 1 127.0.0.1", 
+    timeout: TimeSpan.FromSeconds(5));
+Console.WriteLine($"Async exit code: {asyncResult.ExitCode}");
+Console.WriteLine($"Async output: {asyncResult.StandardOutput}");
+
+// Execute with cancellation token
+using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+var cancelledResult = await ProcessUtilities.ExecuteProcessAsync(
+    "timeout", 
+    "/t 10", 
+    cancellationToken: cts.Token);
+Console.WriteLine($"Cancelled: {cancelledResult.TimedOut}");
+```
