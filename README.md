@@ -2417,3 +2417,30 @@ var removed = await queue.RemoveJobAsync(jobId);
 // Clear all pending jobs from the queue
 await queue.Clear();
 ```
+
+## FileOperationExceptionExtensionsTests
+
+The `FileOperationExceptionExtensionsTests` class provides unit tests for the `FileOperationExceptionExtensions` class, which adds utility methods to `FileOperationException` for extracting file names, checking file path existence, formatting log messages, and enriching exceptions with additional context.
+
+Here is an example usage of the `FileOperationExceptionExtensions` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Exceptions;
+using System;
+
+// Create a file operation exception with a file path
+var exception = new FileOperationException("Failed to process video", "/videos/input/file.mp4");
+
+// Get the file name from the exception
+string fileName = exception.GetFileName(); // Returns "file.mp4"
+
+// Check if the exception has a file path
+bool hasPath = exception.HasFilePath(); // Returns true
+
+// Get a formatted log string representation
+string logMessage = exception.ToLogString(); // Returns "Error: Failed to process video (File: /videos/input/file.mp4)"
+
+// Add additional context information to the exception
+var enrichedException = exception.WithAdditionalInfo("Encoding failed due to insufficient disk space");
+// enrichedException.Message will be "Failed to process video - Encoding failed due to insufficient disk space"
+```
