@@ -2385,6 +2385,65 @@ Console.WriteLine($"Thumbnail extraction result: {thumbnailResponse.Success}, St
 ```
 
 ```
+## ProcessExecutionExceptionValidationTests
+
+The `ProcessExecutionExceptionValidationTests` class provides unit tests for the `ProcessExecutionException` class, verifying that its validation methods work correctly with various exit codes, error outputs, and messages.
+
+Here is an example usage of the `ProcessExecutionException` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Exceptions;
+
+// Happy path: valid exception with no exit code or error output
+var happyPathEx = new ProcessExecutionException("Test message");
+var happyPathProblems = happyPathEx.Validate();
+// happyPathProblems is empty
+
+// ExitCode set with error output: valid combination
+var exitCodeWithErrorEx = new ProcessExecutionException("Test message") { ExitCode = 0, ErrorOutput = "Some error" };
+var exitCodeWithErrorProblems = exitCodeWithErrorEx.Validate();
+// exitCodeWithErrorProblems is empty
+
+// Negative exit code: returns validation problem
+var negativeExitCodeEx = new ProcessExecutionException("Test message") { ExitCode = -1, ErrorOutput = "Error" };
+var negativeExitCodeProblems = negativeExitCodeEx.Validate();
+// Contains: "ExitCode must be a non-negative integer when set."
+
+// ExitCode set without error output: returns validation problem
+var exitCodeWithoutErrorEx = new ProcessExecutionException("Test message") { ExitCode = 1, ErrorOutput = null };
+var exitCodeWithoutErrorProblems = exitCodeWithoutErrorEx.Validate();
+// Contains: "ErrorOutput must be provided when ExitCode is set."
+
+// Whitespace-only message: returns validation problem
+var whitespaceMessageEx = new ProcessExecutionException("   ");
+var whitespaceMessageProblems = whitespaceMessageEx.Validate();
+// Contains: "Message cannot be null, empty, or whitespace."
+
+// IsValid returns true for valid exception
+var validEx = new ProcessExecutionException("Valid message");
+bool isValid = validEx.IsValid();
+// isValid is true
+
+// IsValid returns false for invalid exception
+var invalidEx = new ProcessExecutionException("Invalid message") { ExitCode = -5, ErrorOutput = null };
+bool isInvalidValid = invalidEx.IsValid();
+// isInvalidValid is false
+
+// EnsureValid throws no exception for valid exception
+var ensureValidEx = new ProcessExecutionException("Ensure valid message");
+var ensureValidException = Record.Exception(() => ensureValidEx.EnsureValid());
+// ensureValidException is null
+
+// EnsureValid throws ArgumentException for invalid exception
+var ensureInvalidEx = new ProcessExecutionException("Ensure invalid message") { ExitCode = -1, ErrorOutput = null };
+var ensureInvalidException = Assert.Throws<ArgumentException>(() => ensureInvalidEx.EnsureValid());
+// ensureInvalidException.Message contains "ProcessExecutionException is invalid"
+
+// EnsureValid throws ArgumentNullException for null exception
+ProcessExecutionException nullEx = null;
+var nullException = Assert.Throws<ArgumentNullException>(() => nullEx.EnsureValid());
+// nullException is of type ArgumentNullException
+```
 ## JobQueueTests
 
 The `JobQueueTests` class provides comprehensive unit tests for the `JobQueue` service, ensuring reliable background job management. It covers various scenarios including priority handling, delayed job execution, tag support, and critical lifecycle operations like enqueuing, dequeuing, fetching, and removing jobs.
