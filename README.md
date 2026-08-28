@@ -2444,3 +2444,87 @@ string logMessage = exception.ToLogString(); // Returns "Error: Failed to proces
 var enrichedException = exception.WithAdditionalInfo("Encoding failed due to insufficient disk space");
 // enrichedException.Message will be "Failed to process video - Encoding failed due to insufficient disk space"
 ```
+
+## ValidationExceptionTests
+
+The `ValidationExceptionTests` class provides unit tests for the `ValidationException` class, verifying that constructors and the FromDictionary method work correctly with various parameters including message, validation errors, and inner exceptions.
+
+Here is an example usage of the `ValidationException` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Exceptions;
+using System.Collections.Generic;
+
+// Constructor with message only
+var exception1 = new ValidationException("Test validation error");
+// exception1.Message == "Test validation error"
+// exception1.ValidationErrors == null
+// exception1.InnerException == null
+
+// Constructor with message and validation errors
+var errors = new Dictionary<string, string[]>
+{
+    { "Name", new[] { "Name is required" } },
+    { "Email", new[] { "Email is invalid", "Email is required" } }
+};
+var exception2 = new ValidationException("Validation failed", errors);
+// exception2.Message == "Validation failed"
+// exception2.ValidationErrors == errors
+// exception2.InnerException == null
+
+// Constructor with message and inner exception
+var innerException = new ArgumentException("Inner error");
+var exception3 = new ValidationException("Validation failed", innerException);
+// exception3.Message == "Validation failed"
+// exception3.ValidationErrors == null
+// exception3.InnerException == innerException
+
+// Constructor with message, validation errors, and inner exception
+var exception4 = new ValidationException(
+    "Validation failed",
+    errors,
+    innerException);
+// exception4.Message == "Validation failed"
+// exception4.ValidationErrors == errors
+// exception4.InnerException == innerException
+
+// FromDictionary with empty errors
+var exception5 = ValidationException.FromDictionary(new Dictionary<string, string[]>());
+// exception5.Message == "Validation failed"
+// exception5.ValidationErrors == empty dictionary
+
+// FromDictionary with custom message
+var exception6 = ValidationException.FromDictionary(errors, "Custom validation message");
+// exception6.Message == "Custom validation message"
+// exception6.ValidationErrors == errors
+
+// FromDictionary with multiple errors
+var multipleErrors = new Dictionary<string, string[]>
+{
+    { "Name", new[] { "Name is required", "Name must be at least 3 characters" } },
+    { "Email", new[] { "Email is invalid" } },
+    { "Age", new[] { "Age must be positive", "Age must be less than 120" } }
+};
+var exception7 = ValidationException.FromDictionary(multipleErrors);
+// exception7.ValidationErrors has 3 entries
+
+// FromDictionary with null values (empty arrays) in errors dictionary
+var exception8 = ValidationException.FromDictionary(new Dictionary<string, string[]>
+{
+    { "Field1", new[] { "Error 1" } },
+    { "Field2", new string[0] },
+    { "Field3", new string[0] }
+});
+// exception8.ValidationErrors["Field1"] has one error
+// exception8.ValidationErrors["Field2"] is empty
+// exception8.ValidationErrors["Field3"] is empty
+
+// Modifying ValidationErrors after construction
+var exception9 = new ValidationException("Test", errors);
+exception9.ValidationErrors["NewField"] = new[] { "New error" };
+// exception9.ValidationErrors now contains the original fields plus "NewField"
+
+// ValidationErrors is null when not set via constructor
+var exception10 = new ValidationException("Test message");
+// exception10.ValidationErrors == null
+```
