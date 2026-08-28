@@ -2781,3 +2781,66 @@ public void StreamingSegment_ActualBitrateKbps_ShouldCalculateCorrectBitrate()
     actualBitrate.Should().BeApproximately(6000, 1); // 4500000 * 8 / (6 * 1000) = 6000 kbps
 }
 ```
+
+## FFmpegExceptionExtensionsTests
+
+The `FFmpegExceptionExtensionsTests` class provides unit tests for the `FFmpegExceptionExtensions` class, which adds utility methods to FFmpeg-related exceptions. It verifies that `ToDetailedErrorMessage` produces a formatted, human-readable message for each exception type (including file paths, configuration keys, and timeouts), that the classification helpers (`IsProcessFailure`, `IsInvalidMediaFileError`, `IsInvalidConfigurationError`, `IsUnsupportedOperationError`) correctly identify exception categories, and that a null input throws an `ArgumentNullException`.
+
+Here is an example usage of the `FFmpegExceptionExtensions` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Exceptions;
+using System;
+
+// Format a detailed error message for a general FFmpeg exception
+var ffmpegError = new FFmpegException("Test Message", 1, "Error Output");
+string detailed = ffmpegError.ToDetailedErrorMessage();
+Console.WriteLine(detailed);
+// Contains: "FFmpeg Error: FFmpegException", "Message: Test Message",
+//           "Exit Code: 1", "Error Output: Error Output"
+
+// Format a detailed error message for an invalid media file (includes file path)
+var invalidFile = new InvalidMediaFileException("Invalid File", "path/to/file.mp4");
+string fileDetail = invalidFile.ToDetailedErrorMessage();
+Console.WriteLine(fileDetail);
+// Contains: "FFmpeg Error: InvalidMediaFileException", "File Path: path/to/file.mp4"
+
+// Format a detailed error message for an invalid configuration (includes config key)
+var invalidConfig = new InvalidOperationConfigurationException("Invalid Config", "myKey");
+string configDetail = invalidConfig.ToDetailedErrorMessage();
+Console.WriteLine(configDetail);
+// Contains: "FFmpeg Error: InvalidOperationConfigurationException", "Configuration Key: myKey"
+
+// Format a detailed error message for a process exception (includes timeout)
+var processError = new FFmpegProcessException("Timeout", TimeSpan.FromSeconds(30));
+string timeoutDetail = processError.ToDetailedErrorMessage();
+Console.WriteLine(timeoutDetail);
+// Contains: "FFmpeg Error: FFmpegProcessException", "Timeout: 30 seconds"
+
+// A null input throws an ArgumentNullException
+FFmpegException? nullEx = null;
+try
+{
+    nullEx!.ToDetailedErrorMessage();
+}
+catch (ArgumentNullException)
+{
+    Console.WriteLine("Null input rejected");
+}
+
+// Classify exceptions by category
+var processFailure = new FFmpegProcessException();
+bool isProcessFailure = processFailure.IsProcessFailure(); // true
+
+var generalError = new FFmpegException();
+bool isGeneralProcessFailure = generalError.IsProcessFailure(); // false
+
+var mediaFileError = new InvalidMediaFileException();
+bool isInvalidMediaFile = mediaFileError.IsInvalidMediaFileError(); // true
+
+var configError = new InvalidOperationConfigurationException();
+bool isInvalidConfig = configError.IsInvalidConfigurationError(); // true
+
+var unsupportedError = new UnsupportedOperationException();
+bool isUnsupported = unsupportedError.IsUnsupportedOperationError(); // true
+```
