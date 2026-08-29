@@ -2291,6 +2291,338 @@ public void FormatResolution_StandardHd_ReturnsWidthXHeight()
     Assert.Equal("1920x1080", result);
 }
 ```
+
+## ProgressTrackerTests
+
+The `ProgressTrackerTests` class provides unit tests for the `ProgressTracker` class, verifying that progress tracking functionality works correctly for tracking items, bytes, percentages, and durations during FFmpeg operations. It tests constructor initialization, progress reporting methods, percentage calculations, clamping behavior, reset functionality, and formatted progress output.
+
+Here is an example usage of the `ProgressTrackerTests` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Tests.Utilities;
+using FFmpegDotnetWrapper.Utilities;
+using FluentAssertions;
+using Xunit;
+
+// Test constructor with total items
+[Fact]
+public void Constructor_WithTotalItems_InitializesCorrectly()
+{
+    // Arrange & Act
+    var tracker = new ProgressTracker(totalItems: 100);
+    var report = tracker.GetProgressReport();
+
+    // Assert
+    report.TotalItems.Should().Be(100);
+    report.ItemsCompleted.Should().Be(0);
+    report.ProgressPercentage.Should().Be(0);
+    report.ElapsedTime.TotalMilliseconds.Should().BeGreaterThan(0);
+}
+
+// Test constructor with total bytes
+[Fact]
+public void Constructor_WithTotalBytes_InitializesCorrectly()
+{
+    // Arrange & Act
+    var tracker = new ProgressTracker(totalBytes: 1024 * 1024);
+    var report = tracker.GetProgressReport();
+
+    // Assert
+    report.TotalItems.Should().Be(0);
+    report.ItemsCompleted.Should().Be(0);
+    report.ProgressPercentage.Should().Be(0);
+}
+
+// Test reporting item progress increments items completed
+[Fact]
+public void ReportItemProgress_IncrementsItemsCompleted()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalItems: 100);
+
+    // Act
+    tracker.ReportItemProgress();
+    tracker.ReportItemProgress();
+    tracker.ReportItemProgress();
+    var report = tracker.GetProgressReport();
+
+    // Assert
+    report.ItemsCompleted.Should().Be(3);
+    report.ProgressPercentage.Should().BeApproximately(3.0, 0.001);
+}
+
+// Test reporting item progress with status message sets status message
+[Fact]
+public void ReportItemProgress_WithStatusMessage_SetsStatusMessage()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalItems: 100);
+
+    // Act
+    tracker.ReportItemProgress("Processing frame 42");
+    var report = tracker.GetProgressReport();
+
+    // Assert
+    report.ItemsCompleted.Should().Be(1);
+    report.StatusMessage.Should().Be("Processing frame 42");
+}
+
+// Test reporting item progress multiple times calculates correct percentage
+[Fact]
+public void ReportItemProgress_MultipleTimes_CalculatesCorrectPercentage()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalItems: 50);
+
+    // Act - report 10 items
+    for (int i = 0; i < 10; i++)
+    {
+        tracker.ReportItemProgress();
+    }
+    var report = tracker.GetProgressReport();
+
+    // Assert
+    report.ItemsCompleted.Should().Be(10);
+    report.ProgressPercentage.Should().BeApproximately(20.0, 0.001);
+}
+
+// Test reporting bytes progress updates bytes processed
+[Fact]
+public void ReportBytesProgress_UpdatesBytesProcessed()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalBytes: 1024 * 1024);
+
+    // Act
+    tracker.ReportBytesProgress(512 * 1024, "Downloaded 512KB");
+    tracker.ReportBytesProgress(768 * 1024, "Downloaded 768KB");
+    var report = tracker.GetProgressReport();
+
+    // Assert
+    report.ThroughputBytesPerSecond.Should().BeGreaterThan(0);
+    report.StatusMessage.Should().Be("Downloaded 768KB");
+}
+
+// Test reporting percentage progress sets correct percentage
+[Fact]
+public void ReportPercentageProgress_SetsCorrectPercentage()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalItems: 200);
+
+    // Act
+    tracker.ReportPercentageProgress(25.5, "25% complete");
+    var report = tracker.GetProgressReport();
+
+    // Assert
+    report.ItemsCompleted.Should().Be(51); // 25.5% of 200 = 51
+    report.ProgressPercentage.Should().BeApproximately(25.5, 0.001);
+    report.StatusMessage.Should().Be("25% complete");
+}
+
+// Test reporting percentage progress clamps to zero
+[Fact]
+public void ReportPercentageProgress_ClampsToZero()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalItems: 100);
+
+    // Act
+    tracker.ReportPercentageProgress(-10, "Negative percentage");
+    var report = tracker.GetProgressReport();
+
+    // Assert
+    report.ProgressPercentage.Should().Be(0);
+}
+
+// Test reporting percentage progress clamps to hundred
+[Fact]
+public void ReportPercentageProgress_ClampsToHundred()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalItems: 100);
+
+    // Act
+    tracker.ReportPercentageProgress(150, "Over 100%");
+    var report = tracker.GetProgressReport();
+
+    // Assert
+    report.ProgressPercentage.Should().Be(100);
+}
+
+// Test reporting duration progress calculates correct percentage
+[Fact]
+public void ReportDurationProgress_CalculatesCorrectPercentage()
+{
+    // Arrange
+    var tracker = new ProgressTracker();
+    var totalDuration = TimeSpan.FromSeconds(100);
+    var processedDuration = TimeSpan.FromSeconds(30);
+
+    // Act
+    tracker.ReportDurationProgress(processedDuration, totalDuration, "Processing video");
+    var report = tracker.GetProgressReport();
+
+    // Assert
+    report.ProgressPercentage.Should().BeApproximately(30.0, 0.001);
+    report.StatusMessage.Should().Be("Processing video");
+}
+
+// Test reporting duration progress with zero total duration returns zero
+[Fact]
+public void ReportDurationProgress_WithZeroTotalDuration_ReturnsZero()
+{
+    // Arrange
+    var tracker = new ProgressTracker();
+    var totalDuration = TimeSpan.Zero;
+    var processedDuration = TimeSpan.FromSeconds(10);
+
+    // Act
+    tracker.ReportDurationProgress(processedDuration, totalDuration);
+    var report = tracker.GetProgressReport();
+
+    // Assert
+    report.ProgressPercentage.Should().Be(0);
+}
+
+// Test get progress report returns all fields populated
+[Fact]
+public void GetProgressReport_ReturnsAllFieldsPopulated()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalItems: 100);
+    tracker.ReportItemProgress("Processing...");
+
+    // Act
+    var report = tracker.GetProgressReport();
+
+    // Assert
+    report.ProgressPercentage.Should().BeGreaterThan(0);
+    report.ItemsCompleted.Should().Be(1);
+    report.TotalItems.Should().Be(100);
+    report.ElapsedTime.TotalMilliseconds.Should().BeGreaterThan(0);
+    report.StatusMessage.Should().Be("Processing...");
+    report.ThroughputItemsPerSecond.Should().BeGreaterThanOrEqualTo(0);
+}
+
+// Test percent complete property returns correct value
+[Fact]
+public void PercentComplete_Property_ReturnsCorrectValue()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalItems: 50);
+
+    // Act - report 25 items
+    for (int i = 0; i < 25; i++)
+    {
+        tracker.ReportItemProgress();
+    }
+
+    // Assert
+    tracker.PercentComplete.Should().BeApproximately(50.0, 0.001);
+}
+
+// Test percent complete property clamps to zero
+[Fact]
+public void PercentComplete_Property_ClampsToZero()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalItems: 100);
+    tracker.ReportPercentageProgress(-50);
+
+    // Assert
+    tracker.PercentComplete.Should().Be(0);
+}
+
+// Test percent complete property clamps to hundred
+[Fact]
+public void PercentComplete_Property_ClampsToHundred()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalItems: 100);
+    tracker.ReportPercentageProgress(150);
+
+    // Assert
+    tracker.PercentComplete.Should().Be(100);
+}
+
+// Test reset clears all state
+[Fact]
+public void Reset_ClearsAllState()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalItems: 100);
+    tracker.ReportItemProgress("First");
+    tracker.ReportPercentageProgress(50);
+
+    // Verify initial state - after 50% progress, 50 items should be completed
+    tracker.GetProgressReport().ItemsCompleted.Should().Be(50);
+    tracker.GetProgressReport().ProgressPercentage.Should().BeApproximately(50.0, 0.001);
+
+    // Act
+    tracker.Reset(totalItems: 200);
+    var report = tracker.GetProgressReport();
+
+    // Assert
+    report.ItemsCompleted.Should().Be(0);
+    report.TotalItems.Should().Be(200);
+    report.ProgressPercentage.Should().Be(0);
+    report.StatusMessage.Should().BeEmpty();
+}
+
+// Test reset resets stopwatch
+[Fact]
+public void Reset_ResetsStopwatch()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalItems: 100);
+    tracker.ReportItemProgress();
+    System.Threading.Thread.Sleep(10); // Ensure some time passes
+
+    // Act
+    tracker.Reset();
+    var report1 = tracker.GetProgressReport();
+    System.Threading.Thread.Sleep(10);
+    var report2 = tracker.GetProgressReport();
+
+    // Assert - elapsed time should be less after reset
+    report2.ElapsedTime.Should().BeLessThan(report1.ElapsedTime);
+}
+
+// Test get formatted progress returns expected format
+[Fact]
+public void GetFormattedProgress_ReturnsExpectedFormat()
+{
+    // Arrange
+    var tracker = new ProgressTracker(totalItems: 100);
+    tracker.ReportItemProgress("Processing frames");
+
+    // Act
+    var formatted = tracker.GetFormattedProgress();
+
+    // Assert
+    formatted.Should().NotBeNullOrEmpty();
+    formatted.Should().Contain("%");
+    formatted.Should().Contain("1/100");
+    formatted.Should().Contain("Processing frames");
+}
+
+// Test get formatted progress without total items shows only percentage
+[Fact]
+public void GetFormattedProgress_WithoutTotalItems_ShowsOnlyPercentage()
+{
+    // Arrange
+    var tracker = new ProgressTracker();
+    tracker.ReportPercentageProgress(45.5);
+
+    // Act
+    var formatted = tracker.GetFormattedProgress();
+
+    // Assert
+    formatted.Should().Contain("45.5%");
+    formatted.Should().NotContain("/"); // No items count
+}
+```
 using FFmpegDotnetWrapper.Api.Controllers;
 using FFmpegDotnetWrapper.Api.DTOs;
 using FFmpegDotnetWrapper.Models;
