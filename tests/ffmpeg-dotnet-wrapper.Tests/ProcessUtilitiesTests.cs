@@ -422,5 +422,91 @@ namespace FFmpegDotnetWrapper.Tests
             result.StandardOutput.Should().Contain("async stdout message");
             result.StandardError.Should().BeEmpty();
         }
+
+        /// <summary>
+        /// Verifies that success requires both a zero exit code and no timeout.
+        /// </summary>
+        [Theory]
+        [InlineData(0, false, true)]
+        [InlineData(1, false, false)]
+        [InlineData(0, true, false)]
+        public void ProcessResult_Success_ReturnsExpectedValue(
+            int exitCode,
+            bool timedOut,
+            bool expected)
+        {
+            var result = new ProcessUtilities.ProcessResult
+            {
+                ExitCode = exitCode,
+                TimedOut = timedOut
+            };
+
+            result.Success.Should().Be(expected);
+        }
+
+        /// <summary>
+        /// Verifies that the string representation contains every process result detail.
+        /// </summary>
+        [Fact]
+        public void ProcessResult_ToString_ContainsResultDetails()
+        {
+            var result = new ProcessUtilities.ProcessResult
+            {
+                ExitCode = 2,
+                StandardOutput = "standard output",
+                StandardError = "standard error",
+                ExecutionTime = TimeSpan.FromSeconds(3),
+                TimedOut = true
+            };
+
+            var text = result.ToString();
+
+            text.Should().Contain("ExitCode = 2");
+            text.Should().Contain("StandardOutput = standard output");
+            text.Should().Contain("StandardError = standard error");
+            text.Should().Contain($"ExecutionTime = {result.ExecutionTime}");
+            text.Should().Contain("TimedOut = True");
+        }
+
+        /// <summary>
+        /// Verifies that a null executable name is rejected with the correct parameter name.
+        /// </summary>
+        [Fact]
+        public void ExecuteProcess_NullFileName_ThrowsArgumentNullException()
+        {
+            var action = () => ProcessUtilities.ExecuteProcess(null!, string.Empty);
+
+            action.Should().Throw<ArgumentNullException>()
+                .WithParameterName("fileName");
+        }
+
+        /// <summary>
+        /// Verifies that null command arguments are rejected with the correct parameter name.
+        /// </summary>
+        [Fact]
+        public void ExecuteProcess_NullArguments_ThrowsArgumentNullException()
+        {
+            var action = () => ProcessUtilities.ExecuteProcess("dotnet", null!);
+
+            action.Should().Throw<ArgumentNullException>()
+                .WithParameterName("arguments");
+        }
+
+        /// <summary>
+        /// Verifies that a portable dotnet command completes successfully and captures output.
+        /// </summary>
+        [Fact]
+        public void ExecuteProcess_DotnetVersion_ReturnsSuccessfulResultWithOutput()
+        {
+            var result = ProcessUtilities.ExecuteProcess(
+                "dotnet",
+                "--version",
+                timeout: TimeSpan.FromSeconds(30));
+
+            result.ExitCode.Should().Be(0);
+            result.TimedOut.Should().BeFalse();
+            result.Success.Should().BeTrue();
+            result.StandardOutput.Should().NotBeNullOrWhiteSpace();
+        }
     }
 }
