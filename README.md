@@ -2844,3 +2844,32 @@ bool isInvalidConfig = configError.IsInvalidConfigurationError(); // true
 var unsupportedError = new UnsupportedOperationException();
 bool isUnsupported = unsupportedError.IsUnsupportedOperationError(); // true
 ```
+
+## RepositoryExceptionExtensionsTests
+
+The `RepositoryExceptionExtensionsTests` class provides unit tests for the `RepositoryExceptionExtensions` class, which adds utility methods to `RepositoryException` to check specific error conditions and add context. It verifies that methods like `IsRepositoryNotFound`, `IsRepositoryAlreadyExists`, and `IsAccessDenied` correctly identify repository-specific error conditions based on exception messages, and that the `WithContext` method properly enriches exceptions with additional contextual information while preserving the original exception as an inner exception.
+
+Here is an example usage of the `RepositoryExceptionExtensions` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Exceptions;
+using System;
+
+// Check if a repository exception indicates a not found error
+var notFoundException = new RepositoryException("Repository not found");
+bool isNotFound = notFoundException.IsRepositoryNotFound(); // Returns true
+
+// Check if a repository exception indicates an already exists error
+var alreadyExistsException = new RepositoryException("Repository already exists");
+bool isAlreadyExists = alreadyExistsException.IsRepositoryAlreadyExists(); // Returns true
+
+// Check if a repository exception indicates an access denied error
+var accessDeniedException = new RepositoryException("Access denied to repository");
+bool isAccessDenied = accessDeniedException.IsAccessDenied(); // Returns true
+
+// Add context to a repository exception
+var originalException = new RepositoryException("Original repository error", "test-repo");
+var enrichedException = originalException.WithContext("Additional context about the error");
+// enrichedException.Message will be "Original repository error | Context: Additional context about the error"
+// enrichedException.InnerException will be the original exception
+```
