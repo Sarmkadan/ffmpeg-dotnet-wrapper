@@ -99,6 +99,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
         Task<IEnumerable<BackgroundJob>> GetJobsAsync(JobState state);
         Task<bool> CancelJobAsync(string jobId);
         Task UpdateJobProgressAsync(string jobId, double percentage, string? statusMessage = null);
+        int PruneCompletedJobs(TimeSpan olderThan);
     }
 
     public class BackgroundJobService : IBackgroundJobService
@@ -172,6 +173,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
                     lock (_lockObject)
                     {
                         job.State = JobState.Failed;
+                        job.CompletedAt = DateTime.UtcNow;
                         job.ErrorMessage = "Job was not dequeued from priority queue";
                         job.StatusMessage = "Failed - not dequeued";
                     }
@@ -183,6 +185,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
                 lock (_lockObject)
                 {
                     job.State = JobState.Failed;
+                    job.CompletedAt = DateTime.UtcNow;
                     job.ErrorMessage = ex.Message;
                     job.StatusMessage = "Failed during processing";
                 }
@@ -269,6 +272,43 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
             }
 
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Removes terminal jobs whose completion timestamp is older than the specified age.
+        /// Returns the number of jobs removed.
+        /// </summary>
+        public int PruneCompletedJobs(TimeSpan olderThan)
+        {
+            if (olderThan < TimeSpan.Zero)
+                throw new ArgumentOutOfRangeException(nameof(olderThan), "Retention age cannot be negative");
+
+            var cutoff = DateTime.UtcNow - olderThan;
+            var prunedCount = 0;
+
+            lock (_lockObject)
+            {
+                var jobIdsToPrune = _jobs.Values
+                    .Where(job => (job.State == JobState.Completed ||
+                                   job.State == JobState.Failed ||
+                                   job.State == JobState.Cancelled) &&
+                                  job.CompletedAt.HasValue &&
+                                  job.CompletedAt.Value < cutoff)
+                    .Select(job => job.JobId)
+                    .ToList();
+
+                foreach (var jobId in jobIdsToPrune)
+                {
+                    if (_jobs.Remove(jobId))
+                        prunedCount++;
+
+                    if (_cancellationTokens.Remove(jobId, out var cancellationToken))
+                        cancellationToken.Dispose();
+                }
+            }
+
+            _logger.LogInformation("Pruned {PrunedJobCount} completed background jobs", prunedCount);
+            return prunedCount;
         }
 
         /// <summary>
