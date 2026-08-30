@@ -82,6 +82,7 @@ public class FFmpegService : IFFmpegService
 
         return await RunOperationAsync(
             operation,
+            inputMedia.Name,
             () =>
             {
                 inputMedia.ValidateAsVideo();
@@ -90,7 +91,6 @@ public class FFmpegService : IFFmpegService
                 // Build transcoding arguments
                 BuildTranscodeArguments(operation, settings);
 
-                _logger.LogInformation("Starting transcode operation for {File}", inputMedia.Name);
             },
             async result =>
             {
@@ -100,7 +100,6 @@ public class FFmpegService : IFFmpegService
                 result.SetMetric("OutputSize", outputMedia.FileSize);
                 result.SetMetric("SizeReduction", result.GetSizeReductionPercentage(inputMedia.FileSize));
             },
-            ex => _logger.LogError(ex, "Transcode operation failed for {File}", inputMedia.Name),
             cancellationToken);
     }
 
@@ -127,6 +126,12 @@ public class FFmpegService : IFFmpegService
 
         operation.AddInputFile(inputMedia.FilePath);
 
+        using var scope = _logger.BeginScope("FFmpeg operation {Operation}", operation.Type);
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "Starting {Operation} operation for {File} with output {OutputPath}",
+            operation.Type, inputMedia.Name, outputPath);
+
         try
         {
             inputMedia.ValidateAsVideo();
@@ -134,7 +139,6 @@ public class FFmpegService : IFFmpegService
 
             BuildTranscodeArguments(operation, settings);
 
-            _logger.LogInformation("Starting transcode operation with progress streaming for {File}", inputMedia.Name);
             var result = await ExecuteFFmpegWithProgressAsync(operation, inputMedia.Duration, progress, cancellationToken);
 
             if (result.IsSuccess)
@@ -146,11 +150,16 @@ public class FFmpegService : IFFmpegService
                 result.SetMetric("SizeReduction", result.GetSizeReductionPercentage(inputMedia.FileSize));
             }
 
+            _logger.LogInformation(
+                "Completed {Operation} operation for {File} with output {OutputPath} in {DurationMs}ms; success: {Success}",
+                operation.Type, inputMedia.Name, outputPath, stopwatch.ElapsedMilliseconds, result.IsSuccess);
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Transcode operation failed for {File}", inputMedia.Name);
+            _logger.LogError(ex,
+                "{Operation} operation failed for {File} with output {OutputPath} after {DurationMs}ms",
+                operation.Type, inputMedia.Name, outputPath, stopwatch.ElapsedMilliseconds);
             throw;
         }
     }
@@ -174,6 +183,7 @@ public class FFmpegService : IFFmpegService
 
         return await RunOperationAsync(
             operation,
+            inputMedia.Name,
             () =>
             {
                 settings.Validate(inputMedia);
@@ -181,14 +191,12 @@ public class FFmpegService : IFFmpegService
                 // Build trim arguments
                 BuildTrimArguments(operation, settings);
 
-                _logger.LogInformation("Starting trim operation for {File}", inputMedia.Name);
             },
             async result =>
             {
                 var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken);
                 result.OutputMedia = outputMedia;
             },
-            ex => _logger.LogError(ex, "Trim operation failed for {File}", inputMedia.Name),
             cancellationToken);
     }
 
@@ -210,12 +218,19 @@ public class FFmpegService : IFFmpegService
         foreach (var file in inputFiles)
             operation.AddInputFile(file);
 
+        const string operationType = "Merge";
+        var inputFileName = string.Join(", ", operation.InputFiles.Select(Path.GetFileName));
+        using var scope = _logger.BeginScope("FFmpeg operation {Operation}", operationType);
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "Starting {Operation} operation for {File} with output {OutputPath}",
+            operationType, inputFileName, outputPath);
+
         try
         {
             settings.InputFiles = operation.InputFiles;
             settings.Validate();
 
-            _logger.LogInformation("Starting merge operation with {Count} files", operation.InputFiles.Count);
             var result = await ExecuteFFmpegAsync(operation, cancellationToken);
 
             if (result.IsSuccess)
@@ -224,11 +239,16 @@ public class FFmpegService : IFFmpegService
                 result.OutputMedia = outputMedia;
             }
 
+            _logger.LogInformation(
+                "Completed {Operation} operation for {File} with output {OutputPath} in {DurationMs}ms; success: {Success}",
+                operationType, inputFileName, outputPath, stopwatch.ElapsedMilliseconds, result.IsSuccess);
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Merge operation failed");
+            _logger.LogError(ex,
+                "{Operation} operation failed for {File} with output {OutputPath} after {DurationMs}ms",
+                operationType, inputFileName, outputPath, stopwatch.ElapsedMilliseconds);
             throw;
         }
     }
@@ -252,6 +272,7 @@ public class FFmpegService : IFFmpegService
 
         return await RunOperationAsync(
             operation,
+            inputMedia.Name,
             () =>
             {
                 settings.Validate(inputMedia);
@@ -259,14 +280,12 @@ public class FFmpegService : IFFmpegService
                 // Build watermark arguments
                 BuildWatermarkArguments(operation, settings, inputMedia);
 
-                _logger.LogInformation("Starting watermark operation for {File}", inputMedia.Name);
             },
             async result =>
             {
                 var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken);
                 result.OutputMedia = outputMedia;
             },
-            ex => _logger.LogError(ex, "Watermark operation failed for {File}", inputMedia.Name),
             cancellationToken);
     }
 
@@ -277,11 +296,15 @@ public class FFmpegService : IFFmpegService
             throw new InvalidMediaFileException($"File does not exist: {filePath}", filePath);
 
         var mediaFile = new MediaFile(filePath);
+        const string operationType = "AnalyzeMedia";
+        using var scope = _logger.BeginScope("FFmpeg operation {Operation}", operationType);
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "Starting {Operation} operation for {File} with output {OutputPath}",
+            operationType, Path.GetFileName(filePath), filePath);
 
         try
         {
-            _logger.LogInformation("Analyzing media file: {File}", filePath);
-
             var ffprobeArgs = $"-v quiet -print_format json -show_format -show_streams \"{filePath}\"";
 
             using var process = new Process
@@ -345,11 +368,16 @@ public class FFmpegService : IFFmpegService
 
             // Save the media file to the repository
             await _mediaRepository.AddAsync(mediaFile, cancellationToken);
+            _logger.LogInformation(
+                "Completed {Operation} operation for {File} with output {OutputPath} in {DurationMs}ms; success: {Success}",
+                operationType, Path.GetFileName(filePath), filePath, stopwatch.ElapsedMilliseconds, true);
             return mediaFile;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Media analysis failed for {File}", filePath);
+            _logger.LogError(ex,
+                "{Operation} operation failed for {File} with output {OutputPath} after {DurationMs}ms",
+                operationType, Path.GetFileName(filePath), filePath, stopwatch.ElapsedMilliseconds);
             throw;
         }
     }
@@ -359,17 +387,30 @@ public class FFmpegService : IFFmpegService
         FFmpegOperation operation,
         CancellationToken cancellationToken = default)
     {
+        const string operationType = "Custom";
+        var inputFileName = operation.InputFiles.FirstOrDefault() is { } inputFile
+            ? Path.GetFileName(inputFile)
+            : operation.Name;
+        using var scope = _logger.BeginScope("FFmpeg operation {Operation}", operationType);
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "Starting {Operation} operation for {File} with output {OutputPath}",
+            operationType, inputFileName, operation.OutputFile);
         try
         {
             operation.Validate();
-            _logger.LogInformation("Executing custom FFmpeg operation: {Name}", operation.Name);
 
             var result = await ExecuteFFmpegAsync(operation, cancellationToken);
+            _logger.LogInformation(
+                "Completed {Operation} operation for {File} with output {OutputPath} in {DurationMs}ms; success: {Success}",
+                operationType, inputFileName, operation.OutputFile, stopwatch.ElapsedMilliseconds, result.IsSuccess);
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Custom operation failed: {Name}", operation.Name);
+            _logger.LogError(ex,
+                "{Operation} operation failed for {File} with output {OutputPath} after {DurationMs}ms",
+                operationType, inputFileName, operation.OutputFile, stopwatch.ElapsedMilliseconds);
             throw;
         }
     }
@@ -377,6 +418,13 @@ public class FFmpegService : IFFmpegService
     /// <inheritdoc/>
     public async Task<string> GetFFmpegVersionAsync(CancellationToken cancellationToken = default)
     {
+        const string operationType = "GetFFmpegVersion";
+        const string outputPath = "None";
+        using var scope = _logger.BeginScope("FFmpeg operation {Operation}", operationType);
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "Starting {Operation} operation for {File} with output {OutputPath}",
+            operationType, Path.GetFileName(_ffmpegPath), outputPath);
         try
         {
             using var process = new Process
@@ -404,11 +452,17 @@ public class FFmpegService : IFFmpegService
         var versionOutput = await versionOutputTask;
         await errorOutputTask; // Ensure stderr is drained
 
-        return versionOutput ?? "Unknown";
+        var version = versionOutput ?? "Unknown";
+        _logger.LogInformation(
+            "Completed {Operation} operation for {File} with output {OutputPath} in {DurationMs}ms; success: {Success}",
+            operationType, Path.GetFileName(_ffmpegPath), outputPath, stopwatch.ElapsedMilliseconds, true);
+        return version;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get FFmpeg version");
+            _logger.LogError(ex,
+                "{Operation} operation failed for {File} with output {OutputPath} after {DurationMs}ms",
+                operationType, Path.GetFileName(_ffmpegPath), outputPath, stopwatch.ElapsedMilliseconds);
             throw;
         }
     }
@@ -416,8 +470,17 @@ public class FFmpegService : IFFmpegService
     /// <inheritdoc/>
     public Task<bool> IsFFmpegAvailableAsync(CancellationToken cancellationToken = default)
     {
+        const string operationType = "CheckFFmpegAvailability";
+        const string outputPath = "None";
+        using var scope = _logger.BeginScope("FFmpeg operation {Operation}", operationType);
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "Starting {Operation} operation for {File} with output {OutputPath}",
+            operationType, Path.GetFileName(_ffmpegPath), outputPath);
         bool available = File.Exists(_ffmpegPath) && File.Exists(_ffprobePath);
-        _logger.LogInformation("FFmpeg availability check: {Available}", available);
+        _logger.LogInformation(
+            "Completed {Operation} operation for {File} with output {OutputPath} in {DurationMs}ms; success: {Success}",
+            operationType, Path.GetFileName(_ffmpegPath), outputPath, stopwatch.ElapsedMilliseconds, available);
         return Task.FromResult(available);
     }
 
@@ -439,12 +502,14 @@ public class FFmpegService : IFFmpegService
 
         operation.AddInputFile(inputMedia.FilePath);
 
+        using var scope = _logger.BeginScope("FFmpeg operation {Operation}", operation.Type);
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "Starting {Operation} operation for {File} with output {OutputPath}",
+            operation.Type, inputMedia.Name, outputPath);
+
         try
         {
-            _logger.LogInformation(
-                "Extracting audio from {File} as {Codec} at {Bitrate}kbps",
-                inputMedia.Name, audioCodec, audioBitrate);
-
             var audioCodecName = GetAudioCodecName(audioCodec);
             operation.AddArgument("-vn"); // discard video stream
             operation.AddArgument($"-c:a {audioCodecName}");
@@ -458,11 +523,16 @@ public class FFmpegService : IFFmpegService
                 result.OutputMedia = outputMedia;
             }
 
+            _logger.LogInformation(
+                "Completed {Operation} operation for {File} with output {OutputPath} in {DurationMs}ms; success: {Success}",
+                operation.Type, inputMedia.Name, outputPath, stopwatch.ElapsedMilliseconds, result.IsSuccess);
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Audio extraction failed for {File}", inputMedia.Name);
+            _logger.LogError(ex,
+                "{Operation} operation failed for {File} with output {OutputPath} after {DurationMs}ms",
+                operation.Type, inputMedia.Name, outputPath, stopwatch.ElapsedMilliseconds);
             throw;
         }
     }
@@ -488,19 +558,39 @@ public class FFmpegService : IFFmpegService
         };
 
         var results = new List<ConversionResult>();
+        const string operationType = "BatchTranscode";
+        using var scope = _logger.BeginScope("FFmpeg operation {Operation}", operationType);
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "Starting {Operation} operation for {File} with output {OutputPath}",
+            operationType, "Multiple files", outputDirectory);
 
-        foreach (var inputMedia in inputFiles)
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            foreach (var inputMedia in inputFiles)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
 
-            var fileName = Path.GetFileNameWithoutExtension(inputMedia.FilePath) + extension;
-            var outputPath = Path.Combine(outputDirectory, fileName);
+                var fileName = Path.GetFileNameWithoutExtension(inputMedia.FilePath) + extension;
+                var outputPath = Path.Combine(outputDirectory, fileName);
 
-            var result = await TranscodeAsync(inputMedia, outputPath, settings, cancellationToken);
-            results.Add(result);
+                var result = await TranscodeAsync(inputMedia, outputPath, settings, cancellationToken);
+                results.Add(result);
+            }
+
+            var success = results.All(result => result.IsSuccess);
+            _logger.LogInformation(
+                "Completed {Operation} operation for {File} with output {OutputPath} in {DurationMs}ms; success: {Success}",
+                operationType, "Multiple files", outputDirectory, stopwatch.ElapsedMilliseconds, success);
+            return results;
         }
-
-        return results;
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "{Operation} operation failed for {File} with output {OutputPath} after {DurationMs}ms",
+                operationType, "Multiple files", outputDirectory, stopwatch.ElapsedMilliseconds);
+            throw;
+        }
     }
 
     /// <summary>
@@ -537,6 +627,13 @@ public class FFmpegService : IFFmpegService
 
         operation.AddInputFile(inputMedia.FilePath);
 
+        const string operationType = "CreateHls";
+        using var scope = _logger.BeginScope("FFmpeg operation {Operation}", operationType);
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "Starting {Operation} operation for {File} with output {OutputPath}",
+            operationType, inputMedia.Name, playlistPath);
+
         try
         {
             settings.Validate();
@@ -570,27 +667,33 @@ public class FFmpegService : IFFmpegService
 
             operation.AddArgument($"-hls_segment_filename \"{segmentPattern}\"");
 
-            _logger.LogInformation(
-                "Starting HLS encode for {File} -> {Playlist} ({SegDur}s segments, {Type})",
-                inputMedia.Name, playlistPath, settings.SegmentDuration, settings.PlaylistType);
-
             var result = await ExecuteFFmpegAsync(operation, cancellationToken);
+            _logger.LogInformation(
+                "Completed {Operation} operation for {File} with output {OutputPath} in {DurationMs}ms; success: {Success}",
+                operationType, inputMedia.Name, playlistPath, stopwatch.ElapsedMilliseconds, result.IsSuccess);
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "HLS encode failed for {File}", inputMedia.Name);
+            _logger.LogError(ex,
+                "{Operation} operation failed for {File} with output {OutputPath} after {DurationMs}ms",
+                operationType, inputMedia.Name, playlistPath, stopwatch.ElapsedMilliseconds);
             throw;
         }
     }
 
     private async Task<ConversionResult> RunOperationAsync(
         FFmpegOperation operation,
+        string inputFileName,
         Action buildArguments,
         Func<ConversionResult, Task>? onSuccess,
-        Action<Exception> logError,
         CancellationToken cancellationToken)
     {
+        using var scope = _logger.BeginScope("FFmpeg operation {Operation}", operation.Type);
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "Starting {Operation} operation for {File} with output {OutputPath}",
+            operation.Type, inputFileName, operation.OutputFile);
         try
         {
             buildArguments();
@@ -600,11 +703,16 @@ public class FFmpegService : IFFmpegService
             if (result.IsSuccess && onSuccess is not null)
                 await onSuccess(result);
 
+            _logger.LogInformation(
+                "Completed {Operation} operation for {File} with output {OutputPath} in {DurationMs}ms; success: {Success}",
+                operation.Type, inputFileName, operation.OutputFile, stopwatch.ElapsedMilliseconds, result.IsSuccess);
             return result;
         }
         catch (Exception ex)
         {
-            logError(ex);
+            _logger.LogError(ex,
+                "{Operation} operation failed for {File} with output {OutputPath} after {DurationMs}ms",
+                operation.Type, inputFileName, operation.OutputFile, stopwatch.ElapsedMilliseconds);
             throw;
         }
     }
@@ -662,7 +770,9 @@ public class FFmpegService : IFFmpegService
                 var errorOutputTail = ExtractErrorOutputTail(runResult.StdErrTail);
                 result.MarkAsFailed($"FFmpeg exited with code {runResult.ExitCode}", runResult.ExitCode, errorOutputTail);
                 result.FFmpegOutput = runResult.StdErrTail;
-                _logger.LogError("FFmpeg operation failed with exit code {ExitCode}: {Error}", runResult.ExitCode, errorOutputTail);
+                _logger.LogError(
+                    "{Operation} operation failed with exit code {ExitCode}: {Error}",
+                    operation.Type, runResult.ExitCode, errorOutputTail);
             }
 
             operation.ExecutedAt = DateTime.UtcNow;
@@ -675,7 +785,7 @@ public class FFmpegService : IFFmpegService
             sw.Stop();
             result.Duration = sw.Elapsed;
             result.MarkAsFailed(ex.Message);
-            _logger.LogError(ex, "FFmpeg execution error");
+            _logger.LogError(ex, "{Operation} operation execution error", operation.Type);
             throw;
         }
     }
@@ -758,7 +868,9 @@ public class FFmpegService : IFFmpegService
                 var errorOutputTail = ExtractErrorOutputTail(runResult.StdErrTail);
                 result.MarkAsFailed($"FFmpeg exited with code {runResult.ExitCode}", runResult.ExitCode, errorOutputTail);
                 result.FFmpegOutput = runResult.StdErrTail;
-                _logger.LogError("FFmpeg operation failed with exit code {ExitCode}: {Error}", runResult.ExitCode, errorOutputTail);
+                _logger.LogError(
+                    "{Operation} operation failed with exit code {ExitCode}: {Error}",
+                    operation.Type, runResult.ExitCode, errorOutputTail);
             }
 
             operation.ExecutedAt = DateTime.UtcNow;
@@ -771,7 +883,7 @@ public class FFmpegService : IFFmpegService
             sw.Stop();
             result.Duration = sw.Elapsed;
             result.MarkAsFailed(ex.Message);
-            _logger.LogError(ex, "FFmpeg execution error");
+            _logger.LogError(ex, "{Operation} operation execution error", operation.Type);
             throw;
         }
     }
@@ -934,33 +1046,20 @@ public class FFmpegService : IFFmpegService
 
         operation.AddInputFile(inputMedia.FilePath);
 
-        try
-        {
-            settings.Validate();
-
-            BuildSubtitleArguments(operation, settings);
-
-            _logger.LogInformation(
-                "Embedding subtitles ({Mode}) from {Sub} into {File}",
-                settings.HardEmbed ? "hard" : "soft",
-                settings.SubtitlePath,
-                inputMedia.Name);
-
-            var result = await ExecuteFFmpegAsync(operation, cancellationToken);
-
-            if (result.IsSuccess)
+        return await RunOperationAsync(
+            operation,
+            inputMedia.Name,
+            () =>
+            {
+                settings.Validate();
+                BuildSubtitleArguments(operation, settings);
+            },
+            async result =>
             {
                 var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken);
                 result.OutputMedia = outputMedia;
-            }
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Subtitle embedding failed for {File}", inputMedia.Name);
-            throw;
-        }
+            },
+            cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -972,6 +1071,11 @@ public class FFmpegService : IFFmpegService
     {
         var result = new ThumbnailResult();
         var sw = Stopwatch.StartNew();
+        const string operationType = "ExtractThumbnails";
+        using var scope = _logger.BeginScope("FFmpeg operation {Operation}", operationType);
+        _logger.LogInformation(
+            "Starting {Operation} operation for {File} with output {OutputPath}",
+            operationType, inputMedia.Name, outputPattern);
 
         try
         {
@@ -1025,8 +1129,8 @@ public class FFmpegService : IFFmpegService
             result.IsSuccess = result.Thumbnails.Count > 0;
 
             _logger.LogInformation(
-                "Extracted {Count} thumbnail(s) from {File} in {Elapsed}ms",
-                result.Thumbnails.Count, inputMedia.Name, sw.ElapsedMilliseconds);
+                "Completed {Operation} operation for {File} with output {OutputPath} in {DurationMs}ms; success: {Success}",
+                operationType, inputMedia.Name, outputPattern, sw.ElapsedMilliseconds, result.IsSuccess);
         }
         catch (Exception ex)
         {
@@ -1034,7 +1138,9 @@ public class FFmpegService : IFFmpegService
             result.Duration = sw.Elapsed;
             result.IsSuccess = false;
             result.ErrorMessage = ex.Message;
-            _logger.LogError(ex, "Thumbnail extraction failed for {File}", inputMedia.Name);
+            _logger.LogError(ex,
+                "{Operation} operation failed for {File} with output {OutputPath} after {DurationMs}ms",
+                operationType, inputMedia.Name, outputPattern, sw.ElapsedMilliseconds);
             throw;
         }
 
