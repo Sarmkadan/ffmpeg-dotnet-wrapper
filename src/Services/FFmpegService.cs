@@ -80,33 +80,28 @@ public class FFmpegService : IFFmpegService
 
         operation.AddInputFile(inputMedia.FilePath);
 
-        try
-        {
-            inputMedia.ValidateAsVideo();
-            settings.Validate();
+        return await RunOperationAsync(
+            operation,
+            () =>
+            {
+                inputMedia.ValidateAsVideo();
+                settings.Validate();
 
-            // Build transcoding arguments
-            BuildTranscodeArguments(operation, settings);
+                // Build transcoding arguments
+                BuildTranscodeArguments(operation, settings);
 
-            _logger.LogInformation("Starting transcode operation for {File}", inputMedia.Name);
-            var result = await ExecuteFFmpegAsync(operation, cancellationToken);
-
-            if (result.IsSuccess)
+                _logger.LogInformation("Starting transcode operation for {File}", inputMedia.Name);
+            },
+            async result =>
             {
                 var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken);
                 result.OutputMedia = outputMedia;
                 result.SetMetric("InputSize", inputMedia.FileSize);
                 result.SetMetric("OutputSize", outputMedia.FileSize);
                 result.SetMetric("SizeReduction", result.GetSizeReductionPercentage(inputMedia.FileSize));
-            }
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Transcode operation failed for {File}", inputMedia.Name);
-            throw;
-        }
+            },
+            ex => _logger.LogError(ex, "Transcode operation failed for {File}", inputMedia.Name),
+            cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -177,29 +172,24 @@ public class FFmpegService : IFFmpegService
 
         operation.AddInputFile(inputMedia.FilePath);
 
-        try
-        {
-            settings.Validate(inputMedia);
+        return await RunOperationAsync(
+            operation,
+            () =>
+            {
+                settings.Validate(inputMedia);
 
-            // Build trim arguments
-            BuildTrimArguments(operation, settings);
+                // Build trim arguments
+                BuildTrimArguments(operation, settings);
 
-            _logger.LogInformation("Starting trim operation for {File}", inputMedia.Name);
-            var result = await ExecuteFFmpegAsync(operation, cancellationToken);
-
-            if (result.IsSuccess)
+                _logger.LogInformation("Starting trim operation for {File}", inputMedia.Name);
+            },
+            async result =>
             {
                 var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken);
                 result.OutputMedia = outputMedia;
-            }
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Trim operation failed for {File}", inputMedia.Name);
-            throw;
-        }
+            },
+            ex => _logger.LogError(ex, "Trim operation failed for {File}", inputMedia.Name),
+            cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -260,29 +250,24 @@ public class FFmpegService : IFFmpegService
 
         operation.AddInputFile(inputMedia.FilePath);
 
-        try
-        {
-            settings.Validate(inputMedia);
+        return await RunOperationAsync(
+            operation,
+            () =>
+            {
+                settings.Validate(inputMedia);
 
-            // Build watermark arguments
-            BuildWatermarkArguments(operation, settings, inputMedia);
+                // Build watermark arguments
+                BuildWatermarkArguments(operation, settings, inputMedia);
 
-            _logger.LogInformation("Starting watermark operation for {File}", inputMedia.Name);
-            var result = await ExecuteFFmpegAsync(operation, cancellationToken);
-
-            if (result.IsSuccess)
+                _logger.LogInformation("Starting watermark operation for {File}", inputMedia.Name);
+            },
+            async result =>
             {
                 var outputMedia = await AnalyzeMediaAsync(outputPath, cancellationToken);
                 result.OutputMedia = outputMedia;
-            }
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Watermark operation failed for {File}", inputMedia.Name);
-            throw;
-        }
+            },
+            ex => _logger.LogError(ex, "Watermark operation failed for {File}", inputMedia.Name),
+            cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -595,6 +580,31 @@ public class FFmpegService : IFFmpegService
         catch (Exception ex)
         {
             _logger.LogError(ex, "HLS encode failed for {File}", inputMedia.Name);
+            throw;
+        }
+    }
+
+    private async Task<ConversionResult> RunOperationAsync(
+        FFmpegOperation operation,
+        Action buildArguments,
+        Func<ConversionResult, Task>? onSuccess,
+        Action<Exception> logError,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            buildArguments();
+
+            var result = await ExecuteFFmpegAsync(operation, cancellationToken);
+
+            if (result.IsSuccess && onSuccess is not null)
+                await onSuccess(result);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            logError(ex);
             throw;
         }
     }
