@@ -14,6 +14,11 @@ namespace FFmpegDotnetWrapper.Services;
 /// </summary>
 public class WatermarkService : IWatermarkService
 {
+    private const WatermarkPosition DefaultPosition = WatermarkPosition.TopRight;
+    private const int DefaultMarginPixels = 10;
+    private const double DefaultOpacity = 0.8;
+    private const double DefaultScale = 0.2;
+
     private readonly IFFmpegService _ffmpegService;
     private readonly ILogger<WatermarkService> _logger;
 
@@ -39,10 +44,10 @@ public class WatermarkService : IWatermarkService
         MediaFile inputMedia,
         string outputPath,
         string watermarkPath,
-        WatermarkPosition position = WatermarkPosition.TopRight,
-        int margin = 10,
-        double opacity = 0.8,
-        double scale = 0.2,
+        WatermarkPosition position = DefaultPosition,
+        int margin = DefaultMarginPixels,
+        double opacity = DefaultOpacity,
+        double scale = DefaultScale,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("ApplyWatermarkAsync called for file {FileName}", inputMedia.Name);
@@ -125,10 +130,10 @@ public class WatermarkService : IWatermarkService
     /// <param name="scale">Scale factor relative to video width (0.0 to 1.0). Defaults to 0.2.</param>
     /// <returns>A configured <see cref="WatermarkSettings"/> instance.</returns>
     public WatermarkSettings CreateSettings(
-        WatermarkPosition position = WatermarkPosition.TopRight,
-        int margin = 10,
-        double opacity = 0.8,
-        double scale = 0.2)
+        WatermarkPosition position = DefaultPosition,
+        int margin = DefaultMarginPixels,
+        double opacity = DefaultOpacity,
+        double scale = DefaultScale)
     {
         return new WatermarkSettings
         {
