@@ -24,6 +24,8 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public class ProcessResult
         {
+            private const int OutputPreviewLength = 500;
+
             /// <summary>
             /// Exit code from the process (0 = success, non-zero = error).
             /// FFmpeg returns 0 on success, >0 on various error conditions.
@@ -60,7 +62,16 @@ namespace FFmpegDotnetWrapper.Utilities
 
             public override string ToString()
             {
-                return $"ProcessResult {{ ExitCode = {ExitCode}, StandardOutput = {StandardOutput}, StandardError = {StandardError}, ExecutionTime = {ExecutionTime}, TimedOut = {TimedOut} }}";
+                return $"ProcessResult {{ ExitCode = {ExitCode}, StandardOutput = {TruncateOutput(StandardOutput)}, StandardError = {TruncateOutput(StandardError)}, ExecutionTime = {ExecutionTime}, TimedOut = {TimedOut} }}";
+            }
+
+            private static string TruncateOutput(string? output)
+            {
+                if (output == null) return string.Empty;
+
+                return output.Length <= OutputPreviewLength
+                    ? output
+                    : $"{output.Substring(0, OutputPreviewLength)}... [truncated, total length: {output.Length}]";
             }
         }
 
