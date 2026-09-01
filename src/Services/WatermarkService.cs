@@ -50,6 +50,20 @@ public class WatermarkService : IWatermarkService
         double scale = DefaultScale,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputMedia);
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(watermarkPath);
+        ArgumentOutOfRangeException.ThrowIfNegative(margin);
+        if (double.IsNaN(opacity) || opacity < 0.0 || opacity > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(opacity));
+        }
+
+        if (double.IsNaN(scale) || scale <= 0.0 || scale > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(scale));
+        }
+
         _logger.LogInformation("ApplyWatermarkAsync called for file {FileName}", inputMedia.Name);
 
         var settings = CreateSettings(position, margin, opacity, scale);
@@ -90,10 +104,9 @@ public class WatermarkService : IWatermarkService
         WatermarkSettings settings,
         CancellationToken cancellationToken = default)
     {
-        if (settings is null)
-        {
-            throw new ArgumentNullException(nameof(settings));
-        }
+        ArgumentNullException.ThrowIfNull(inputMedia);
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+        ArgumentNullException.ThrowIfNull(settings);
 
         settings.Validate(inputMedia);
 
@@ -135,6 +148,17 @@ public class WatermarkService : IWatermarkService
         double opacity = DefaultOpacity,
         double scale = DefaultScale)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(margin);
+        if (double.IsNaN(opacity) || opacity < 0.0 || opacity > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(opacity));
+        }
+
+        if (double.IsNaN(scale) || scale <= 0.0 || scale > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(scale));
+        }
+
         return new WatermarkSettings
         {
             Position = position,
