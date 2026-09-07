@@ -21,6 +21,10 @@ namespace FFmpegDotnetWrapper.Serialization
     {
         private readonly JsonSerializerOptions _options;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JsonOutputFormatter"/> class.
+        /// </summary>
+        /// <param name="indent">Whether the serialized JSON should be indented.</param>
         public JsonOutputFormatter(bool indent = true)
         {
             _options = new JsonSerializerOptions
@@ -41,6 +45,9 @@ namespace FFmpegDotnetWrapper.Serialization
         /// Serializes an API response object to JSON string.
         /// Automatically handles nested objects and collections.
         /// </summary>
+        /// <typeparam name="T">The type of data contained in the response.</typeparam>
+        /// <param name="response">The API response to serialize.</param>
+        /// <returns>A JSON representation of the API response.</returns>
         public string Format<T>(ApiResponse<T> response)
         {
             ArgumentNullException.ThrowIfNull(response);
@@ -60,6 +67,8 @@ namespace FFmpegDotnetWrapper.Serialization
         /// <summary>
         /// Serializes a non-generic API response to JSON.
         /// </summary>
+        /// <param name="response">The API response to serialize.</param>
+        /// <returns>A JSON representation of the API response.</returns>
         public string Format(ApiResponse response)
         {
             ArgumentNullException.ThrowIfNull(response);
@@ -78,6 +87,9 @@ namespace FFmpegDotnetWrapper.Serialization
         /// <summary>
         /// Serializes any object to JSON with standard formatting.
         /// </summary>
+        /// <typeparam name="T">The type of object to serialize.</typeparam>
+        /// <param name="obj">The object to serialize.</param>
+        /// <returns>A JSON representation of the object.</returns>
         public string Format<T>(T obj)
         {
             ArgumentNullException.ThrowIfNull(obj);
@@ -97,6 +109,9 @@ namespace FFmpegDotnetWrapper.Serialization
         /// Deserializes JSON string to an API response envelope object.
         /// Handles type conversion and validation.
         /// </summary>
+        /// <typeparam name="T">The type of data contained in the response.</typeparam>
+        /// <param name="json">The JSON string to deserialize.</param>
+        /// <returns>The deserialized API response, or <see langword="null"/> if the JSON represents a null value.</returns>
         public ApiResponse<T>? DeserializeApiResponse<T>(string json)
         {
             ArgumentException.ThrowIfNullOrEmpty(json);
@@ -113,6 +128,9 @@ namespace FFmpegDotnetWrapper.Serialization
         /// <summary>
         /// Deserializes JSON to any specified type.
         /// </summary>
+        /// <typeparam name="T">The type to deserialize the JSON into.</typeparam>
+        /// <param name="json">The JSON string to deserialize.</param>
+        /// <returns>The deserialized value, or <see langword="null"/> if the JSON represents a null value.</returns>
         public T? Deserialize<T>(string json)
         {
             try
@@ -173,6 +191,8 @@ namespace FFmpegDotnetWrapper.Serialization
         /// Formats a list of conversion results as CSV.
         /// Includes headers and proper escaping of special characters.
         /// </summary>
+        /// <param name="results">The conversion results to format.</param>
+        /// <returns>A CSV string containing a header and one row for each conversion result.</returns>
         public string FormatResults(List<ConversionResult> results)
         {
             var lines = new List<string>();
@@ -226,6 +246,9 @@ namespace FFmpegDotnetWrapper.Serialization
         /// <summary>
         /// Formats an API response as plain text with indentation.
         /// </summary>
+        /// <typeparam name="T">The type of data contained in the response.</typeparam>
+        /// <param name="response">The API response to format.</param>
+        /// <returns>A human-readable plain-text representation of the API response.</returns>
         public string Format<T>(ApiResponse<T> response)
         {
             var lines = new List<string>();
@@ -256,6 +279,8 @@ namespace FFmpegDotnetWrapper.Serialization
         /// <summary>
         /// Formats a conversion result as plain text with summary statistics.
         /// </summary>
+        /// <param name="result">The conversion result to format.</param>
+        /// <returns>A human-readable plain-text representation of the conversion result.</returns>
         public string FormatResult(ConversionResult result)
         {
             var lines = new List<string>();
