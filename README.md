@@ -3205,3 +3205,41 @@ var enrichedException = originalException.WithContext("Additional context about 
 // enrichedException.Message will be "Original repository error | Context: Additional context about the error"
 // enrichedException.InnerException will be the original exception
 ```
+
+## StreamingProgressService
+
+The `IStreamingProgressService` interface streams real-time progress updates from a running FFmpeg process, including completion percentage, processed duration, frame count, bitrate, encoding speed, and estimated time remaining. `StreamingProgressService` reads redirected standard error from the process and emits `FFmpegProgressUpdate` snapshots until the process exits or cancellation is requested.
+
+Here is an example usage of the `IStreamingProgressService` interface with its public members:
+
+```csharp
+using System.Diagnostics;
+using FFmpegDotnetWrapper.Services;
+using Microsoft.Extensions.Logging;
+
+var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+IStreamingProgressService progressService = new StreamingProgressService(
+    loggerFactory.CreateLogger<StreamingProgressService>());
+
+using var ffmpegProcess = new Process
+{
+    StartInfo = new ProcessStartInfo
+    {
+        FileName = "ffmpeg",
+        Arguments = "-i input.mp4 -f null -",
+        RedirectStandardError = true,
+        UseShellExecute = false
+    }
+};
+
+ffmpegProcess.Start();
+
+await foreach (var update in progressService.StreamProgressAsync(
+    "transcode-123",
+    ffmpegProcess,
+    TimeSpan.FromMinutes(10)))
+{
+    Console.WriteLine(
+        $"Progress: {update.ProgressPercentage:F1}% ({update.ProcessedDuration}/{update.TotalDuration})");
+}
+```
