@@ -17,6 +17,9 @@ namespace FFmpegDotnetWrapper;
 /// </summary>
 public class Program
 {
+    /// <summary>
+    /// Configures the application services, verifies that FFmpeg is available, and runs the usage examples.
+    /// </summary>
     public static async Task Main(string[] args)
     {
         // Setup dependency injection and logging
