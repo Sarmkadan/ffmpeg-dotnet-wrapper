@@ -14,6 +14,10 @@ namespace FFmpegDotnetWrapper.Services
     {
         private const string FFprobeExecutable = "ffprobe";
 
+        /// <summary>
+        /// Returns a string representation of the media probe service.
+        /// </summary>
+        /// <returns>A string identifying the service and its executable.</returns>
         public override string ToString() => $"MediaProbeService {{ FFprobeExecutable = {FFprobeExecutable} }}";
 
         /// <summary>
