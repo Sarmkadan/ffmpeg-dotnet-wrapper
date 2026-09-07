@@ -16,6 +16,9 @@ public class WatermarkSettings
     private string _watermarkPath = string.Empty;
     private double _opacity = 1.0;
 
+    /// <summary>
+    /// Gets or sets the path to the watermark file.
+    /// </summary>
     public string WatermarkPath
     {
         get => _watermarkPath;
@@ -34,6 +37,9 @@ public class WatermarkSettings
         }
     }
 
+    /// <summary>
+    /// Gets or sets the watermark opacity, from 0 (transparent) to 1 (opaque).
+    /// </summary>
     public double Opacity
     {
         get => _opacity;
@@ -45,14 +51,49 @@ public class WatermarkSettings
         }
     }
 
+    /// <summary>
+    /// Gets or sets the position of the watermark in the video frame.
+    /// </summary>
     public WatermarkPosition Position { get; set; } = WatermarkPosition.TopRight;
+
+    /// <summary>
+    /// Gets or sets the horizontal offset of the watermark in pixels.
+    /// </summary>
     public int? XOffset { get; set; } = 10;
+
+    /// <summary>
+    /// Gets or sets the vertical offset of the watermark in pixels.
+    /// </summary>
     public int? YOffset { get; set; } = 10;
+
+    /// <summary>
+    /// Gets or sets the watermark width as a proportion of the video width.
+    /// </summary>
     public double? Scale { get; set; } = 0.2; // 20% of video width
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the watermark's aspect ratio is preserved.
+    /// </summary>
     public bool PreserveAspectRatio { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the time at which the watermark appears.
+    /// </summary>
     public TimeSpan? StartTime { get; set; }
+
+    /// <summary>
+    /// Gets or sets how long the watermark remains visible.
+    /// </summary>
     public TimeSpan? Duration { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the watermark uses an entrance animation.
+    /// </summary>
     public bool AnimateIn { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the duration of the watermark's entrance animation.
+    /// </summary>
     public TimeSpan? AnimateInDuration { get; set; }
 
     public override string ToString() => $"WatermarkSettings {{ Position = {Position}, XOffset = {XOffset}, YOffset = {YOffset}, Scale = {Scale}, PreserveAspectRatio = {PreserveAspectRatio}, StartTime = {StartTime} }}";
@@ -129,9 +170,28 @@ public class WatermarkSettings
 /// </summary>
 public enum WatermarkPosition
 {
+    /// <summary>
+    /// Positions the watermark in the top-left corner.
+    /// </summary>
     TopLeft,
+
+    /// <summary>
+    /// Positions the watermark in the top-right corner.
+    /// </summary>
     TopRight,
+
+    /// <summary>
+    /// Positions the watermark in the bottom-left corner.
+    /// </summary>
     BottomLeft,
+
+    /// <summary>
+    /// Positions the watermark in the bottom-right corner.
+    /// </summary>
     BottomRight,
+
+    /// <summary>
+    /// Positions the watermark in the center.
+    /// </summary>
     Center
 }
