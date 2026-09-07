@@ -3243,3 +3243,29 @@ await foreach (var update in progressService.StreamProgressAsync(
         $"Progress: {update.ProgressPercentage:F1}% ({update.ProcessedDuration}/{update.TotalDuration})");
 }
 ```
+
+## BackgroundJobService
+
+The `IBackgroundJobService` interface provides background job scheduling with lifecycle tracking, progress monitoring, and cancellation support. `BackgroundJobService` keeps job details in memory and uses the configured job queue to process work by priority.
+
+Here is an example usage of the `IBackgroundJobService` interface with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.BackgroundJobs;
+
+async Task RunBackgroundJobAsync(IBackgroundJobService backgroundJobService)
+{
+    var jobId = backgroundJobService.EnqueueJob(
+        "Generate preview",
+        async cancellationToken =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+        });
+
+    var job = await backgroundJobService.GetJobAsync(jobId);
+    Console.WriteLine($"Job {job?.JobId} is {job?.State}");
+
+    var cancellationRequested = await backgroundJobService.CancelJobAsync(jobId);
+    Console.WriteLine($"Cancellation requested: {cancellationRequested}");
+}
+```
