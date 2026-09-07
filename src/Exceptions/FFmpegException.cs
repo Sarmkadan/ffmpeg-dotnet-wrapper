@@ -20,22 +20,40 @@ public class FFmpegException : Exception
     /// </summary>
     public Dictionary<string, string> Context { get; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FFmpegException"/> class.
+    /// </summary>
     public FFmpegException()
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FFmpegException"/> class with a specified error message.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
     public FFmpegException(string message)
         : base(message)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FFmpegException"/> class with a specified error message and a reference to the inner exception that is the cause of this exception.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
+    /// <param name="innerException">The exception that is the cause of the current exception.</param>
     public FFmpegException(string message, Exception innerException)
         : base(message, innerException)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FFmpegException"/> class with a specified error message, process exit code and error output.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
+    /// <param name="exitCode">The process exit code associated with the error.</param>
+    /// <param name="errorOutput">The error output from the process execution, if any.</param>
     public FFmpegException(string message, int exitCode, string? errorOutput = null)
         : base(message)
     {
@@ -55,12 +73,22 @@ public class FFmpegException : Exception
 /// </summary>
 public class InvalidMediaFileException : FFmpegException
 {
-    public string? FilePath { get; set; }
+    /// <summary>
+/// Gets or sets the path to the invalid media file.
+/// </summary>
+public string? FilePath { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InvalidMediaFileException"/> class.
+    /// </summary>
     public InvalidMediaFileException()
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InvalidMediaFileException"/> class with a specified error message.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
     public InvalidMediaFileException(string message) : base(message)
     {
         if (string.IsNullOrEmpty(message))
@@ -69,6 +97,11 @@ public class InvalidMediaFileException : FFmpegException
         }
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InvalidMediaFileException"/> class with a specified error message and file path.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
+    /// <param name="filePath">The path to the invalid media file.</param>
     public InvalidMediaFileException(string message, string filePath)
         : base(message)
     {
@@ -85,12 +118,22 @@ public class InvalidMediaFileException : FFmpegException
 /// </summary>
 public class FFmpegProcessException : FFmpegException
 {
-    public TimeSpan? Timeout { get; set; }
+    /// <summary>
+/// Gets or sets the timeout value for the FFmpeg process.
+/// </summary>
+public TimeSpan? Timeout { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FFmpegProcessException"/> class.
+    /// </summary>
     public FFmpegProcessException()
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FFmpegProcessException"/> class with a specified error message.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
     public FFmpegProcessException(string message) : base(message)
     {
         if (string.IsNullOrEmpty(message))
@@ -99,6 +142,11 @@ public class FFmpegProcessException : FFmpegException
         }
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FFmpegProcessException"/> class with a specified error message and timeout value.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
+    /// <param name="timeout">The timeout value for the FFmpeg process.</param>
     public FFmpegProcessException(string message, TimeSpan timeout)
         : base(message)
     {
@@ -115,12 +163,22 @@ public class FFmpegProcessException : FFmpegException
 /// </summary>
 public class InvalidOperationConfigurationException : FFmpegException
 {
-    public string? ConfigurationKey { get; set; }
+    /// <summary>
+/// Gets or sets the configuration key that is invalid or incomplete.
+/// </summary>
+public string? ConfigurationKey { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InvalidOperationConfigurationException"/> class.
+    /// </summary>
     public InvalidOperationConfigurationException()
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InvalidOperationConfigurationException"/> class with a specified error message.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
     public InvalidOperationConfigurationException(string message) : base(message)
     {
         if (string.IsNullOrEmpty(message))
@@ -129,6 +187,11 @@ public class InvalidOperationConfigurationException : FFmpegException
         }
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InvalidOperationConfigurationException"/> class with a specified error message and configuration key.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
+    /// <param name="configKey">The configuration key that is invalid or incomplete.</param>
     public InvalidOperationConfigurationException(string message, string configKey)
         : base(message)
     {
@@ -145,10 +208,17 @@ public class InvalidOperationConfigurationException : FFmpegException
 /// </summary>
 public class UnsupportedOperationException : FFmpegException
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UnsupportedOperationException"/> class.
+    /// </summary>
     public UnsupportedOperationException()
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UnsupportedOperationException"/> class with a specified error message.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
     public UnsupportedOperationException(string message) : base(message)
     {
         if (string.IsNullOrEmpty(message))
