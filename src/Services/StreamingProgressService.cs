@@ -48,17 +48,17 @@ public sealed class StreamingProgressService : IStreamingProgressService
 {
     // FFmpeg stderr progress line example:
     // frame=  150 fps= 30 q=28.0 size=    1024kB time=00:00:05.00 bitrate=1677.7kbits/s speed=2.00x
-    private static readonly Regex FrameRegex   = new(@"frame=\s*(\d+)",              RegexOptions.Compiled);
-    private static readonly Regex FpsRegex     = new(@"fps=\s*([\d.]+)",             RegexOptions.Compiled);
-    private static readonly Regex SizeRegex    = new(@"size=\s*(\d+)kB",            RegexOptions.Compiled);
-    private static readonly Regex TimeRegex    = new(@"time=(\d{2}:\d{2}:\d{2}\.?\d*)", RegexOptions.Compiled);
+    private static readonly Regex FrameRegex = new(@"frame=\s*(\d+)", RegexOptions.Compiled);
+    private static readonly Regex FpsRegex = new(@"fps=\s*([\d.]+)", RegexOptions.Compiled);
+    private static readonly Regex SizeRegex = new(@"size=\s*(\d+)kB", RegexOptions.Compiled);
+    private static readonly Regex TimeRegex = new(@"time=(\d{2}:\d{2}:\d{2}\.?\d*)", RegexOptions.Compiled);
     private static readonly Regex BitrateRegex = new(@"bitrate=\s*([\d.]+)kbits/s", RegexOptions.Compiled);
-    private static readonly Regex SpeedRegex   = new(@"speed=\s*([\d.]+)x",         RegexOptions.Compiled);
+    private static readonly Regex SpeedRegex = new(@"speed=\s*([\d.]+)x", RegexOptions.Compiled);
 
     private readonly ILogger<StreamingProgressService> _logger;
 
     /// <summary>
-    /// Initialises a new <see cref="StreamingProgressService"/> with the required logger.
+    /// Initializes a new <see cref="StreamingProgressService"/> with the required logger.
     /// </summary>
     /// <param name="logger">Logger for debug and diagnostic output.</param>
     public StreamingProgressService(ILogger<StreamingProgressService> logger)
@@ -134,19 +134,19 @@ public sealed class StreamingProgressService : IStreamingProgressService
 
         return new FFmpegProgressUpdate
         {
-            OperationId           = operationId,
-            ProgressPercentage    = progressPercent,
-            ProcessedDuration     = processedDuration,
-            TotalDuration         = totalDuration,
+            OperationId = operationId,
+            ProgressPercentage = progressPercent,
+            ProcessedDuration = processedDuration,
+            TotalDuration = totalDuration,
             EstimatedTimeRemaining = CalculateEta(processedDuration, totalDuration, elapsed),
-            ElapsedWallTime       = elapsed,
-            FramesProcessed       = ParseInt(FrameRegex, line),
-            FramesPerSecond       = ParseDouble(FpsRegex, line),
-            OutputSizeBytes       = ParseLong(SizeRegex, line) * 1024L,
-            BitrateKbps           = ParseDouble(BitrateRegex, line),
-            EncodingSpeed         = ParseDouble(SpeedRegex, line),
-            Timestamp             = DateTime.UtcNow,
-            RawOutput             = line
+            ElapsedWallTime = elapsed,
+            FramesProcessed = ParseInt(FrameRegex, line),
+            FramesPerSecond = ParseDouble(FpsRegex, line),
+            OutputSizeBytes = ParseLong(SizeRegex, line) * 1024L,
+            BitrateKbps = ParseDouble(BitrateRegex, line),
+            EncodingSpeed = ParseDouble(SpeedRegex, line),
+            Timestamp = DateTime.UtcNow,
+            RawOutput = line
         };
     }
 
