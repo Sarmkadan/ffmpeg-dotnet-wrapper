@@ -3269,3 +3269,19 @@ async Task RunBackgroundJobAsync(IBackgroundJobService backgroundJobService)
     Console.WriteLine($"Cancellation requested: {cancellationRequested}");
 }
 ```
+
+## ConcatenationBuilder
+
+The `ConcatenationBuilder` class provides a fluent API for composing multiple media segments into `MergeSettings` for concatenation. It supports adding input files, configuring transitions between segments, and building the completed merge configuration.
+
+Here is an example usage of the `ConcatenationBuilder` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Models;
+
+var settings = new ConcatenationBuilder()
+    .Add("intro.mp4")
+    .Add("main.mp4")
+    .WithTransition(ConcatTransition.Crossfade, duration: 0.75)
+    .Build();
+```
