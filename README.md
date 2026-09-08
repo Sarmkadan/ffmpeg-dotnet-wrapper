@@ -3285,3 +3285,31 @@ var settings = new ConcatenationBuilder()
     .WithTransition(ConcatTransition.Crossfade, duration: 0.75)
     .Build();
 ```
+
+## SlidingWindowRateLimiter
+
+The `IRateLimiter` interface provides request admission checks and status reporting for named rate-limit policies. `SlidingWindowRateLimiter` implements it with in-memory request histories, removing expired entries as the configured sliding window advances.
+
+Here is an example usage of the `SlidingWindowRateLimiter` class and `IRateLimiter` interface with their public members:
+
+```csharp
+using FFmpegDotnetWrapper.Middleware;
+using Microsoft.Extensions.Logging;
+
+var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+var slidingWindowRateLimiter = new SlidingWindowRateLimiter(
+    loggerFactory.CreateLogger<SlidingWindowRateLimiter>());
+
+slidingWindowRateLimiter.RegisterPolicy(new RateLimitPolicy
+{
+    PolicyName = "api",
+    MaxRequests = 10,
+    WindowSeconds = 60
+});
+
+IRateLimiter rateLimiter = slidingWindowRateLimiter;
+var isAllowed = rateLimiter.AllowRequest("client-123", "api");
+var status = rateLimiter.GetStatus("client-123", "api");
+
+Console.WriteLine($"Allowed: {isAllowed}; remaining requests: {status.RemainingRequests}");
+```
