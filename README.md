@@ -3313,3 +3313,34 @@ var status = rateLimiter.GetStatus("client-123", "api");
 
 Console.WriteLine($"Allowed: {isAllowed}; remaining requests: {status.RemainingRequests}");
 ```
+
+## WebhookService
+
+The `IWebhookService` interface and `WebhookService` implementation manage webhook endpoints that receive operation events from the event system. Webhooks can be filtered by event type, configured with authentication and custom headers, and queried to retrieve the endpoints that are currently active.
+
+Here is an example usage of the `IWebhookService` interface with its public members:
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using FFmpegDotnetWrapper.Integration;
+
+static async Task ConfigureWebhookAsync(IWebhookService webhookService)
+{
+    var endpoint = new WebhookEndpoint
+    {
+        Url = "https://example.com/webhooks/ffmpeg",
+        EventTypes = new List<string> { "OperationCompletedEvent" },
+        AuthToken = "example-token"
+    };
+
+    await webhookService.RegisterWebhookAsync(endpoint);
+
+    var activeWebhooks = await webhookService.GetActiveWebhooksAsync();
+    foreach (var webhook in activeWebhooks)
+    {
+        Console.WriteLine($"{webhook.WebhookId}: {webhook.Url}");
+    }
+}
+```
