@@ -3378,3 +3378,33 @@ if (command != null)
         : $"Missing arguments: {string.Join(", ", missingArguments)}");
 }
 ```
+
+## GifExportService
+
+The `GifExportService` class creates an optimized GIF from a selected video segment using FFmpeg's two-pass palette generation and application process. The `GifExportSettings` class controls the output frame rate, dimensions, dithering mode, loop count, and quality preset, while the returned `ConversionResult` reports whether the export succeeded and where the GIF was written.
+
+Here is an example usage of the `GifExportService` and `GifExportSettings` classes with their public members:
+
+```csharp
+using FFmpegDotnetWrapper.Models;
+using FFmpegDotnetWrapper.Services;
+
+var gifExporter = new GifExportService();
+var settings = new GifExportSettings(GifQualityPreset.High)
+{
+    MaxWidth = 720,
+    DitherMode = DitherMode.Sierra2_4a,
+    Loop = -1
+};
+
+var result = await gifExporter.ExportGifAsync(
+    "input.mp4",
+    TimeSpan.FromSeconds(10),
+    TimeSpan.FromSeconds(5),
+    settings);
+
+if (result.IsSuccess)
+{
+    Console.WriteLine($"GIF created at: {result.OutputFilePath}");
+}
+```
