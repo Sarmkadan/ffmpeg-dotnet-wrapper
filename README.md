@@ -3466,3 +3466,39 @@ if (job != null)
     await jobQueue.RequeuJobAsync(job);
 }
 ```
+
+## EventPublisher
+
+The `FFmpegEvent` abstract class provides shared event metadata, including an event ID, occurrence time, correlation ID, and source. The `IEventPublisher` interface defines subscription and asynchronous publication operations for strongly typed events derived from `FFmpegEvent`, while `EventPublisher` dispatches published events to their registered handlers. Handler failures are logged so that one subscriber does not prevent the remaining subscribers from being invoked.
+
+Here is an example usage of the `EventPublisher` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Events;
+using Microsoft.Extensions.Logging;
+
+var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+IEventPublisher eventPublisher = new EventPublisher(
+    loggerFactory.CreateLogger<EventPublisher>());
+
+var handler = new OperationStartedHandler();
+eventPublisher.Subscribe<OperationStartedEvent>(handler);
+
+await eventPublisher.PublishAsync(new OperationStartedEvent
+{
+    InputFile = "input.mp4",
+    OutputFile = "output.mp4",
+    OperationType = "Transcode",
+    CorrelationId = "job-123",
+    Source = "TranscodeService"
+});
+
+public sealed class OperationStartedHandler : IEventHandler<OperationStartedEvent>
+{
+    public Task HandleAsync(OperationStartedEvent @event)
+    {
+        Console.WriteLine($"Starting {@event.OperationType}: {@event.InputFile}");
+        return Task.CompletedTask;
+    }
+}
+```
