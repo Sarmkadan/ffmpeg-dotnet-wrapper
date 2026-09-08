@@ -3408,3 +3408,33 @@ if (result.IsSuccess)
     Console.WriteLine($"GIF created at: {result.OutputFilePath}");
 }
 ```
+
+## CircuitBreakerRetryPolicy
+
+The `CircuitBreakerRetryPolicy` class decorates an `IRetryPolicy` and opens its circuit after a configurable number of consecutive failures, temporarily blocking further operations. After the configured break duration it allows half-open attempts to test recovery, and it also exposes the current state, failure count, retry decision, and a manual reset operation.
+
+Here is an example usage of the `CircuitBreakerRetryPolicy` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.Policies;
+
+var retryPolicy = new ExponentialBackoffRetryPolicy(maxAttempts: 3);
+var circuitBreaker = new CircuitBreakerRetryPolicy(
+    retryPolicy,
+    failureThreshold: 3,
+    breakDuration: TimeSpan.FromSeconds(30),
+    halfOpenAttempts: 2);
+
+var result = await circuitBreaker.ExecuteAsync(async cancellationToken =>
+{
+    await Task.Delay(100, cancellationToken);
+    return "Operation completed";
+});
+
+Console.WriteLine($"{result}; state: {circuitBreaker.State}; failures: {circuitBreaker.FailureCount}");
+
+var retriesTimeouts = circuitBreaker.ShouldRetry(new TimeoutException());
+Console.WriteLine($"Retries timeouts: {retriesTimeouts}");
+
+circuitBreaker.Reset();
+```
