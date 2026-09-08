@@ -3344,3 +3344,37 @@ static async Task ConfigureWebhookAsync(IWebhookService webhookService)
     }
 }
 ```
+
+## CliCommandParser
+
+The `CliCommandParser` class registers command definitions, parses command-line arguments into structured commands, and validates required positional arguments. The `CliCommandDefinition` class describes a command's name, description, expected positional arguments, and named options.
+
+Here is an example usage of the `CliCommandParser` and `CliCommandDefinition` classes with their public members:
+
+```csharp
+using FFmpegDotnetWrapper.Cli;
+
+var parser = new CliCommandParser();
+parser.RegisterCommand(new CliCommandDefinition
+{
+    Name = "transcode",
+    Description = "Transcode an input file",
+    Arguments = new List<CliArgument>
+    {
+        new() { Name = "input", Description = "Input media file", IsRequired = true }
+    },
+    Options = new List<CliOption>
+    {
+        new() { LongForm = "codec", ShortForm = "c", Description = "Output codec" }
+    }
+});
+
+var command = parser.ParseCommand(new[] { "transcode", "input.mp4", "--codec", "h265" });
+if (command != null)
+{
+    var missingArguments = parser.ValidateCommand(command);
+    Console.WriteLine(missingArguments.Count == 0
+        ? $"Parsed {command.Name} successfully"
+        : $"Missing arguments: {string.Join(", ", missingArguments)}");
+}
+```
