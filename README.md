@@ -3438,3 +3438,31 @@ Console.WriteLine($"Retries timeouts: {retriesTimeouts}");
 
 circuitBreaker.Reset();
 ```
+
+## JobQueue
+
+The `IJobQueue` interface and `JobQueue` class provide a thread-safe, priority-based queue for background work, including delayed execution and job lookup. Each `QueuedJob` exposes its payload, priority, retry state, schedule, and tags, while `JobQueue` also supports requeuing failed jobs with an incremented retry count.
+
+Here is an example usage of the `JobQueue` class with its public members:
+
+```csharp
+using FFmpegDotnetWrapper.BackgroundJobs;
+using Microsoft.Extensions.Logging;
+
+var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+var jobQueue = new JobQueue(loggerFactory.CreateLogger<JobQueue>());
+
+var jobId = await jobQueue.EnqueueAsync(
+    payload: "transcode input.mp4",
+    priority: 2,
+    tags: new Dictionary<string, string> { ["mediaType"] = "video" });
+
+var job = await jobQueue.DequeueAsync();
+if (job != null)
+{
+    Console.WriteLine($"Processing {job.JobId}: {job.Payload}");
+
+    // Requeue the job after a failed processing attempt.
+    await jobQueue.RequeuJobAsync(job);
+}
+```
