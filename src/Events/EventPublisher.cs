@@ -40,6 +40,15 @@ namespace FFmpegDotnetWrapper.Events
         /// Examples: "TranscodeService", "WatermarkService", "BatchProcessor".
         /// </summary>
         public string? Source { get; set; }
+
+        /// <summary>
+        /// Returns a string representation of the FFmpegEvent.
+        /// </summary>
+        /// <returns>A concise, single-line, culture-invariant summary including EventId, event type name, OperationId and Timestamp.</returns>
+        public override string ToString()
+        {
+            return $"EventId: {EventId}, Type: {GetType().Name}, OperationId: {Source ?? "none"}, Timestamp: {OccurredAt:O}";
+        }
     }
 
     /// <summary>
