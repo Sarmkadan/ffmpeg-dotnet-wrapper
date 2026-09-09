@@ -22,6 +22,15 @@ namespace FFmpegDotnetWrapper.Middleware
         private readonly ILogger<ErrorHandlingMiddleware> _logger;
         private readonly bool _includeStackTrace;
 
+        // HTTP status codes
+        private const int StatusBadRequest = 400;
+        private const int StatusUnauthorized = 401;
+        private const int StatusForbidden = 403;
+        private const int StatusNotFound = 404;
+        private const int StatusRequestTimeout = 408;
+        private const int StatusUnprocessableEntity = 422;
+        private const int StatusInternalServerError = 500;
+
         public ErrorHandlingMiddleware(ILogger<ErrorHandlingMiddleware> logger, bool includeStackTrace = false)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -45,27 +54,27 @@ namespace FFmpegDotnetWrapper.Middleware
                 return ApiResponse<T>.Failure(
                     ex.Message,
                     new List<ApiError> { new() { Code = "FFMPEG_ERROR", Message = ex.Message } },
-                    400);
+                    StatusBadRequest);
             }
             catch (InvalidOperationException ex)
             {
                 _logger.LogWarning(ex, "Invalid operation: {OperationName}", operationName);
-                return ApiResponse<T>.Failure(ex.Message, 400);
+                return ApiResponse<T>.Failure(ex.Message, StatusBadRequest);
             }
             catch (ArgumentException ex)
             {
                 _logger.LogWarning(ex, "Invalid argument in operation: {OperationName}", operationName);
-                return ApiResponse<T>.Failure($"Invalid input: {ex.Message}", 400);
+                return ApiResponse<T>.Failure($"Invalid input: {ex.Message}", StatusBadRequest);
             }
             catch (FileNotFoundException ex)
             {
                 _logger.LogWarning(ex, "File not found in operation: {OperationName}", operationName);
-                return ApiResponse<T>.Failure("The requested file was not found", 404);
+                return ApiResponse<T>.Failure("The requested file was not found", StatusNotFound);
             }
             catch (UnauthorizedAccessException ex)
             {
                 _logger.LogWarning(ex, "Unauthorized access in operation: {OperationName}", operationName);
-                return ApiResponse<T>.Failure("Access to the resource is denied", 403);
+                return ApiResponse<T>.Failure("Access to the resource is denied", StatusForbidden);
             }
             catch (Exception ex)
             {
@@ -74,7 +83,7 @@ namespace FFmpegDotnetWrapper.Middleware
                     ? $"An unexpected error occurred: {ex.Message}\n{ex.StackTrace}"
                     : "An unexpected error occurred. Please contact support.";
 
-                return ApiResponse<T>.Failure(errorMessage, 500);
+                return ApiResponse<T>.Failure(errorMessage, StatusInternalServerError);
             }
         }
 
@@ -92,27 +101,27 @@ namespace FFmpegDotnetWrapper.Middleware
             catch (FFmpegException ex)
             {
                 _logger.LogWarning(ex, "Async FFmpeg operation failed: {OperationName}", operationName);
-                return ApiResponse<T>.Failure(ex.Message, 400);
+                return ApiResponse<T>.Failure(ex.Message, StatusBadRequest);
             }
             catch (InvalidOperationException ex)
             {
                 _logger.LogWarning(ex, "Invalid async operation: {OperationName}", operationName);
-                return ApiResponse<T>.Failure(ex.Message, 400);
+                return ApiResponse<T>.Failure(ex.Message, StatusBadRequest);
             }
             catch (ArgumentException ex)
             {
                 _logger.LogWarning(ex, "Invalid argument in async operation: {OperationName}", operationName);
-                return ApiResponse<T>.Failure($"Invalid input: {ex.Message}", 400);
+                return ApiResponse<T>.Failure($"Invalid input: {ex.Message}", StatusBadRequest);
             }
             catch (FileNotFoundException ex)
             {
                 _logger.LogWarning(ex, "File not found in async operation: {OperationName}", operationName);
-                return ApiResponse<T>.Failure("The requested file was not found", 404);
+                return ApiResponse<T>.Failure("The requested file was not found", StatusNotFound);
             }
             catch (OperationCanceledException)
             {
                 _logger.LogWarning("Async operation cancelled: {OperationName}", operationName);
-                return ApiResponse<T>.Failure("The operation was cancelled", 408);
+                return ApiResponse<T>.Failure("The operation was cancelled", StatusRequestTimeout);
             }
             catch (Exception ex)
             {
@@ -121,7 +130,7 @@ namespace FFmpegDotnetWrapper.Middleware
                     ? $"An unexpected error occurred: {ex.Message}\n{ex.StackTrace}"
                     : "An unexpected error occurred. Please contact support.";
 
-                return ApiResponse<T>.Failure(errorMessage, 500);
+                return ApiResponse<T>.Failure(errorMessage, StatusInternalServerError);
             }
         }
 
@@ -150,12 +159,12 @@ namespace FFmpegDotnetWrapper.Middleware
         /// </summary>
         private int GetStatusCode(Exception ex) => ex switch
         {
-            FileNotFoundException => 404,
-            UnauthorizedAccessException => 403,
-            ArgumentException or InvalidOperationException => 400,
-            OperationCanceledException => 408,
-            FFmpegException => 422,
-            _ => 500
+            FileNotFoundException => StatusNotFound,
+            UnauthorizedAccessException => StatusForbidden,
+            ArgumentException or InvalidOperationException => StatusBadRequest,
+            OperationCanceledException => StatusRequestTimeout,
+            FFmpegException => StatusUnprocessableEntity,
+            _ => StatusInternalServerError
         };
 
         /// <summary>
