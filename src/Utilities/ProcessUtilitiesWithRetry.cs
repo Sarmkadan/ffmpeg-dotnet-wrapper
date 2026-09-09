@@ -30,6 +30,7 @@ public static class ProcessUtilitiesWithRetry
     /// <param name="timeout">Process timeout (optional).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Process execution result with retry support.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="fileName"/> is null or empty.</exception>
     public static async Task<ProcessUtilities.ProcessResult> ExecuteProcessWithRetryAsync(
         string fileName,
         string arguments,
@@ -38,6 +39,8 @@ public static class ProcessUtilitiesWithRetry
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrEmpty(fileName);
+
         if (retryPolicy == null)
         {
             // No retry policy - execute directly
@@ -60,11 +63,14 @@ public static class ProcessUtilitiesWithRetry
     /// <param name="retryPolicy">Retry policy to use (null for no retry).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Result from the operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="operation"/> is null.</exception>
     public static async Task<T> ExecuteWithRetryAsync<T>(
         Func<CancellationToken, Task<T>> operation,
         IRetryPolicy? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(operation);
+
         if (retryPolicy == null)
         {
             return await operation(cancellationToken);
@@ -80,11 +86,14 @@ public static class ProcessUtilitiesWithRetry
     /// <param name="retryPolicy">Retry policy to use (null for no retry).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Task representing the operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="operation"/> is null.</exception>
     public static async Task ExecuteWithRetryAsync(
         Func<CancellationToken, Task> operation,
         IRetryPolicy? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(operation);
+
         if (retryPolicy == null)
         {
             await operation(cancellationToken);
