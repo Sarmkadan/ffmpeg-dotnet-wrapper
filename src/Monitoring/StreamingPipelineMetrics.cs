@@ -75,9 +75,11 @@ public sealed class StreamingPipelineMetrics
     /// </summary>
     /// <param name="profile">The quality profile at which the segment was encoded.</param>
     /// <param name="fileSizeBytes">The segment's file size in bytes.</param>
+    /// <exception cref="ArgumentOutOfRangeException"/>
     public void RecordSegmentProduced(StreamingProfile profile, long fileSizeBytes)
     {
         ArgumentNullException.ThrowIfNull(profile);
+        ArgumentOutOfRangeException.ThrowIfNegative(fileSizeBytes);
         Interlocked.Increment(ref _totalSegmentsProduced);
         Interlocked.Add(ref _totalBytesProduced, fileSizeBytes);
 
