@@ -60,6 +60,16 @@ namespace FFmpegDotnetWrapper.Middleware
         public int RemainingRequests => Math.Max(0, MaxRequests - RequestsMade);
         public DateTime ResetTime { get; set; }
         public double SecondsUntilReset => Math.Max(0, (ResetTime - DateTime.UtcNow).TotalSeconds);
+
+        /// <summary>
+        /// Returns a culture-invariant string representing the current rate limit status.
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "Remaining: {0}/{1}, Reset in: {2:F0}s",
+                RemainingRequests, MaxRequests, SecondsUntilReset);
+        }
     }
 
     /// <summary>
