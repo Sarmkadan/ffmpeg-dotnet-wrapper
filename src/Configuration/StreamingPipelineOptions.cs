@@ -144,4 +144,13 @@ public sealed class StreamingProfileOptions
     /// <returns>A new <see cref="StreamingProfile"/> with the values from this options object.</returns>
     public StreamingProfile ToProfile() =>
         new(Name, Width, Height, VideoBitrateKbps, AudioBitrateKbps, FrameRate);
+
+    /// <summary>
+    /// Returns a culture-invariant string representation of the StreamingProfileOptions.
+    /// </summary>
+    /// <returns>A string containing the profile name, resolution, and bitrate information.</returns>
+    public override string ToString() =>
+        string.Format(System.Globalization.CultureInfo.InvariantCulture,
+            "StreamingProfileOptions {{ Name = {0}, Resolution = {1}x{2}, VideoBitrateKbps = {3}, AudioBitrateKbps = {4}, FrameRate = {5} }}",
+            Name, Width, Height, VideoBitrateKbps, AudioBitrateKbps, FrameRate);
 }
