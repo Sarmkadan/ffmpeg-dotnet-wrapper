@@ -35,8 +35,10 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// Transcodes a video file to a different format or codec.
         /// Supports quality, bitrate, and codec selection through the fluent API.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when request is null.</exception>
         public async Task<ApiResponse<ConversionResult>> TranscodeAsync(TranscodeRequest request)
         {
+            ArgumentNullException.ThrowIfNull(request);
             try
             {
                 if (!System.IO.File.Exists(request.InputPath))
@@ -74,8 +76,10 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// Trims a video file to a specified duration or timeframe.
         /// Supports start time and duration or end time specifications.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when request is null.</exception>
         public async Task<ApiResponse<ConversionResult>> TrimAsync(TrimRequest request)
         {
+            ArgumentNullException.ThrowIfNull(request);
             try
             {
                 var settings = new TrimSettings
@@ -107,8 +111,10 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// Merges multiple video files into a single output file.
         /// Maintains codec compatibility and handles stream synchronization.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when request is null.</exception>
         public async Task<ApiResponse<ConversionResult>> MergeAsync(MergeRequest request)
         {
+            ArgumentNullException.ThrowIfNull(request);
             try
             {
                 var settings = new MergeSettings
@@ -136,8 +142,10 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// Adds a watermark overlay to a video file.
         /// Supports image watermarks with position and opacity customization.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when request is null.</exception>
         public async Task<ApiResponse<ConversionResult>> WatermarkAsync(WatermarkRequest request)
         {
+            ArgumentNullException.ThrowIfNull(request);
             try
             {
                 var settings = new WatermarkSettings
@@ -193,8 +201,10 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// Embeds a subtitle file into a video either as a selectable stream
         /// (soft embed) or burned into the video frames (hard embed).
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when request is null.</exception>
         public async Task<ApiResponse<ConversionResult>> EmbedSubtitlesAsync(SubtitleRequest request)
         {
+            ArgumentNullException.ThrowIfNull(request);
             try
             {
                 if (!System.IO.File.Exists(request.InputPath))
@@ -235,8 +245,10 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// Extracts thumbnail images from a video file at specified timestamps
         /// or evenly distributed across its duration.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when request is null.</exception>
         public async Task<ApiResponse<ThumbnailResult>> ExtractThumbnailsAsync(ThumbnailRequest request)
         {
+            ArgumentNullException.ThrowIfNull(request);
             try
             {
                 if (!System.IO.File.Exists(request.InputPath))
