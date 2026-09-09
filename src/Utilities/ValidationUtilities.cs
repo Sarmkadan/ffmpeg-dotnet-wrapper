@@ -18,6 +18,31 @@ namespace FFmpegDotnetWrapper.Utilities
     /// </summary>
     public static class ValidationUtilities
     {
+        private const int MinimumBitrateKbps = 1;
+        private const int MaximumBitrateKbps = 50000;
+        private const int MinimumTimeComponent = 0;
+        private const int MinutesPerHour = 60;
+        private const int SecondsPerMinute = 60;
+        private const int SecondsPerHour = 3600;
+        private const int MinimumCrf = 0;
+        private const int MaximumCrf = 51;
+        private const int MinimumWatermarkXPosition = -4096;
+        private const int MaximumWatermarkXPosition = 4096;
+        private const int MinimumWatermarkYPosition = -2160;
+        private const int MaximumWatermarkYPosition = 2160;
+        private const double MinimumWatermarkScale = 0.01;
+        private const double MaximumWatermarkScale = 1.0;
+        private const double MinimumOpacity = 0.0;
+        private const double MaximumOpacity = 1.0;
+        private const int MinimumResolutionDimension = 0;
+        private const int MaximumResolutionWidth = 7680;
+        private const int MaximumResolutionHeight = 4320;
+        private const double MinimumFrameRate = 0;
+        private const double MaximumFrameRate = 240;
+        private const decimal MinimumAspectRatioDimension = 0;
+        private const double MinimumTrimTimeSeconds = 0;
+        private const double MinimumTrimDurationSeconds = 0;
+
         // Supported video codecs
         private static readonly HashSet<string> SupportedVideoCodecs = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -43,7 +68,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static bool IsValidBitrate(int bitratekbps)
         {
-            return bitratekbps >= 1 && bitratekbps <= 50000; // 1k to 50Mbps
+            return bitratekbps >= MinimumBitrateKbps && bitratekbps <= MaximumBitrateKbps; // 1k to 50Mbps
         }
 
         /// <summary>
@@ -92,7 +117,7 @@ namespace FFmpegDotnetWrapper.Utilities
             // Try parsing as pure seconds
             if (double.TryParse(timeString.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds))
             {
-                return seconds >= 0 ? seconds : null;
+                return seconds >= MinimumTimeComponent ? seconds : null;
             }
 
             // Try parsing as HH:MM:SS
@@ -102,9 +127,11 @@ namespace FFmpegDotnetWrapper.Utilities
                 int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var minutes) &&
                 double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var secs))
             {
-                if (hours >= 0 && minutes >= 0 && minutes < 60 && secs >= 0 && secs < 60)
+                if (hours >= MinimumTimeComponent && minutes >= MinimumTimeComponent &&
+                    minutes < MinutesPerHour && secs >= MinimumTimeComponent &&
+                    secs < SecondsPerMinute)
                 {
-                    return hours * 3600 + minutes * 60 + secs;
+                    return hours * SecondsPerHour + minutes * SecondsPerMinute + secs;
                 }
             }
 
@@ -117,8 +144,8 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static string FormatSecondsToTime(double seconds)
         {
-            if (seconds < 0)
-                seconds = 0;
+            if (seconds < MinimumTimeComponent)
+                seconds = MinimumTimeComponent;
 
             var timeSpan = TimeSpan.FromSeconds(seconds);
             return $"{timeSpan.Hours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
@@ -130,7 +157,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static bool IsValidQualitySetting(int quality, string? codec = null)
         {
-            return quality >= 0 && quality <= 51; // Standard CRF range
+            return quality >= MinimumCrf && quality <= MaximumCrf; // Standard CRF range
         }
 
         /// <summary>
@@ -140,7 +167,8 @@ namespace FFmpegDotnetWrapper.Utilities
         public static bool IsValidWatermarkPosition(int x, int y)
         {
             // Allow positioning slightly outside video bounds
-            return x >= -4096 && x <= 4096 && y >= -2160 && y <= 2160;
+            return x >= MinimumWatermarkXPosition && x <= MaximumWatermarkXPosition &&
+                y >= MinimumWatermarkYPosition && y <= MaximumWatermarkYPosition;
         }
 
         /// <summary>
@@ -149,7 +177,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static bool IsValidWatermarkScale(double scale)
         {
-            return scale >= 0.01 && scale <= 1.0;
+            return scale >= MinimumWatermarkScale && scale <= MaximumWatermarkScale;
         }
 
         /// <summary>
@@ -158,7 +186,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static bool IsValidOpacity(double opacity)
         {
-            return opacity >= 0.0 && opacity <= 1.0;
+            return opacity >= MinimumOpacity && opacity <= MaximumOpacity;
         }
 
         /// <summary>
@@ -177,7 +205,8 @@ namespace FFmpegDotnetWrapper.Utilities
             if (int.TryParse(match.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var width) &&
                 int.TryParse(match.Groups[2].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var height))
             {
-                return width > 0 && width <= 7680 && height > 0 && height <= 4320;
+                return width > MinimumResolutionDimension && width <= MaximumResolutionWidth &&
+                    height > MinimumResolutionDimension && height <= MaximumResolutionHeight;
             }
 
             return false;
@@ -190,7 +219,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static bool IsValidFrameRate(double fps)
         {
-            return fps > 0 && fps <= 240; // Max 240 fps for extreme slow-mo
+            return fps > MinimumFrameRate && fps <= MaximumFrameRate; // Max 240 fps for extreme slow-mo
         }
 
         /// <summary>
@@ -209,7 +238,7 @@ namespace FFmpegDotnetWrapper.Utilities
             if (decimal.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var w) &&
                 decimal.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var h))
             {
-                return w > 0 && h > 0;
+                return w > MinimumAspectRatioDimension && h > MinimumAspectRatioDimension;
             }
 
             return false;
@@ -221,10 +250,10 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static bool ValidateTrimTimes(double? startSeconds, double? endSeconds, double? durationSeconds)
         {
-            if (startSeconds.HasValue && startSeconds.Value < 0)
+            if (startSeconds.HasValue && startSeconds.Value < MinimumTrimTimeSeconds)
                 return false;
 
-            if (durationSeconds.HasValue && durationSeconds.Value <= 0)
+            if (durationSeconds.HasValue && durationSeconds.Value <= MinimumTrimDurationSeconds)
                 return false;
 
             if (startSeconds.HasValue && endSeconds.HasValue && startSeconds.Value >= endSeconds.Value)
