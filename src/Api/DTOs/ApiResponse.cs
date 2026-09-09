@@ -180,6 +180,25 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// Examples: "Please check the file format" or "Try again in a few moments".
         /// </summary>
         public string? Suggestion { get; set; }
+
+        /// <summary>
+        /// Returns a string representation of the ApiError object.
+        /// </summary>
+        /// <returns>A string containing the Code, Message, and Field (if any) properties.</returns>
+        public override string ToString()
+        {
+            var parts = new List<string>();
+            if (!string.IsNullOrEmpty(Code))
+            {
+                parts.Add($"Code: {Code}");
+            }
+            parts.Add($"Message: {Message}");
+            if (!string.IsNullOrEmpty(Field))
+            {
+                parts.Add($"Field: {Field}");
+            }
+            return string.Join(", ", parts);
+        }
     }
 
     /// <summary>
