@@ -26,8 +26,16 @@ public class MediaRepository : IMediaRepository
         }
     }
 
+    /// <summary>
+    /// Gets a media file by file path.
+    /// </summary>
+    /// <param name="filePath">The file path to search for.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The matching media file, or <c>null</c> if not found.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="filePath"/> is null or whitespace.</exception>
     public Task<MediaFile?> GetByFilePathAsync(string filePath, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         lock (_lockObject)
         {
             var normalizedPath = Path.GetFullPath(filePath);
@@ -83,8 +91,16 @@ public class MediaRepository : IMediaRepository
         }
     }
 
+    /// <summary>
+    /// Searches media files by name.
+    /// </summary>
+    /// <param name="name">The name to search for.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The matching media files.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="name"/> is null or whitespace.</exception>
     public Task<IEnumerable<MediaFile>> SearchByNameAsync(string name, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         lock (_lockObject)
         {
             var results = _mediaFiles.Values
