@@ -17,6 +17,10 @@ namespace FFmpegDotnetWrapper.Services
     /// </summary>
     public class GifExportService
     {
+        private const string DefaultFfmpegExecutableName = "ffmpeg";
+        private const int PaletteMaxColors = 256;
+        private const string LanczosScaleFlag = "lanczos";
+
         private readonly string _ffmpegExecutablePath;
 
         /// <summary>
@@ -28,7 +32,7 @@ namespace FFmpegDotnetWrapper.Services
         /// </param>
         public GifExportService(string? ffmpegExecutablePath = null)
         {
-            _ffmpegExecutablePath = ffmpegExecutablePath ?? "ffmpeg";
+            _ffmpegExecutablePath = ffmpegExecutablePath ?? DefaultFfmpegExecutableName;
         }
 
         /// <summary>
@@ -100,7 +104,7 @@ namespace FFmpegDotnetWrapper.Services
                 // ---------- First pass: generate palette with optimized stats mode ----------
                 // Use 'diff' stats mode for better palette generation on video segments
                 string paletteArgs = $"-y -ss {start.TotalSeconds:F3} -t {duration.TotalSeconds:F3} -i \"{sourcePath}\" " +
-                    $"-vf \"fps={fps},scale={width}:-1:flags=lanczos,palettegen=stats_mode=diff:max_colors=256\" \"{palettePath}\" -hide_banner -loglevel error";
+                    $"-vf \"fps={fps},scale={width}:-1:flags={LanczosScaleFlag},palettegen=stats_mode=diff:max_colors={PaletteMaxColors}\" \"{palettePath}\" -hide_banner -loglevel error";
 
                 var paletteResult = await RunFfmpegAsync(paletteArgs).ConfigureAwait(false);
 
@@ -130,7 +134,7 @@ namespace FFmpegDotnetWrapper.Services
 
                 string gifArgs = $"-y -ss {start.TotalSeconds:F3} -t {duration.TotalSeconds:F3} -i \"{sourcePath}\" " +
                     $"-i \"{palettePath}\" " +
-                    $"-filter_complex \"fps={fps},scale={width}:-1:flags=lanczos[x];[x][1:v]paletteuse=dither={ditherValue}\" " +
+                    $"-filter_complex \"fps={fps},scale={width}:-1:flags={LanczosScaleFlag}[x];[x][1:v]paletteuse=dither={ditherValue}\" " +
                     $"-loop {(settings.Loop == -1 ? 0 : settings.Loop)} \"{outputGifPath}\" -hide_banner -loglevel error";
 
                 var gifResult = await RunFfmpegAsync(gifArgs).ConfigureAwait(false);
