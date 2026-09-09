@@ -28,6 +28,10 @@ namespace FFmpegDotnetWrapper.Services;
 /// </remarks>
 public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
 {
+    private const int SegmentPollDelayMilliseconds = 250;
+    private const int PipelineIdLength = 12;
+    private const int KilobitsPerSecondToBitsPerSecond = 1000;
+
     private sealed record PipelineContext(StreamingPipelineResult Result, CancellationTokenSource Cts);
 
     private readonly ConcurrentDictionary<string, PipelineContext> _activePipelines = new();
@@ -71,7 +75,7 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
             throw new InvalidOperationException(
                 $"Maximum concurrent pipeline limit of {_options.MaxConcurrentPipelines} has been reached.");
 
-        var pipelineId = Guid.NewGuid().ToString("N")[..12];
+        var pipelineId = Guid.NewGuid().ToString("N")[..PipelineIdLength];
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
         var result = new StreamingPipelineResult
@@ -290,7 +294,7 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
                 }
 
                 if (!process.HasExited)
-                    await Task.Delay(250, cancellationToken);
+                    await Task.Delay(SegmentPollDelayMilliseconds, cancellationToken);
             }
         }
         finally
@@ -420,7 +424,7 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
 
         foreach (var p in settings.Profiles.OrderByDescending(p => p.VideoBitrateKbps))
         {
-            sb.AppendLine($"#EXT-X-STREAM-INF:BANDWIDTH={p.TotalBitrateKbps * 1000}," +
+            sb.AppendLine($"#EXT-X-STREAM-INF:BANDWIDTH={p.TotalBitrateKbps * KilobitsPerSecondToBitsPerSecond}," +
                           $"RESOLUTION={p.Resolution},NAME=\"{p.Name}\"");
             sb.AppendLine($"{p.Name}/playlist.m3u8");
         }
