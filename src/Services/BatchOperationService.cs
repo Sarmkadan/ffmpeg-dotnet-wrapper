@@ -6,6 +6,7 @@
 using System.Collections.Concurrent;
 using FFmpegDotnetWrapper.Models;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace FFmpegDotnetWrapper.Services;
 
@@ -285,4 +286,15 @@ public class BatchAnalysisResult
     public List<MediaFile> AnalyzedFiles { get; set; } = new();
 
     public TimeSpan GetDuration() => CompletedAt.HasValue ? CompletedAt.Value - CreatedAt : TimeSpan.Zero;
+
+    /// <summary>
+    /// Returns a culture-invariant string representation of the BatchAnalysisResult.
+    /// </summary>
+    /// <returns>A string containing analyzed file count and cancellation status.</returns>
+    public override string ToString()
+    {
+        return string.Format(CultureInfo.InvariantCulture,
+            "BatchAnalysisResult {{ TotalFiles = {0}, AnalyzedFilesCount = {1}, IsCancelled = {2}, CreatedAt = {3} }}",
+            TotalFiles, AnalyzedFiles.Count, IsCancelled, CreatedAt);
+    }
 }
