@@ -32,6 +32,7 @@ public class SubtitleService
     /// <param name="outputPath">Destination file path for the output with the embedded subtitle track.</param>
     /// <param name="language">Optional ISO 639-1 language code stored in the stream metadata.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="inputMedia"/> is null.</exception>
     /// <returns>A <see cref="ConversionResult"/> describing the outcome.</returns>
     public async Task<ConversionResult> EmbedSoftSubtitlesAsync(
         MediaFile inputMedia,
@@ -40,6 +41,8 @@ public class SubtitleService
         string? language = null,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputMedia);
+
         var settings = new SubtitleSettings
         {
             SubtitlePath = subtitlePath,
@@ -68,6 +71,7 @@ public class SubtitleService
     /// <param name="fontName">Font face used for rendering (default: Arial).</param>
     /// <param name="fontSize">Font size in points (default: 24).</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="inputMedia"/> is null.</exception>
     /// <returns>A <see cref="ConversionResult"/> describing the outcome.</returns>
     public async Task<ConversionResult> BurnSubtitlesAsync(
         MediaFile inputMedia,
@@ -77,6 +81,8 @@ public class SubtitleService
         int fontSize = 24,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputMedia);
+
         var settings = new SubtitleSettings
         {
             SubtitlePath = subtitlePath,
