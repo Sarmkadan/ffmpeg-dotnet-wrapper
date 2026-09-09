@@ -138,8 +138,11 @@ namespace FFmpegDotnetWrapper.Middleware
         /// Converts exception to a formatted JSON response for HTTP responses.
         /// Used in actual middleware implementations that need to write to response streams.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="ex"/> is <see langword="null"/>.</exception>
         public string SerializeErrorResponse(Exception ex, string operationName, string? requestId = null)
         {
+            ArgumentNullException.ThrowIfNull(ex);
+
             var response = new
             {
                 success = false,
