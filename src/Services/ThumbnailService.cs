@@ -30,6 +30,7 @@ public class ThumbnailService
     /// <param name="outputPath">Full path for the output image file.</param>
     /// <param name="at">Timestamp within the video to capture. Defaults to the 5-second mark.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="inputMedia"/> is null.</exception>
     /// <returns>A <see cref="ThumbnailResult"/> containing the extracted image path.</returns>
     public async Task<ThumbnailResult> ExtractSingleAsync(
         MediaFile inputMedia,
@@ -37,6 +38,7 @@ public class ThumbnailService
         TimeSpan? at = null,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputMedia);
         var settings = new ThumbnailSettings { Format = ThumbnailFormat.Jpeg };
         settings.Times.Add(at ?? TimeSpan.FromSeconds(5));
 
@@ -56,6 +58,7 @@ public class ThumbnailService
     /// <param name="width">Optional output width in pixels.</param>
     /// <param name="height">Optional output height in pixels (use <c>-1</c> with a set width to auto-scale).</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="inputMedia"/> is null.</exception>
     /// <returns>A <see cref="ThumbnailResult"/> containing paths of all extracted images.</returns>
     public async Task<ThumbnailResult> ExtractStoryboardAsync(
         MediaFile inputMedia,
@@ -95,6 +98,7 @@ public class ThumbnailService
     /// <param name="timestamps">Specific timestamps to capture.</param>
     /// <param name="format">Image format for the output thumbnails.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="inputMedia"/> is null.</exception>
     /// <returns>A <see cref="ThumbnailResult"/> with one image per timestamp.</returns>
     public async Task<ThumbnailResult> ExtractAtTimestampsAsync(
         MediaFile inputMedia,
@@ -103,6 +107,7 @@ public class ThumbnailService
         ThumbnailFormat format = ThumbnailFormat.Jpeg,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputMedia);
         var settings = new ThumbnailSettings { Format = format };
         settings.Times.AddRange(timestamps);
 
