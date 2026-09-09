@@ -22,6 +22,8 @@ public sealed class FFmpegProcessRunner : IFFmpegProcessRunner
     /// Maximum number of characters of stderr retained for diagnostics on long-running processes.
     /// </summary>
     private const int MaxRetainedStderrChars = 64 * 1024;
+private const int StderrBufferInitialCapacity = 4096;
+private const double PercentScale = 100.0;
 
     /// <summary>
     /// How long to wait, after sending <c>q</c> to ffmpeg's standard input on cancellation, before
@@ -52,7 +54,7 @@ public sealed class FFmpegProcessRunner : IFFmpegProcessRunner
 
         using var process = new Process { StartInfo = startInfo };
         var stopwatch = Stopwatch.StartNew();
-        var stderrBuffer = new System.Text.StringBuilder(capacity: 4096);
+        var stderrBuffer = new System.Text.StringBuilder(capacity: StderrBufferInitialCapacity);
         var stderrLock = new object();
 
         using var timeoutCts = new CancellationTokenSource();
@@ -249,7 +251,7 @@ public sealed class FFmpegProcessRunner : IFFmpegProcessRunner
                 : TimeSpan.Zero;
 
         var progressPercent = totalDuration.TotalSeconds > 0
-            ? Math.Clamp(processedDuration.TotalSeconds / totalDuration.TotalSeconds * 100.0, 0.0, 100.0)
+            ? Math.Clamp(processedDuration.TotalSeconds / totalDuration.TotalSeconds * PercentScale, 0.0, PercentScale)
             : 0.0;
 
         var update = new FFmpegProgressUpdate
