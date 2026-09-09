@@ -289,8 +289,10 @@ namespace FFmpegDotnetWrapper.Api.Controllers
     /// Extracts audio from a video file and saves as a standalone audio file.
     /// Supports multiple audio codecs (MP3, AAC, OPUS, FLAC) and configurable bitrate.
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when request is null.</exception>
     public async Task<ApiResponse<ConversionResult>> ExtractAudioAsync(AudioExtractRequest request)
     {
+        ArgumentNullException.ThrowIfNull(request);
         try
         {
             if (!System.IO.File.Exists(request.InputPath))
