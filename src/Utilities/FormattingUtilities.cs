@@ -16,6 +16,10 @@ namespace FFmpegDotnetWrapper.Utilities
     /// </summary>
     public static class FormattingUtilities
     {
+        private const int ByteScale = 1024;
+        private const int BitrateKilobitThreshold = 1000;
+        private const int BitrateMegabitThreshold = 1000000;
+        private const int DefaultTruncateLength = 80;
         /// <summary>
         /// Formats a timespan into a human-readable duration string (HH:MM:SS format).
         /// Used in logging and progress reporting for FFmpeg operations.
@@ -46,7 +50,7 @@ namespace FFmpegDotnetWrapper.Utilities
             double len = bytes;
             int order = 0;
 
-            while (len >= 1024 && order < sizes.Length - 1)
+            while (len >= ByteScale && order < sizes.Length - 1)
             {
                 order++;
                 len = len / 1024;
@@ -61,11 +65,11 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static string FormatBitrate(int kbps)
         {
-            if (kbps >= 1000000)
+            if (kbps >= BitrateMegabitThreshold)
             {
                 return $"{((double)kbps / 1000000).ToString("0.##", CultureInfo.InvariantCulture)} Gbps";
             }
-            else if (kbps >= 1000)
+            else if (kbps >= BitrateKilobitThreshold)
             {
                 return $"{((double)kbps / 1000).ToString("0.##", CultureInfo.InvariantCulture)} Mbps";
             }
@@ -217,7 +221,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// Truncates a string to a maximum length and adds ellipsis if needed.
         /// Used for displaying long file paths in logs without line wrapping.
         /// </summary>
-        public static string TruncateString(string? input, int maxLength = 80)
+        public static string TruncateString(string? input, int maxLength = DefaultTruncateLength)
         {
             if (string.IsNullOrEmpty(input))
                 return string.Empty;
