@@ -96,6 +96,14 @@ public sealed class FFmpegProcessResult
     /// timing out, and was not cancelled.
     /// </summary>
     public bool Success => ExitCode == 0 && !TimedOut && !WasCancelled;
+
+    /// <summary>
+    /// Returns a culture-invariant string representation of the FFmpegProcessResult.
+    /// </summary>
+    public override string ToString()
+    {
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "ExitCode={0}, Success={1}, ExecutionTime={2}, TimedOut={3}", ExitCode, Success, ExecutionTime, TimedOut);
+    }
 }
 
 /// <summary>
