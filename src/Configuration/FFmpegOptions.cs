@@ -163,6 +163,15 @@ namespace FFmpegDotnetWrapper.Configuration
         public string? AuthToken { get; set; }
         public List<string> EventTypes { get; set; } = new();
         public bool Enabled { get; set; } = true;
+        /// <summary>
+        /// Returns a string that represents the current PreConfiguredWebhook object.
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "PreConfiguredWebhook {{ Name = {0}, Url = {1}, EventTypes = {2} }}",
+                Name, Url, EventTypes.Count);
+        }
     }
 
     /// <summary>
