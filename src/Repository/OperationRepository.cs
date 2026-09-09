@@ -15,7 +15,9 @@ public class OperationRepository : IOperationRepository
 {
     private readonly Dictionary<string, FFmpegOperation> _operations = new();
     private readonly object _lockObject = new();
-    private readonly int _maxOperationsInMemory = 1000;
+    public const int DefaultMaxOperationsInMemory = 1000;
+    public const int DefaultRecentCount = 10;
+    private readonly int _maxOperationsInMemory = DefaultMaxOperationsInMemory;
 
     public Task<FFmpegOperation?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
@@ -82,7 +84,7 @@ public class OperationRepository : IOperationRepository
         }
     }
 
-    public Task<IEnumerable<FFmpegOperation>> GetRecentAsync(int count = 10, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<FFmpegOperation>> GetRecentAsync(int count = DefaultRecentCount, CancellationToken cancellationToken = default)
     {
         lock (_lockObject)
         {
