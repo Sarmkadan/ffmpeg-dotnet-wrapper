@@ -39,32 +39,40 @@ namespace FFmpegDotnetWrapper.Cli
         /// <summary>
         /// Formats an error message with optional color.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="message"/> is null.</exception>
         public string FormatError(string message)
         {
+            ArgumentNullException.ThrowIfNull(message);
             return _useColors ? $"[31m✗ {message}[0m" : $"✗ {message}";
         }
 
         /// <summary>
         /// Formats a warning message with optional color.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="message"/> is null.</exception>
         public string FormatWarning(string message)
         {
+            ArgumentNullException.ThrowIfNull(message);
             return _useColors ? $"[33m⚠ {message}[0m" : $"⚠ {message}";
         }
 
         /// <summary>
         /// Formats an informational message.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="message"/> is null.</exception>
         public string FormatInfo(string message)
         {
+            ArgumentNullException.ThrowIfNull(message);
             return _useColors ? $"[36mℹ {message}[0m" : $"ℹ {message}";
         }
 
         /// <summary>
         /// Formats a conversion result as a simple status line.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="result"/> is null.</exception>
         public string FormatConversionResult(ConversionResult result)
         {
+            ArgumentNullException.ThrowIfNull(result);
             var status = result.Success
                 ? FormatSuccess($"{result.OutputFile}")
                 : FormatError($"{result.OutputFile} ({result.ErrorMessage})");
@@ -79,8 +87,10 @@ namespace FFmpegDotnetWrapper.Cli
         /// <summary>
         /// Formats a table with multiple results.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="results"/> is null.</exception>
         public string FormatResultsTable(List<ConversionResult> results)
         {
+            ArgumentNullException.ThrowIfNull(results);
             var lines = new StringBuilder();
 
             // Header
@@ -126,8 +136,10 @@ namespace FFmpegDotnetWrapper.Cli
         /// <summary>
         /// Formats operation summary statistics.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="results"/> is null.</exception>
         public string FormatSummary(List<ConversionResult> results)
         {
+            ArgumentNullException.ThrowIfNull(results);
             var successful = 0;
             var failed = 0;
             var totalTime = TimeSpan.Zero;
@@ -160,8 +172,12 @@ namespace FFmpegDotnetWrapper.Cli
         /// <summary>
         /// Creates a help box with title and content.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="title"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="lines"/> is null.</exception>
         public string FormatHelpBox(string title, List<string> lines)
         {
+            ArgumentNullException.ThrowIfNull(title);
+            ArgumentNullException.ThrowIfNull(lines);
             var box = new StringBuilder();
             var width = Math.Min(_consoleWidth - 4, 80);
 
@@ -194,16 +210,22 @@ namespace FFmpegDotnetWrapper.Cli
         /// <summary>
         /// Formats a key-value pair for display (e.g., "Name:  value").
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="key"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
         public string FormatKeyValue(string key, string value, int keyWidth = 20)
         {
+            ArgumentNullException.ThrowIfNull(key);
+            ArgumentNullException.ThrowIfNull(value);
             return $"{key.PadRight(keyWidth)} {value}";
         }
 
         /// <summary>
         /// Formats API response for CLI display.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="response"/> is null.</exception>
         public string FormatApiResponse<T>(ApiResponse<T> response)
         {
+            ArgumentNullException.ThrowIfNull(response);
             var lines = new StringBuilder();
 
             lines.AppendLine(FormatKeyValue("Status", response.Success ? "Success" : "Failed"));
