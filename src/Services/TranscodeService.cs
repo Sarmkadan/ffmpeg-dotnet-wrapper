@@ -8,6 +8,7 @@ using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Models;
 using FFmpegDotnetWrapper.Repository;
 using Microsoft.Extensions.Logging;
+using System;
 
 namespace FFmpegDotnetWrapper.Services;
 
@@ -28,11 +29,14 @@ public class TranscodeService : ITranscodeService
     /// <summary>
     /// Transcodes to H.264 format optimized for web.
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="inputMedia"/> is null.</exception>
     public async Task<ConversionResult> TranscodeToWebAsync(
         MediaFile inputMedia,
         string outputPath,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputMedia);
+
         var settings = new TranscodeSettings
         {
             VideoCodec = VideoCodec.H264,
@@ -55,11 +59,14 @@ public class TranscodeService : ITranscodeService
     /// <summary>
     /// Transcodes to H.265 format for better compression.
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="inputMedia"/> is null.</exception>
     public async Task<ConversionResult> TranscodeToH265Async(
         MediaFile inputMedia,
         string outputPath,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputMedia);
+
         var settings = new TranscodeSettings
         {
             VideoCodec = VideoCodec.H265,
@@ -81,11 +88,14 @@ public class TranscodeService : ITranscodeService
     /// <summary>
     /// Transcodes to mobile-friendly format.
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="inputMedia"/> is null.</exception>
     public async Task<ConversionResult> TranscodeToMobileAsync(
         MediaFile inputMedia,
         string outputPath,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputMedia);
+
         var settings = new TranscodeSettings
         {
             VideoCodec = VideoCodec.H264,
@@ -108,11 +118,14 @@ public class TranscodeService : ITranscodeService
     /// <summary>
     /// Transcodes to high-quality format for archival.
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="inputMedia"/> is null.</exception>
     public async Task<ConversionResult> TranscodeToHighQualityAsync(
         MediaFile inputMedia,
         string outputPath,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputMedia);
+
         var settings = new TranscodeSettings
         {
             VideoCodec = VideoCodec.H264,
@@ -134,6 +147,7 @@ public class TranscodeService : ITranscodeService
     /// <summary>
     /// Creates a custom transcode with specified bitrate.
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="inputMedia"/> is null.</exception>
     public async Task<ConversionResult> TranscodeWithBitrateAsync(
         MediaFile inputMedia,
         string outputPath,
@@ -141,6 +155,8 @@ public class TranscodeService : ITranscodeService
         int audioBitrate,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputMedia);
+
         var settings = new TranscodeSettings
         {
             VideoCodec = VideoCodec.H264,
@@ -166,12 +182,14 @@ public class TranscodeService : ITranscodeService
     /// <summary>
     /// Extracts audio from a video file.
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="inputMedia"/> is null.</exception>
     public async Task<ConversionResult> ExtractAudioAsync(
         MediaFile inputMedia,
         string outputPath,
         AudioCodec audioCodec = AudioCodec.MP3,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputMedia);
         inputMedia.ValidateAsVideo();
 
         var settings = new TranscodeSettings
@@ -189,6 +207,7 @@ public class TranscodeService : ITranscodeService
     /// <summary>
     /// Converts video to a specific resolution.
     /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="inputMedia"/> is null.</exception>
     public async Task<ConversionResult> ResizeVideoAsync(
         MediaFile inputMedia,
         string outputPath,
@@ -196,6 +215,8 @@ public class TranscodeService : ITranscodeService
         int height,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputMedia);
+
         if (width < 1 || height < 1)
             throw new InvalidOperationConfigurationException("Width and height must be greater than 0");
 
