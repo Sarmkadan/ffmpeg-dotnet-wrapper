@@ -18,6 +18,8 @@ namespace FFmpegDotnetWrapper.Utilities
     /// </summary>
     public static class ProcessUtilities
     {
+        private static readonly TimeSpan DefaultProcessTimeout = TimeSpan.FromMinutes(10);
+        private const double PercentScale = 100;
         /// <summary>
         /// Represents the result of a process execution.
         /// Includes exit code, stdout, and stderr for comprehensive error diagnostics.
@@ -90,7 +92,7 @@ namespace FFmpegDotnetWrapper.Utilities
             if (fileName == null) throw new ArgumentNullException(nameof(fileName));
             if (arguments == null) throw new ArgumentNullException(nameof(arguments));
 
-            timeout ??= TimeSpan.FromMinutes(10); // Default 10-minute timeout
+            timeout ??= DefaultProcessTimeout;
 
             var startTime = DateTime.UtcNow;
             var processInfo = new ProcessStartInfo
@@ -180,7 +182,7 @@ namespace FFmpegDotnetWrapper.Utilities
             TimeSpan? timeout = null,
             CancellationToken cancellationToken = default)
         {
-            timeout ??= TimeSpan.FromMinutes(10);
+            timeout ??= DefaultProcessTimeout;
 
             var startTime = DateTime.UtcNow;
             var processInfo = new ProcessStartInfo
@@ -291,8 +293,8 @@ namespace FFmpegDotnetWrapper.Utilities
 
             if (frameMatch.Success && long.TryParse(frameMatch.Groups[1].Value, out var currentFrame))
             {
-                var percentage = (double)currentFrame / estimatedTotalFrames * 100;
-                return Math.Min(percentage, 100);
+                var percentage = (double)currentFrame / estimatedTotalFrames * PercentScale;
+                return Math.Min(percentage, PercentScale);
             }
 
             return 0;
