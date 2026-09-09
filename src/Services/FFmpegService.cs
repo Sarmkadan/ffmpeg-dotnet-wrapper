@@ -489,7 +489,7 @@ public class FFmpegService : IFFmpegService
         MediaFile inputMedia,
         string outputPath,
         AudioCodec audioCodec = AudioCodec.MP3,
-        int audioBitrate = 192,
+        int audioBitrate = DefaultAudioBitrateKbps,
         CancellationToken cancellationToken = default)
     {
         var operation = new FFmpegOperation
@@ -800,6 +800,26 @@ public class FFmpegService : IFFmpegService
     private const int MaxRetainedStderrChars = 64 * 1024;
 
     /// <summary>
+    /// Default width used when video file width is null for watermark positioning.
+    /// </summary>
+    private const int DefaultWatermarkFallbackWidth = 1920;
+
+    /// <summary>
+    /// Default height used when video file height is null for watermark positioning.
+    /// </summary>
+    private const int DefaultWatermarkFallbackHeight = 1080;
+
+    /// <summary>
+    /// Default audio bitrate in kbps used when extracting audio.
+    /// </summary>
+    private const int DefaultAudioBitrateKbps = 192;
+
+    /// <summary>
+    /// Number of lines from the end of FFmpeg stderr to include in error diagnostics.
+    /// </summary>
+    private const int ErrorOutputTailLineCount = 10;
+
+    /// <summary>
     /// Executes an FFmpeg operation while streaming incremental <see cref="FFmpegProgressUpdate"/>
     /// snapshots parsed from FFmpeg's <c>-progress pipe:1</c> stdout stream. Each stdout line is
     /// parsed and discarded immediately (no accumulation of the full output), and stderr is kept
@@ -936,7 +956,7 @@ public class FFmpegService : IFFmpegService
         MediaFile videoFile)
     {
         var filter = $"overlay=";
-        var (x, y) = settings.CalculatePosition(videoFile.Width ?? 1920, videoFile.Height ?? 1080);
+        var (x, y) = settings.CalculatePosition(videoFile.Width ?? DefaultWatermarkFallbackWidth, videoFile.Height ?? DefaultWatermarkFallbackHeight);
         filter += $"{x}:{y}";
 
         operation.AddArgument($"-i \"{settings.WatermarkPath}\"");
@@ -1233,8 +1253,8 @@ public class FFmpegService : IFFmpegService
 
         var lines = errorOutput.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
 
-        // Return last 10 lines, or all lines if fewer than 10
-        var startIndex = Math.Max(0, lines.Length - 10);
+        // Return last ErrorOutputTailLineCount lines, or all lines if fewer than that
+        var startIndex = Math.Max(0, lines.Length - ErrorOutputTailLineCount);
         return string.Join(Environment.NewLine, lines.Skip(startIndex));
     }
 }
