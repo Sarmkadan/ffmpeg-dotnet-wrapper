@@ -127,10 +127,10 @@ namespace FFmpegDotnetWrapper.Caching
         /// Removes a specific cache entry by key.
         /// Returns true if entry was found and removed, false if not found.
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="key"/> is null or empty.</exception>
         public bool Remove(string key)
         {
-            if (string.IsNullOrEmpty(key))
-                return false;
+            ArgumentException.ThrowIfNullOrEmpty(key);
 
             lock (_lockObject)
             {
