@@ -84,8 +84,12 @@ namespace FFmpegDotnetWrapper.Utilities
         /// Masks sensitive paths and creates readable multi-line output.
         /// Useful for debugging but should mask sensitive information.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="executable"/> or <paramref name="arguments"/> is <see langword="null"/>.</exception>
         public static string FormatFFmpegCommand(string executable, string arguments)
         {
+            ArgumentNullException.ThrowIfNull(executable);
+            ArgumentNullException.ThrowIfNull(arguments);
+
             var sb = new StringBuilder();
             sb.AppendLine($"{executable} \\");
 
