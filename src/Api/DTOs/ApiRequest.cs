@@ -63,6 +63,15 @@ namespace FFmpegDotnetWrapper.Api.DTOs
 
         [Range(0, 51)]
         public int? Quality { get; set; }
+
+        /// <summary>
+        /// Returns a string representation of the TranscodeRequest.
+        /// </summary>
+        /// <returns>A concise, single-line, culture-invariant summary including InputPath, OutputPath and codec/format properties.</returns>
+        public override string ToString()
+        {
+            return $"InputPath: {InputPath}, OutputPath: {OutputPath}, Format: {OutputFormat}, Codec: {Codec ?? "none"}";
+        }
     }
 
     /// <summary>
