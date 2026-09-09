@@ -29,6 +29,9 @@ public class CircuitBreakerRetryPolicy : IRetryPolicy
     private DateTime _lastFailureTime = DateTime.MinValue;
     private readonly object _stateLock = new object();
 
+    private const int DefaultFailureThreshold = 5;
+    private static readonly TimeSpan DefaultBreakDuration = TimeSpan.FromSeconds(30);
+
     /// <summary>
     /// Creates a new circuit breaker retry policy.
     /// </summary>
@@ -38,7 +41,7 @@ public class CircuitBreakerRetryPolicy : IRetryPolicy
     /// <param name="halfOpenAttempts">Number of attempts to make in half-open state before deciding circuit state.</param>
     public CircuitBreakerRetryPolicy(
         IRetryPolicy innerPolicy,
-        int failureThreshold = 5,
+        int failureThreshold = DefaultFailureThreshold,
         TimeSpan? breakDuration = null,
         int halfOpenAttempts = 2)
     {
@@ -60,7 +63,7 @@ public class CircuitBreakerRetryPolicy : IRetryPolicy
 
         _innerPolicy = innerPolicy;
         _failureThreshold = failureThreshold;
-        _breakDuration = breakDuration ?? TimeSpan.FromSeconds(30);
+        _breakDuration = breakDuration ?? DefaultBreakDuration;
         _halfOpenAttempts = halfOpenAttempts;
     }
 
