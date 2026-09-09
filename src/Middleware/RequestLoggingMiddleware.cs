@@ -138,8 +138,10 @@ namespace FFmpegDotnetWrapper.Middleware
         /// Logs an error that occurred during operation processing.
         /// Records exception details, operation context, and recovery suggestions.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="ex"/> is null.</exception>
         public void LogError(Exception ex, string operationName, string? requestId = null, Dictionary<string, object>? context = null)
         {
+            ArgumentNullException.ThrowIfNull(ex);
             try
             {
                 var timestamp = FormattingUtilities.FormatTimestamp(DateTime.UtcNow);
