@@ -47,6 +47,9 @@ namespace FFmpegDotnetWrapper.Utilities
     /// </summary>
     public class ProgressTracker : IDisposable
     {
+        private const double MinPercentage = 0;
+        private const double MaxPercentage = 100;
+
         private readonly Stopwatch _stopwatch;
         private readonly object _lockObject = new();
         private int _itemsProcessed = 0;
@@ -109,12 +112,12 @@ namespace FFmpegDotnetWrapper.Utilities
             lock (_lockObject)
             {
                 // Clamp to 0‑100
-                percentage = Math.Max(0, Math.Min(100, percentage));
+                percentage = Math.Max(MinPercentage, Math.Min(MaxPercentage, percentage));
 
                 // Calculate items completed based on percentage
                 if (_totalItems > 0)
                 {
-                    _itemsProcessed = (int)((_totalItems * percentage) / 100);
+                    _itemsProcessed = (int)((_totalItems * percentage) / MaxPercentage);
                 }
 
                 if (!string.IsNullOrEmpty(statusMessage))
@@ -139,12 +142,12 @@ namespace FFmpegDotnetWrapper.Utilities
                 var percent = totalDuration.TotalSeconds > 0
                     ? (processedDuration.TotalSeconds / totalDuration.TotalSeconds) * 100
                     : 0;
-                percent = Math.Max(0, Math.Min(100, percent));
+                percent = Math.Max(MinPercentage, Math.Min(MaxPercentage, percent));
 
                 // Update items processed for compatibility with existing reporting
                 if (_totalItems > 0)
                 {
-                    _itemsProcessed = (int)((_totalItems * percent) / 100);
+                    _itemsProcessed = (int)((_totalItems * percent) / MaxPercentage);
                 }
 
                 if (!string.IsNullOrEmpty(statusMessage))
@@ -293,7 +296,7 @@ namespace FFmpegDotnetWrapper.Utilities
             get
             {
                 var percent = CalculateProgressPercentage();
-                return Math.Max(0, Math.Min(100, percent));
+                return Math.Max(MinPercentage, Math.Min(MaxPercentage, percent));
             }
         }
 
