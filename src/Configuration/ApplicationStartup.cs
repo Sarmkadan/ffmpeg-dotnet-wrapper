@@ -190,8 +190,11 @@ namespace FFmpegDotnetWrapper.Configuration
         /// Gets the FFmpeg options from the configured services.
         /// Useful for accessing configuration during runtime.
         /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="serviceProvider"/> is <see langword="null"/>.</exception>
         public static FFmpegOptions GetFFmpegOptions(this IServiceProvider serviceProvider)
         {
+            ArgumentNullException.ThrowIfNull(serviceProvider);
+
             var optionsMonitor = serviceProvider.GetRequiredService<IOptionsMonitor<FFmpegOptions>>();
             return optionsMonitor.CurrentValue;
         }
@@ -199,32 +202,44 @@ namespace FFmpegDotnetWrapper.Configuration
         /// <summary>
         /// Gets cache service from the configured services.
         /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="serviceProvider"/> is <see langword="null"/>.</exception>
         public static ICacheService GetCacheService(this IServiceProvider serviceProvider)
         {
+            ArgumentNullException.ThrowIfNull(serviceProvider);
+
             return serviceProvider.GetRequiredService<ICacheService>();
         }
 
         /// <summary>
         /// Gets event publisher from the configured services.
         /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="serviceProvider"/> is <see langword="null"/>.</exception>
         public static IEventPublisher GetEventPublisher(this IServiceProvider serviceProvider)
         {
+            ArgumentNullException.ThrowIfNull(serviceProvider);
+
             return serviceProvider.GetRequiredService<IEventPublisher>();
         }
 
         /// <summary>
         /// Gets background job service from the configured services.
         /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="serviceProvider"/> is <see langword="null"/>.</exception>
         public static IBackgroundJobService GetBackgroundJobService(this IServiceProvider serviceProvider)
         {
+            ArgumentNullException.ThrowIfNull(serviceProvider);
+
             return serviceProvider.GetRequiredService<IBackgroundJobService>();
         }
 
         /// <summary>
         /// Gets rate limiter from the configured services.
         /// </summary>
+        /// <exception cref="ArgumentNullException"><paramref name="serviceProvider"/> is <see langword="null"/>.</exception>
         public static IRateLimiter GetRateLimiter(this IServiceProvider serviceProvider)
         {
+            ArgumentNullException.ThrowIfNull(serviceProvider);
+
             return serviceProvider.GetRequiredService<IRateLimiter>();
         }
     }
