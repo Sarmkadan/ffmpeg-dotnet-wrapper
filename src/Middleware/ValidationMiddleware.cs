@@ -165,8 +165,11 @@ namespace FFmpegDotnetWrapper.Middleware
         /// Validates merge request specifically - requires at least 2 files with identical codecs.
         /// FFmpeg merge operations require codec compatibility across all input files.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is <see langword="null"/>.</exception>
         public static ApiResponse<MergeRequest>? ValidateMergeRequest(MergeRequest request)
         {
+            ArgumentNullException.ThrowIfNull(request);
+
             var errors = new List<ApiError>();
 
             if (request.InputPaths == null || request.InputPaths.Count < 2)
