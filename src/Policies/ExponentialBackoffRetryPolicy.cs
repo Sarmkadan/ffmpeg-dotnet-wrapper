@@ -20,6 +20,13 @@ namespace FFmpegDotnetWrapper.Policies;
 /// </summary>
 public class ExponentialBackoffRetryPolicy : IRetryPolicy
 {
+    private const int ExitCodeCannotExecute = 126;
+    private const int ExitCodeCommandNotFound = 127;
+    private const int ExitCodeTerminatedBySignal = 130;
+    private const int ExitCodeGenericError1 = 1;
+    private const int ExitCodeGenericError2 = 2;
+    private const int DefaultInitialDelayMilliseconds = 100;
+
     private readonly int _maxAttempts;
     private readonly int _initialDelayMilliseconds;
     private readonly double _backoffFactor;
@@ -37,7 +44,7 @@ public class ExponentialBackoffRetryPolicy : IRetryPolicy
     /// If null, uses default logic for transient failures.</param>
     public ExponentialBackoffRetryPolicy(
         int maxAttempts = 3,
-        int initialDelayMilliseconds = 100,
+        int initialDelayMilliseconds = DefaultInitialDelayMilliseconds,
         double backoffFactor = 2.0,
         double jitterFactor = 0.5,
         Func<Exception, bool>? shouldRetryPredicate = null)
@@ -254,11 +261,11 @@ public class ExponentialBackoffRetryPolicy : IRetryPolicy
             return processEx.ExitCode switch
             {
                 // Retry these common transient failures
-                1 => false, // Generic error - check if it's a bad argument
-                2 => false, // Generic error
-                126 => false, // Command cannot execute
-                127 => false, // Command not found
-                130 => false, // Process terminated by signal (Ctrl+C)
+                ExitCodeGenericError1 => false, // Generic error - check if it's a bad argument
+                ExitCodeGenericError2 => false, // Generic error
+                ExitCodeCannotExecute => false, // Command cannot execute
+                ExitCodeCommandNotFound => false, // Command not found
+                ExitCodeTerminatedBySignal => false, // Process terminated by signal (Ctrl+C)
                 _ => true // Retry other exit codes (transient issues)
             };
         }
