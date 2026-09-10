@@ -42,7 +42,7 @@ namespace FFmpegDotnetWrapper.Abstraction
         /// Optional context to include in the exception message.
         /// </param>
         /// <exception cref="ProcessExecutionException">
-        /// Thrown when the process result indicates failure (non-zero exit code, timeout, or cancellation).
+        /// Thrown when the process result indicates failure (non‑zero exit code, timeout, or cancellation).
         /// </exception>
         public static void ThrowIfFailed(this ProcessResult result, string? context = null)
         {
@@ -58,21 +58,18 @@ namespace FFmpegDotnetWrapper.Abstraction
                 ? $"Process execution failed: {failureReason}"
                 : $"Process execution failed ({context}): {failureReason}";
 
-            // Use the constructor that takes message and exitCode if we have an exit code, otherwise just message.
+            // If the failure is not due to timeout or cancellation we have a meaningful exit code.
             if (!result.TimedOut && !result.WasCancelled)
             {
                 throw new ProcessExecutionException(message, result.ExitCode, result.StdErrTail);
             }
-            else
-            {
-                // For timeout or cancellation, we don't have an exit code that indicates failure in the same way.
-                // We'll use the constructor that takes only a message.
-                throw new ProcessExecutionException(message);
-            }
+
+            // For timeout or cancellation we only have a generic message.
+            throw new ProcessExecutionException(message);
         }
 
         /// <summary>
-        /// Gets a human-readable string describing the failure reason, or <see langword="null"/> if the process succeeded.
+        /// Gets a human‑readable string describing the failure reason, or <see langword="null"/> if the process succeeded.
         /// </summary>
         /// <param name="result">The process result.</param>
         /// <returns>
