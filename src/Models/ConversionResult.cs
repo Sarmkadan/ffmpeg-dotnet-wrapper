@@ -152,6 +152,7 @@ public class ConversionResult
     /// <param name="exitCode">FFmpeg exit code (0 for success).</param>
     public void MarkAsSuccess(string outputPath, int exitCode = 0)
     {
+        ArgumentNullException.ThrowIfNull(outputPath);
         IsSuccess = true;
         ExitCode = exitCode;
         OutputFilePath = outputPath;
@@ -168,6 +169,7 @@ public class ConversionResult
     /// <param name="errorOutput">Tail of stderr output for diagnostic purposes.</param>
     public void MarkAsFailed(string errorMessage, int exitCode = 1, string? errorOutput = null)
     {
+        ArgumentNullException.ThrowIfNull(errorMessage);
         IsSuccess = false;
         ErrorMessage = errorMessage;
         ExitCode = exitCode;
