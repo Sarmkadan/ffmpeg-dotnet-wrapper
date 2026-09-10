@@ -229,4 +229,13 @@ public sealed class ProfileMetrics
         Interlocked.Increment(ref _totalSegments);
         Interlocked.Add(ref _totalBytes, bytes);
     }
+
+    /// <summary>
+    /// Returns a culture-invariant string representing the profile metrics.
+    /// </summary>
+    /// <returns>A string in the format "ProfileName: Segments=<total>, Bytes=<total>".</returns>
+    public override string ToString()
+    {
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}: Segments={1}, Bytes={2}", ProfileName, TotalSegments, TotalBytes);
+    }
 }
