@@ -47,6 +47,15 @@ namespace FFmpegDotnetWrapper.Integration
 
         /// <summary>Custom headers to include in webhook requests.</summary>
         public Dictionary<string, string> Headers { get; set; } = new();
+
+        /// <summary>
+        /// Returns a concise, single-line, culture-invariant summary of the webhook endpoint.
+        /// </summary>
+        /// <returns>A string containing WebhookId, Url, IsActive, and EventTypes count.</returns>
+        public override string ToString()
+        {
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture, "Id={0}, Url={1}, IsActive={2}, EventTypesCount={3}", WebhookId, Url, IsActive, EventTypes.Count);
+        }
     }
 
     /// <summary>
