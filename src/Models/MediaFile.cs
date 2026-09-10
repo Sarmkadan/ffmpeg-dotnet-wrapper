@@ -156,4 +156,14 @@ public class MediaFile
             Metadata = new Dictionary<string, string>(Metadata)
         };
     }
+
+    /// <summary>
+    /// Returns a concise, culture-invariant summary of the media file.
+    /// </summary>
+    public override string ToString()
+    {
+        var resolution = (Width.HasValue && Height.HasValue) ? $"{Width}x{Height}" : "N/A";
+        var duration = Duration?.ToString() ?? "N/A";
+        return $"MediaFile {{ Name = {Name}, Extension = {Extension}, Resolution = {resolution}, Duration = {duration}, FileSize = {FileSize} }}";
+    }
 }
