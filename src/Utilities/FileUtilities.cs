@@ -215,6 +215,8 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static string GetTempFilePath(string? extension = null)
         {
+            ArgumentNullException.ThrowIfNull(extension);
+
             var tempPath = Path.Combine(
                 Path.GetTempPath(),
                 "ffmpeg-dotnet",
@@ -231,6 +233,8 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static string SanitizeFileName(string fileName)
         {
+            ArgumentNullException.ThrowIfNull(fileName);
+
             var invalidChars = new Regex($"[{Regex.Escape(new string(Path.GetInvalidFileNameChars()))}]");
             var sanitized = invalidChars.Replace(fileName, "_");
             return sanitized.Length > MaxFileNameLength
@@ -244,6 +248,9 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static bool AreFormatsCompatible(string filePath1, string filePath2)
         {
+            ArgumentNullException.ThrowIfNull(filePath1);
+            ArgumentNullException.ThrowIfNull(filePath2);
+
             var ext1 = GetFileExtension(filePath1);
             var ext2 = GetFileExtension(filePath2);
             return ext1.Equals(ext2, StringComparison.OrdinalIgnoreCase);
