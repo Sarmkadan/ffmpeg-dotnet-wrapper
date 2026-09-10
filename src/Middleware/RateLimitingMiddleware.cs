@@ -121,9 +121,8 @@ namespace FFmpegDotnetWrapper.Middleware
         /// </summary>
         public bool AllowRequest(string identifier, string policyName = "default")
         {
-            if (string.IsNullOrEmpty(identifier))
-                throw new ArgumentException("Identifier cannot be empty", nameof(identifier));
-
+            ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
+            ArgumentException.ThrowIfNullOrWhiteSpace(policyName);
             lock (_lockObject) // atomic update
             {
                 if (!_policies.TryGetValue(policyName, out var policy))
@@ -174,6 +173,7 @@ namespace FFmpegDotnetWrapper.Middleware
         /// </summary>
         public bool AllowRequest(string? userId, string? tenantId, string policyName = "default")
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(policyName);
             if (!_policies.TryGetValue(policyName, out var policy))
                 return true;
 
@@ -199,6 +199,7 @@ namespace FFmpegDotnetWrapper.Middleware
         /// </summary>
         public RateLimitStatus GetStatus(string identifier, string policyName = "default")
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
             lock (_lockObject) // atomic update
             {
                 if (!_policies.TryGetValue(policyName, out var policy))
@@ -242,6 +243,7 @@ namespace FFmpegDotnetWrapper.Middleware
         /// </summary>
         public void Reset(string identifier, string policyName = "default")
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
             lock (_lockObject) // atomic update
             {
                 var windowKey = $"{identifier}:{policyName}";
