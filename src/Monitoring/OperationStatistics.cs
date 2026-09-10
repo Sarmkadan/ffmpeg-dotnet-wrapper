@@ -33,6 +33,16 @@ namespace FFmpegDotnetWrapper.Monitoring
             ? (SuccessfulOperations * 100.0) / TotalAttempts
             : 0;
 
+        /// <summary>
+        /// Returns a concise, single-line, culture-invariant summary of the operation statistics.
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "Type: {0}, Attempts: {1}, Success: {2}, Failed: {3}, Rate: {4:0.0}%",
+                Type, TotalAttempts, SuccessfulOperations, FailedOperations, SuccessRate);
+        }
+
         /// <summary>Total bytes processed across all operations.</summary>
         public long TotalBytesProcessed { get; set; }
 
