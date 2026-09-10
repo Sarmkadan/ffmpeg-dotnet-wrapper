@@ -19,6 +19,7 @@ public class MediaRepository : IMediaRepository
 
     public Task<MediaFile?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
         lock (_lockObject)
         {
             _mediaFiles.TryGetValue(id, out var mediaFile);
@@ -85,6 +86,7 @@ public class MediaRepository : IMediaRepository
 
     public Task<bool> DeleteAsync(string id, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
         lock (_lockObject)
         {
             return Task.FromResult(_mediaFiles.Remove(id));
@@ -149,6 +151,7 @@ public class MediaRepository : IMediaRepository
 
     public Task<bool> ExistsAsync(string id, CancellationToken cancellationToken = default)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(id);
         lock (_lockObject)
         {
             return Task.FromResult(_mediaFiles.ContainsKey(id));
