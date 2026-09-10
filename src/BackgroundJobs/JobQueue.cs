@@ -24,6 +24,21 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
         public int MaxRetries { get; set; } = 3;
         public string Payload { get; set; } = string.Empty;
         public Dictionary<string, string> Tags { get; set; } = new();
+
+        /// <summary>
+        /// Returns a culture-invariant string representation of the queued job.
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "JobId: {0}, Priority: {1}, Retry: {2}/{3}, Enqueued: {4:O}, Due: {5}",
+                JobId,
+                Priority,
+                RetryCount,
+                MaxRetries,
+                EnqueuedAt,
+                DueAt.HasValue ? DueAt.Value.ToString("O") : "null");
+        }
     }
 
     /// <summary>
