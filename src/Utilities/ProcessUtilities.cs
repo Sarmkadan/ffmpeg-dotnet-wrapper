@@ -182,6 +182,9 @@ namespace FFmpegDotnetWrapper.Utilities
             TimeSpan? timeout = null,
             CancellationToken cancellationToken = default)
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
+            ArgumentException.ThrowIfNullOrWhiteSpace(arguments);
+
             timeout ??= DefaultProcessTimeout;
 
             var startTime = DateTime.UtcNow;
@@ -263,6 +266,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static bool IsExecutableAvailable(string executableName)
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(executableName);
             try
             {
                 var result = ExecuteProcess(
