@@ -112,6 +112,7 @@ public class ConcatenationBuilder
     /// <returns>This builder instance for chaining.</returns>
     public ConcatenationBuilder Add(string filePath)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         _segments.Add(new ConcatenationSegment(filePath));
         return this;
     }
@@ -130,6 +131,8 @@ public class ConcatenationBuilder
         TimeSpan? trimEnd = null,
         TimeSpan? trimDuration = null)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+
         if (trimEnd.HasValue && trimDuration.HasValue)
             throw new InvalidOperationConfigurationException(
                 "Specify either TrimEnd or TrimDuration for a segment, not both");
@@ -154,6 +157,7 @@ public class ConcatenationBuilder
     {
         if (index < 0 || index > _segments.Count)
             throw new ArgumentOutOfRangeException(nameof(index));
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
 
         _segments.Insert(index, new ConcatenationSegment(filePath));
         return this;
@@ -165,6 +169,7 @@ public class ConcatenationBuilder
     /// <returns>This builder instance for chaining.</returns>
     public ConcatenationBuilder Remove(string filePath)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         _segments.RemoveAll(s => string.Equals(s.FilePath, Path.GetFullPath(filePath), StringComparison.OrdinalIgnoreCase));
         return this;
     }
