@@ -31,5 +31,21 @@ namespace FFmpegDotnetWrapper.Cli
         /// Optional sub‑command name.
         /// </summary>
         public string? SubCommand { get; set; }
+
+        /// <summary>
+        /// Returns a concise, single-line summary of the CLI command.
+        /// </summary>
+        public override string ToString()
+        {
+            var parts = new List<string>();
+            if (!string.IsNullOrEmpty(Name))
+                parts.Add(Name);
+            if (!string.IsNullOrEmpty(SubCommand))
+                parts.Add(SubCommand);
+            var @base = string.Join(" ", parts);
+            return string.IsNullOrEmpty(@base)
+                ? $"(Args: {Arguments.Count}, Options: {Options.Count})"
+                : $"{@base} (Args: {Arguments.Count}, Options: {Options.Count})";
+        }
     }
 }
