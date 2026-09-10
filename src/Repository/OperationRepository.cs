@@ -21,6 +21,9 @@ public class OperationRepository : IOperationRepository
 
     public Task<FFmpegOperation?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
+        if (id == null)
+            throw new ArgumentNullException(nameof(id));
+
         lock (_lockObject)
         {
             _operations.TryGetValue(id, out var operation);
@@ -38,6 +41,9 @@ public class OperationRepository : IOperationRepository
 
     public Task<FFmpegOperation> AddAsync(FFmpegOperation operation, CancellationToken cancellationToken = default)
     {
+        if (operation == null)
+            throw new ArgumentNullException(nameof(operation));
+
         lock (_lockObject)
         {
             // Implement memory management
@@ -66,6 +72,9 @@ public class OperationRepository : IOperationRepository
 
     public Task<bool> DeleteAsync(string id, CancellationToken cancellationToken = default)
     {
+        if (id == null)
+            throw new ArgumentNullException(nameof(id));
+
         lock (_lockObject)
         {
             return Task.FromResult(_operations.Remove(id));
