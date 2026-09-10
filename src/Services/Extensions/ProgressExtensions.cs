@@ -19,6 +19,7 @@ namespace FFmpegDotNetWrapper.Services.Extensions
         /// <returns>A string of equals-sign characters sized by the integer value of <see cref="FFmpegProgressUpdate.ProgressPercentage"/>.</returns>
         public static string ToConsoleString(this FFmpegProgressUpdate update)
         {
+            ArgumentNullException.ThrowIfNull(update);
             return new string('=', (int)update.ProgressPercentage);
         }
 
