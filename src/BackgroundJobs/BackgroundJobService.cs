@@ -206,6 +206,9 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
 
         public Task<BackgroundJob?> GetJobAsync(string jobId)
         {
+            if (string.IsNullOrWhiteSpace(jobId))
+                throw new ArgumentException("Job ID cannot be null, empty, or whitespace", nameof(jobId));
+
             lock (_lockObject)
             {
                 _jobs.TryGetValue(jobId, out var job);
@@ -248,6 +251,9 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
         /// </summary>
         public Task<bool> CancelJobAsync(string jobId)
         {
+            if (string.IsNullOrWhiteSpace(jobId))
+                throw new ArgumentException("Job ID cannot be null, empty, or whitespace", nameof(jobId));
+
             lock (_lockObject)
             {
                 if (!_cancellationTokens.TryGetValue(jobId, out var cts))
