@@ -34,6 +34,9 @@ public class BatchOperationService
         int maxConcurrency = 2,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputFiles);
+        ArgumentNullException.ThrowIfNull(outputDirectory);
+        ArgumentNullException.ThrowIfNull(settings);
         var files = inputFiles.ToList();
         var result = new BatchOperationResult
         {
@@ -122,6 +125,9 @@ public class BatchOperationService
         int maxConcurrency = 2,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(inputFiles);
+        ArgumentNullException.ThrowIfNull(outputDirectory);
+        ArgumentNullException.ThrowIfNull(processFunc);
         var files = inputFiles.ToList();
         var result = new BatchOperationResult
         {
