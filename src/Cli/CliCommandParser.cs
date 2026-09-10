@@ -302,6 +302,11 @@ namespace FFmpegDotnetWrapper.Cli
         /// Expected named options.
         /// </summary>
         public List<CliOption> Options { get; set; } = new();
+
+        /// <summary>
+        /// Returns a concise, culture-invariant summary of the command definition.
+        /// </summary>
+        public override string ToString() => string.Format(System.Globalization.CultureInfo.InvariantCulture, "CliCommandDefinition {{ Name = {0}, Description = {1}, Arguments = {2}, Options = {3} }}", Name, Description, Arguments.Count, Options.Count);
     }
 
     /// <summary>
