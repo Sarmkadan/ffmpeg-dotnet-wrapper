@@ -137,6 +137,14 @@ public class FFmpegOperation
     {
         return $"{Type} - Input: {string.Join(", ", InputFiles)} -> Output: {OutputFile}";
     }
+
+    /// <summary>
+    /// Returns a string representation of the FFmpegOperation.
+    /// </summary>
+    public override string ToString()
+    {
+        return $"{Type} (Id={Id}, Inputs={InputFiles.Count}, Output={OutputFile})";
+    }
 }
 
 /// <summary>
