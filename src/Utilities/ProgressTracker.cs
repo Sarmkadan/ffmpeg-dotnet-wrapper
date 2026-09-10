@@ -109,6 +109,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public void ReportPercentageProgress(double percentage, string? statusMessage = null)
         {
+            ArgumentException.ThrowIfNullOrEmpty(statusMessage);
             lock (_lockObject)
             {
                 // Clamp to 0‑100
@@ -133,6 +134,7 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public void ReportDurationProgress(TimeSpan processedDuration, TimeSpan totalDuration, string? statusMessage = null)
         {
+            ArgumentException.ThrowIfNullOrEmpty(statusMessage);
             lock (_lockObject)
             {
                 _processedDuration = processedDuration;
