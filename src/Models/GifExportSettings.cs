@@ -188,6 +188,14 @@ public class GifExportSettings
     {
         return MaxWidth ?? Width;
     }
+
+    /// <summary>
+    /// Returns a string representation of the GifExportSettings.
+    /// </summary>
+    public override string ToString()
+    {
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "Fps={0}, Width={1}, Quality={2}, DitherMode={3}", Fps, Width, Quality, DitherMode);
+    }
 }
 
 /// <summary>
