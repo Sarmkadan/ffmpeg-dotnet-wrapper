@@ -114,6 +114,7 @@ namespace FFmpegDotnetWrapper.Serialization
         /// <returns>The deserialized API response, or <see langword="null"/> if the JSON represents a null value.</returns>
         public ApiResponse<T>? DeserializeApiResponse<T>(string json)
         {
+            ArgumentNullException.ThrowIfNull(json);
             ArgumentException.ThrowIfNullOrEmpty(json);
             try
             {
@@ -133,6 +134,7 @@ namespace FFmpegDotnetWrapper.Serialization
         /// <returns>The deserialized value, or <see langword="null"/> if the JSON represents a null value.</returns>
         public T? Deserialize<T>(string json)
         {
+            ArgumentNullException.ThrowIfNull(json);
             try
             {
                 return JsonSerializer.Deserialize<T>(json, _options);
@@ -195,6 +197,7 @@ namespace FFmpegDotnetWrapper.Serialization
         /// <returns>A CSV string containing a header and one row for each conversion result.</returns>
         public string FormatResults(List<ConversionResult> results)
         {
+            ArgumentNullException.ThrowIfNull(results);
             var lines = new List<string>();
 
             // Header
@@ -251,6 +254,7 @@ namespace FFmpegDotnetWrapper.Serialization
         /// <returns>A human-readable plain-text representation of the API response.</returns>
         public string Format<T>(ApiResponse<T> response)
         {
+            ArgumentNullException.ThrowIfNull(response);
             var lines = new List<string>();
 
             lines.Add($"Status: {(response.Success ? "SUCCESS" : "FAILED")}");
@@ -283,6 +287,7 @@ namespace FFmpegDotnetWrapper.Serialization
         /// <returns>A human-readable plain-text representation of the conversion result.</returns>
         public string FormatResult(ConversionResult result)
         {
+            ArgumentNullException.ThrowIfNull(result);
             var lines = new List<string>();
 
             lines.Add($"Input File: {result.InputFile}");
