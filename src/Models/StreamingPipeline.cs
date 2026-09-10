@@ -122,6 +122,16 @@ public sealed class StreamingSegment
     /// </summary>
     public double ActualBitrateKbps =>
         DurationSeconds > 0 ? (FileSizeBytes * 8d) / (DurationSeconds * 1000d) : 0;
+
+     /// <summary>
+     /// Returns a concise, single-line, culture-invariant summary of the segment.
+     /// </summary>
+     public override string ToString()
+     {
+         return string.Format(System.Globalization.CultureInfo.InvariantCulture,
+             "Seq={0}, Profile={1}, Duration={2:F2}s, Size={3} bytes, Path={4}",
+             SequenceNumber, Profile.Name, DurationSeconds, FileSizeBytes, FilePath);
+     }
 }
 
 /// <summary>
