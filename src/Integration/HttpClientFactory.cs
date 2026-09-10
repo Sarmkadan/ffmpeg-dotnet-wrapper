@@ -125,6 +125,15 @@ namespace FFmpegDotnetWrapper.Integration
 
         /// <summary>Initial backoff delay in milliseconds.</summary>
         public int InitialBackoffMs { get; set; } = 100;
+
+        /// <summary>
+        /// Returns a concise, single-line, culture-invariant summary of the configuration.
+        /// </summary>
+        /// <returns>A string containing WebhookTimeoutSeconds, ProbeTimeoutSeconds, MediaTransferTimeoutMinutes, EnableRetries, MaxRetryAttempts, and InitialBackoffMs.</returns>
+        public override string ToString()
+        {
+            return $"WebhookTimeout={WebhookTimeoutSeconds}s, ProbeTimeout={ProbeTimeoutSeconds}s, MediaTransferTimeout={MediaTransferTimeoutMinutes}m, EnableRetries={EnableRetries}, MaxRetryAttempts={MaxRetryAttempts}, InitialBackoffMs={InitialBackoffMs}";
+        }
     }
 
     /// <summary>
