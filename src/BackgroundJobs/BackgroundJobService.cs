@@ -84,6 +84,15 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
                 return end - start;
             }
         }
+        /// <summary>
+        /// Returns a concise, culture-invariant summary of the background job.
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                "BackgroundJob {{ Id = {0}, Name = {1}, State = {2}, Progress = {3:F1}% }}",
+                JobId, JobName, State, ProgressPercentage);
+        }
     }
 
     /// <summary>
