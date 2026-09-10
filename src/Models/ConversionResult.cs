@@ -176,6 +176,28 @@ public class ConversionResult
     }
 
     /// <summary>
+    /// Returns a concise, single-line, culture-invariant summary of the conversion result.
+    /// </summary>
+    public override string ToString()
+    {
+        var success = IsSuccess ? "Success" : "Failed";
+        string? outputPath = null;
+        if (!string.IsNullOrEmpty(OutputFilePath))
+        {
+            outputPath = OutputFilePath;
+        }
+        else if (OutputMedia != null && !string.IsNullOrEmpty(OutputMedia.FilePath))
+        {
+            outputPath = OutputMedia.FilePath;
+        }
+
+        string durationStr = Duration.TotalSeconds.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
+        string errorPart = string.IsNullOrEmpty(ErrorMessage) ? "" : $" Error: {ErrorMessage}";
+
+        return $"IsSuccess: {success}, OutputPath: {outputPath ?? "(none)"}, Duration: {durationStr}s{errorPart}";
+    }
+
+    /// <summary>
     /// Generates a summary report of the conversion.
     /// </summary>
     public string GenerateSummary()
