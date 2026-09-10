@@ -53,6 +53,7 @@ public class MergeSettings
     /// </summary>
     public void RemoveInputFile(string filePath)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         _inputFiles.Remove(filePath);
     }
 
