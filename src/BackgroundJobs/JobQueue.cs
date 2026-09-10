@@ -155,6 +155,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
         /// </summary>
         public Task<QueuedJob?> GetJobAsync(string jobId)
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(jobId);
             lock (_lockObject)
             {
                 _jobRegistry.TryGetValue(jobId, out var job);
@@ -181,6 +182,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
         /// </summary>
         public Task<bool> RemoveJobAsync(string jobId)
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(jobId);
             lock (_lockObject)
             {
                 if (_jobRegistry.TryGetValue(jobId, out var job))
