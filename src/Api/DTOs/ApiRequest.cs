@@ -251,6 +251,15 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// </summary>
         [Range(6, 120)]
         public int FontSize { get; set; } = DefaultFontSize;
+
+        /// <summary>
+        /// Returns a string representation of the SubtitleRequest.
+        /// </summary>
+        /// <returns>A concise, single-line, culture-invariant summary including InputPath, OutputPath, SubtitlePath and subtitle properties.</returns>
+        public override string ToString()
+        {
+            return $"InputPath: {InputPath}, OutputPath: {OutputPath}, SubtitlePath: {SubtitlePath}, HardEmbed: {HardEmbed}, Language: {Language ?? "none"}, FontName: {FontName}, FontSize: {FontSize}";
+        }
     }
 
     /// <summary>
