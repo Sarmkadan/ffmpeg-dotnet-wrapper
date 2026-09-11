@@ -333,6 +333,14 @@ namespace FFmpegDotnetWrapper.Cli
         /// Default value if the argument is optional.
         /// </summary>
         public string? DefaultValue { get; set; }
+
+        /// <summary>
+        /// Returns a usage token representation of the argument.
+        /// </summary>
+        public override string ToString()
+        {
+            return IsRequired ? $"<{Name}>" : $"[{Name}]";
+        }
     }
 
     /// <summary>
@@ -364,5 +372,34 @@ namespace FFmpegDotnetWrapper.Cli
         /// Default value if the option is optional.
         /// </summary>
         public string? DefaultValue { get; set; }
+
+        /// <summary>
+        /// Returns a formatted string representation of the option for usage display.
+        /// </summary>
+        public override string ToString()
+        {
+            var parts = new List<string>();
+
+            if (!string.IsNullOrEmpty(ShortForm))
+            {
+                parts.Add($"-{ShortForm}");
+            }
+
+            if (!string.IsNullOrEmpty(LongForm))
+            {
+                parts.Add($"--{LongForm}");
+            }
+
+            var optionPart = string.Join(", ", parts);
+
+            if (RequiresValue)
+            {
+                return $"{optionPart} <{LongForm}>";
+            }
+            else
+            {
+                return optionPart;
+            }
+        }
     }
 }
