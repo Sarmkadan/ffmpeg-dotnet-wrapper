@@ -102,6 +102,11 @@ namespace FFmpegDotnetWrapper.Configuration
         {
             "Metadata", "ProbeResults"
         };
+
+        public override string ToString()
+        {
+            return $"CachingOptions {{ Enabled = {Enabled}, MaxCacheSize = {MaxCacheSize}, DefaultExpirationMinutes = {DefaultExpirationMinutes}, EnabledCacheTypes = {string.Join(", ", EnabledCacheTypes)} }}";
+        }
     }
 
     /// <summary>
