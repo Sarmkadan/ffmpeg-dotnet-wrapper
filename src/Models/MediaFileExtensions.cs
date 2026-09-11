@@ -13,6 +13,30 @@ namespace FFmpegDotnetWrapper.Models;
 /// </summary>
 public static class MediaFileExtensions
 {
+    private const int HdHeight = 720;
+    private const int FullHdHeight = 1080;
+    private const int QhdHeight = 1440;
+    private const int UltraHdHeight = 2160;
+    private const int SdHeight = 480;
+
+    private const int BytesPerKilobyte = 1024;
+
+    private const int HighBitrateKbps = 5000;
+    private const int MediumBitrateKbps = 2500;
+
+    private const int HighSampleRate = 48000;
+    private const int CdSampleRate = 44100;
+    private const int FmSampleRate = 32000;
+    private const int MediumSampleRate = 22050;
+    private const int LowSampleRate = 16000;
+
+    private const int SurroundChannels = 6;
+    private const int StereoChannels = 2;
+    private const int MonoChannels = 1;
+
+    private const int BitsPerByte = 8;
+    private const int KbpsToBps = 1000;
+
     /// <summary>
     /// Determines if the media file is a high definition video (720p or higher).
     /// </summary>
@@ -26,7 +50,7 @@ public static class MediaFileExtensions
         if (!mediaFile.IsVideo())
             return false;
 
-        return mediaFile.Height >= 720;
+        return mediaFile.Height >= HdHeight;
     }
 
     /// <summary>
@@ -42,7 +66,7 @@ public static class MediaFileExtensions
         if (!mediaFile.IsVideo())
             return false;
 
-        return mediaFile.Height >= 2160;
+        return mediaFile.Height >= UltraHdHeight;
     }
 
     /// <summary>
@@ -102,9 +126,9 @@ public static class MediaFileExtensions
 
         double sizeInMB = mediaFile.GetFileSizeInMegabytes();
 
-        if (sizeInMB >= 1024)
+        if (sizeInMB >= BytesPerKilobyte)
         {
-            double sizeInGB = Math.Round(sizeInMB / 1024, 2);
+            double sizeInGB = Math.Round(sizeInMB / BytesPerKilobyte, 2);
             return $"{sizeInGB} GB";
         }
         else
@@ -128,19 +152,19 @@ public static class MediaFileExtensions
 
         string resolutionQuality = mediaFile.Height switch
         {
-            >= 2160 => "4K Ultra HD",
-            >= 1440 => "1440p QHD",
-            >= 1080 => "1080p Full HD",
-            >= 720 => "720p HD",
-            >= 480 => "480p SD",
+            >= UltraHdHeight => "4K Ultra HD",
+            >= QhdHeight => "1440p QHD",
+            >= FullHdHeight => "1080p Full HD",
+            >= HdHeight => "720p HD",
+            >= SdHeight => "480p SD",
             _ => "Low resolution"
         };
 
-        if (mediaFile.Bitrate.HasValue && mediaFile.Bitrate.Value >= 5000)
+        if (mediaFile.Bitrate.HasValue && mediaFile.Bitrate.Value >= HighBitrateKbps)
         {
             return $"{resolutionQuality} (High bitrate)";
         }
-        else if (mediaFile.Bitrate.HasValue && mediaFile.Bitrate.Value >= 2500)
+        else if (mediaFile.Bitrate.HasValue && mediaFile.Bitrate.Value >= MediumBitrateKbps)
         {
             return $"{resolutionQuality} (Medium bitrate)";
         }
@@ -165,19 +189,19 @@ public static class MediaFileExtensions
 
         string sampleRateQuality = mediaFile.AudioSampleRate switch
         {
-            >= 48000 => "High quality (48kHz+)",
-            >= 44100 => "CD quality (44.1kHz)",
-            >= 32000 => "FM radio quality (32kHz)",
-            >= 22050 => "Medium quality (22.05kHz)",
-            >= 16000 => "Low quality (16kHz)",
+            >= HighSampleRate => "High quality (48kHz+)",
+            >= CdSampleRate => "CD quality (44.1kHz)",
+            >= FmSampleRate => "FM radio quality (32kHz)",
+            >= MediumSampleRate => "Medium quality (22.05kHz)",
+            >= LowSampleRate => "Low quality (16kHz)",
             _ => "Very low quality"
         };
 
         string channelsDescription = mediaFile.AudioChannels switch
         {
-            6 => "5.1 Surround",
-            2 => "Stereo",
-            1 => "Mono",
+            SurroundChannels => "5.1 Surround",
+            StereoChannels => "Stereo",
+            MonoChannels => "Mono",
             _ => mediaFile.AudioChannels.HasValue ? $"Multi-channel ({mediaFile.AudioChannels})" : "Unknown channels"
         };
 
@@ -215,7 +239,7 @@ public static class MediaFileExtensions
             return null;
 
         double totalSeconds = mediaFile.Duration.Value.TotalSeconds;
-        return (long)(mediaFile.Bitrate.Value * 1000 * totalSeconds / 8); // Convert kbps to bytes
+        return (long)(mediaFile.Bitrate.Value * KbpsToBps * totalSeconds / BitsPerByte); // Convert kbps to bytes
     }
 
     /// <summary>
