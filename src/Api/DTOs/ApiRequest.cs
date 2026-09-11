@@ -196,6 +196,15 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// </summary>
         [Range(0.01, 1.0)]
         public double Scale { get; set; } = DefaultScale;
+
+        /// <summary>
+        /// Returns a string representation of the WatermarkRequest.
+        /// </summary>
+        /// <returns>A concise, single-line, culture-invariant summary including InputPath, OutputPath, WatermarkPath and watermark properties.</returns>
+        public override string ToString()
+        {
+            return $"InputPath: {InputPath}, OutputPath: {OutputPath}, WatermarkPath: {WatermarkPath}, PositionX: {PositionX}, PositionY: {PositionY}, Opacity: {Opacity}, Scale: {Scale}";
+        }
     }
 
     /// <summary>
