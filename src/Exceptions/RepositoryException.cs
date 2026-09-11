@@ -42,4 +42,10 @@ public class RepositoryException : FFmpegException
         RepositoryName = repositoryName;
         Context[nameof(RepositoryName)] = repositoryName ?? string.Empty;
     }
+    public override string ToString()
+    {
+        return !string.IsNullOrEmpty(RepositoryName)
+            ? $"[Repository: {RepositoryName}] {base.ToString()}"
+            : base.ToString();
+    }
 }
