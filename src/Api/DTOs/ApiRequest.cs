@@ -311,6 +311,16 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// Output image format. Defaults to <c>jpeg</c>.
         /// </summary>
         public string Format { get; set; } = DefaultFormat;
+
+        /// <summary>
+        /// Returns a string representation of the ThumbnailRequest.
+        /// </summary>
+        /// <returns>A concise, single-line, culture-invariant summary including InputPath, OutputPattern, Format and thumbnail count.</returns>
+        public override string ToString()
+        {
+            int thumbnailCount = TimestampsSeconds.Count > 0 ? TimestampsSeconds.Count : Count;
+            return $"InputPath: {InputPath}, OutputPattern: {OutputPattern}, Format: {Format}, ThumbnailCount: {thumbnailCount}";
+        }
     }
 
     /// <summary>
