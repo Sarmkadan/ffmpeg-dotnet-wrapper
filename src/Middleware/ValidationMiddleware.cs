@@ -18,6 +18,8 @@ namespace FFmpegDotnetWrapper.Middleware
     /// </summary>
     public class ValidationMiddleware
     {
+        private const int BadRequestStatusCode = 400;
+
         /// <summary>
         /// Validates an API request object using System.ComponentModel.DataAnnotations attributes.
         /// Collects all validation errors and returns them in a standardized format.
@@ -27,7 +29,7 @@ namespace FFmpegDotnetWrapper.Middleware
         {
             if (request == null)
             {
-                return ApiResponse<T>.Failure("Request body is required", 400);
+                return ApiResponse<T>.Failure("Request body is required", BadRequestStatusCode);
             }
 
             var validationContext = new ValidationContext(request, serviceProvider: null, items: null);
@@ -36,7 +38,7 @@ namespace FFmpegDotnetWrapper.Middleware
             if (!Validator.TryValidateObject(request, validationContext, validationResults, validateAllProperties: true))
             {
                 var errors = ConvertValidationResultsToApiErrors(validationResults);
-                return ApiResponse<T>.Failure("Request validation failed", errors, 400);
+                return ApiResponse<T>.Failure("Request validation failed", errors, BadRequestStatusCode);
             }
 
             return null; // Validation passed
@@ -50,7 +52,7 @@ namespace FFmpegDotnetWrapper.Middleware
         {
             if (requests == null || requests.Count == 0)
             {
-                return ApiResponse<List<T>>.Failure("At least one item is required", 400);
+                return ApiResponse<List<T>>.Failure("At least one item is required", BadRequestStatusCode);
             }
 
             var allErrors = new List<ApiError>();
@@ -86,7 +88,7 @@ namespace FFmpegDotnetWrapper.Middleware
 
             if (allErrors.Count > 0)
             {
-                return ApiResponse<List<T>>.Failure("Batch validation failed", allErrors, 400);
+                return ApiResponse<List<T>>.Failure("Batch validation failed", allErrors, BadRequestStatusCode);
             }
 
             return null; // Validation passed
@@ -155,7 +157,7 @@ namespace FFmpegDotnetWrapper.Middleware
 
             if (errors.Count > 0)
             {
-                return ApiResponse<T>.Failure("File path validation failed", errors, 400);
+                return ApiResponse<T>.Failure("File path validation failed", errors, BadRequestStatusCode);
             }
 
             return null; // Validation passed
@@ -200,7 +202,7 @@ namespace FFmpegDotnetWrapper.Middleware
 
             if (errors.Count > 0)
             {
-                return ApiResponse<MergeRequest>.Failure("Merge request validation failed", errors, 400);
+                return ApiResponse<MergeRequest>.Failure("Merge request validation failed", errors, BadRequestStatusCode);
             }
 
             return null; // Validation passed
