@@ -350,5 +350,14 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// </summary>
         [Range(32, 320)]
         public int AudioBitrate { get; set; } = DefaultAudioBitrate;
+
+        /// <summary>
+        /// Returns a string representation of the AudioExtractRequest.
+        /// </summary>
+        /// <returns>A concise, single-line, culture-invariant summary including InputPath, OutputPath and audio properties.</returns>
+        public override string ToString()
+        {
+            return $"InputPath: {InputPath}, OutputPath: {OutputPath}, Codec: {AudioCodec}, Bitrate: {AudioBitrate}";
+        }
     }
 }
