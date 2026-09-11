@@ -137,6 +137,15 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// Prevents letter-boxing or distortion when merging videos of different resolutions.
         /// </summary>
         public bool MaintainAspectRatio { get; set; } = true;
+
+        /// <summary>
+        /// Returns a string representation of the MergeRequest.
+        /// </summary>
+        /// <returns>A concise, single-line, culture-invariant summary including input count and output path.</returns>
+        public override string ToString()
+        {
+            return $"InputCount: {InputPaths.Count}, OutputPath: {OutputPath}, MaintainAspectRatio: {MaintainAspectRatio}";
+        }
     }
 
     /// <summary>
