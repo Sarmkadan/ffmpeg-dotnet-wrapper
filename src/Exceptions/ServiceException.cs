@@ -50,4 +50,11 @@ public class ServiceException : FFmpegException
         ArgumentException.ThrowIfNullOrEmpty(message);
         Context[nameof(ExitCode)] = exitCode.ToString();
     }
+
+    public override string ToString()
+    {
+        return !string.IsNullOrEmpty(ServiceName)
+            ? $"[ServiceName: {ServiceName}] {base.ToString()}"
+            : base.ToString();
+    }
 }
