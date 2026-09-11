@@ -16,17 +16,22 @@ namespace FFmpegDotnetWrapper.Middleware
     /// </summary>
     public class RateLimitPolicy
     {
+        public const int DefaultMaxRequests = 10;
+        public const int DefaultWindowSeconds = 60;
+        public const bool DefaultPerUserLimit = true;
+        public const string DefaultPolicyName = "default";
+
         /// <summary>Maximum number of operations allowed in the time window.</summary>
-        public int MaxRequests { get; set; } = 10;
+        public int MaxRequests { get; set; } = DefaultMaxRequests;
 
         /// <summary>Time window in seconds for counting requests.</summary>
-        public int WindowSeconds { get; set; } = 60;
+        public int WindowSeconds { get; set; } = DefaultWindowSeconds;
 
         /// <summary>Whether to apply per-user limits in addition to global limits.</summary>
-        public bool PerUserLimit { get; set; } = true;
+        public bool PerUserLimit { get; set; } = DefaultPerUserLimit;
 
         /// <summary>Identifier for this policy (e.g., "transcode", "watermark").</summary>
-        public string PolicyName { get; set; } = "default";
+        public string PolicyName { get; set; } = DefaultPolicyName;
 
         public override string ToString()
         {
@@ -78,6 +83,15 @@ namespace FFmpegDotnetWrapper.Middleware
     /// </summary>
     public class SlidingWindowRateLimiter : IRateLimiter
     {
+        private const int DefaultPolicyMaxRequests = 100;
+        private const int DefaultPolicyWindowSeconds = 60;
+        private const int TranscodePolicyMaxRequests = 5;
+        private const int TranscodePolicyWindowSeconds = 3600;
+        private const int WatermarkPolicyMaxRequests = 20;
+        private const int WatermarkPolicyWindowSeconds = 3600;
+        private const int MergePolicyMaxRequests = 10;
+        private const int MergePolicyWindowSeconds = 3600;
+
         private class RequestWindow
         {
             public Queue<DateTime> Timestamps { get; set; } = new();
@@ -94,10 +108,10 @@ namespace FFmpegDotnetWrapper.Middleware
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             // Register default policies
-            RegisterPolicy(new RateLimitPolicy { PolicyName = "default", MaxRequests = 100, WindowSeconds = 60 });
-            RegisterPolicy(new RateLimitPolicy { PolicyName = "transcode", MaxRequests = 5, WindowSeconds = 3600 });
-            RegisterPolicy(new RateLimitPolicy { PolicyName = "watermark", MaxRequests = 20, WindowSeconds = 3600 });
-            RegisterPolicy(new RateLimitPolicy { PolicyName = "merge", MaxRequests = 10, WindowSeconds = 3600 });
+            RegisterPolicy(new RateLimitPolicy { PolicyName = RateLimitPolicy.DefaultPolicyName, MaxRequests = DefaultPolicyMaxRequests, WindowSeconds = DefaultPolicyWindowSeconds });
+            RegisterPolicy(new RateLimitPolicy { PolicyName = "transcode", MaxRequests = TranscodePolicyMaxRequests, WindowSeconds = TranscodePolicyWindowSeconds });
+            RegisterPolicy(new RateLimitPolicy { PolicyName = "watermark", MaxRequests = WatermarkPolicyMaxRequests, WindowSeconds = WatermarkPolicyWindowSeconds });
+            RegisterPolicy(new RateLimitPolicy { PolicyName = "merge", MaxRequests = MergePolicyMaxRequests, WindowSeconds = MergePolicyWindowSeconds });
         }
 
         /// <summary>
