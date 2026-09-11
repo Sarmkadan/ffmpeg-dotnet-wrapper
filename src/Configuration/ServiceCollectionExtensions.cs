@@ -119,4 +119,13 @@ public class FFmpegWrapperOptions
     /// Gets or sets a value indicating whether detailed logging is enabled.
     /// </summary>
     public bool EnableDetailedLogging { get; set; } = false;
+
+    /// <summary>
+    /// Returns a string that represents the current object.
+    /// </summary>
+    /// <returns>A string that represents the current object.</returns>
+    public override string ToString()
+    {
+        return $"FFmpegWrapperOptions: DefaultTimeout={DefaultTimeout}, FFmpegPath={FFmpegPath}, FFprobePath={FFprobePath}, LogLevel={LogLevel}, EnableOperationCaching={EnableOperationCaching}, MaxCachedOperations={MaxCachedOperations}, EnableDetailedLogging={EnableDetailedLogging}";
+    }
 }
