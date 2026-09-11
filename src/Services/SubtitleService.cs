@@ -17,6 +17,9 @@ public class SubtitleService
     private readonly IFFmpegService _ffmpegService;
     private readonly ILogger<SubtitleService> _logger;
 
+    private const string DefaultFontName = "Arial";
+    private const int DefaultFontSize = 24;
+
     public SubtitleService(IFFmpegService ffmpegService, ILogger<SubtitleService> logger)
     {
         _ffmpegService = ffmpegService ?? throw new ArgumentNullException(nameof(ffmpegService));
@@ -77,8 +80,8 @@ public class SubtitleService
         MediaFile inputMedia,
         string subtitlePath,
         string outputPath,
-        string fontName = "Arial",
-        int fontSize = 24,
+        string fontName = DefaultFontName,
+        int fontSize = DefaultFontSize,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(inputMedia);
