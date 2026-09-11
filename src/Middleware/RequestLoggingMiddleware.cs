@@ -33,6 +33,11 @@ namespace FFmpegDotnetWrapper.Middleware
 
         /// <summary>Include performance metrics in logs.</summary>
         public bool LogPerformanceMetrics { get; set; } = true;
+
+        public override string ToString()
+        {
+            return $"RequestLoggingOptions: LogArguments={LogArguments}, LogResponseData={LogResponseData}, LogStackTrace={LogStackTrace}, MaxLogValueLength={MaxLogValueLength}, LogPerformanceMetrics={LogPerformanceMetrics}";
+        }
     }
 
     /// <summary>
