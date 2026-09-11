@@ -97,6 +97,12 @@ namespace FFmpegDotnetWrapper.Events
         public string ErrorMessage { get; set; } = string.Empty;
         public string? ErrorCode { get; set; }
         public string? StackTrace { get; set; }
+
+        public override string ToString()
+        {
+            var baseString = base.ToString();
+            return $"{baseString}, InputFile: {InputFile}, OperationType: {OperationType}, ErrorMessage: {ErrorMessage}, ErrorCode: {ErrorCode ?? "none"}, StackTrace: {StackTrace ?? "none"}";
+        }
     }
 
     /// <summary>
