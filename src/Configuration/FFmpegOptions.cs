@@ -133,6 +133,11 @@ namespace FFmpegDotnetWrapper.Configuration
 
         /// <summary>Enable per-user rate limiting in addition to global limits.</summary>
         public bool PerUserLimiting { get; set; } = true;
+
+        public override string ToString()
+        {
+            return $"RateLimitingOptions {{ Enabled = {Enabled}, TranscodeOperationsPerHour = {TranscodeOperationsPerHour}, WatermarkOperationsPerHour = {WatermarkOperationsPerHour}, MergeOperationsPerHour = {MergeOperationsPerHour}, WindowSeconds = {WindowSeconds}, PerUserLimiting = {PerUserLimiting} }}";
+        }
     }
 
     /// <summary>
