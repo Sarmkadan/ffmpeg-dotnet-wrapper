@@ -73,6 +73,9 @@ namespace FFmpegDotnetWrapper.Integration
 
     public class WebhookService : IWebhookService, IEventHandler<OperationCompletedEvent>, IEventHandler<OperationFailedEvent>, IEventHandler<OperationStartedEvent>
     {
+        private const int DefaultRetryMaxAttempts = 3;
+        private const int DefaultRetryInitialDelayMilliseconds = 1000;
+
         private readonly ILogger<WebhookService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IRetryPolicy _retryPolicy;
@@ -86,7 +89,7 @@ namespace FFmpegDotnetWrapper.Integration
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-            _retryPolicy = retryPolicy ?? new ExponentialBackoffRetryPolicy(maxAttempts: 3, initialDelayMilliseconds: 1000);
+            _retryPolicy = retryPolicy ?? new ExponentialBackoffRetryPolicy(maxAttempts: DefaultRetryMaxAttempts, initialDelayMilliseconds: DefaultRetryInitialDelayMilliseconds);
         }
 
         /// <summary>
