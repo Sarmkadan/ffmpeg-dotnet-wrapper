@@ -60,6 +60,26 @@ public sealed record StreamingProfile(
     int AudioBitrateKbps,
     double FrameRate = 0)
 {
+    private const int Profile1080pWidth = 1920;
+    private const int Profile1080pHeight = 1080;
+    private const int Profile1080pVideoBitrateKbps = 4500;
+    private const int Profile1080pAudioBitrateKbps = 192;
+
+    private const int Profile720pWidth = 1280;
+    private const int Profile720pHeight = 720;
+    private const int Profile720pVideoBitrateKbps = 2500;
+    private const int Profile720pAudioBitrateKbps = 128;
+
+    private const int Profile480pWidth = 854;
+    private const int Profile480pHeight = 480;
+    private const int Profile480pVideoBitrateKbps = 1000;
+    private const int Profile480pAudioBitrateKbps = 96;
+
+    private const int Profile360pWidth = 640;
+    private const int Profile360pHeight = 360;
+    private const int Profile360pVideoBitrateKbps = 500;
+    private const int Profile360pAudioBitrateKbps = 64;
+
     /// <summary>Gets the <c>WxH</c> resolution string (e.g., <c>"1920x1080"</c>).</summary>
     public string Resolution => $"{Width}x{Height}";
 
@@ -67,16 +87,16 @@ public sealed record StreamingProfile(
     public int TotalBitrateKbps => VideoBitrateKbps + AudioBitrateKbps;
 
     /// <summary>Pre-built 1080p full-HD profile (4500 kbps video, 192 kbps audio).</summary>
-    public static readonly StreamingProfile FullHD = new("1080p", 1920, 1080, 4500, 192);
+    public static readonly StreamingProfile FullHD = new("1080p", Profile1080pWidth, Profile1080pHeight, Profile1080pVideoBitrateKbps, Profile1080pAudioBitrateKbps);
 
     /// <summary>Pre-built 720p HD profile (2500 kbps video, 128 kbps audio).</summary>
-    public static readonly StreamingProfile HD = new("720p", 1280, 720, 2500, 128);
+    public static readonly StreamingProfile HD = new("720p", Profile720pWidth, Profile720pHeight, Profile720pVideoBitrateKbps, Profile720pAudioBitrateKbps);
 
     /// <summary>Pre-built 480p standard-definition profile (1000 kbps video, 96 kbps audio).</summary>
-    public static readonly StreamingProfile SD = new("480p", 854, 480, 1000, 96);
+    public static readonly StreamingProfile SD = new("480p", Profile480pWidth, Profile480pHeight, Profile480pVideoBitrateKbps, Profile480pAudioBitrateKbps);
 
     /// <summary>Pre-built 360p mobile-optimised profile (500 kbps video, 64 kbps audio).</summary>
-    public static readonly StreamingProfile Mobile = new("360p", 640, 360, 500, 64);
+    public static readonly StreamingProfile Mobile = new("360p", Profile360pWidth, Profile360pHeight, Profile360pVideoBitrateKbps, Profile360pAudioBitrateKbps);
 
     /// <summary>
     /// Returns the default four-rung ABR ladder ordered from highest to lowest quality:
@@ -164,10 +184,13 @@ public sealed record BitrateSwitch
 /// </summary>
 public sealed class StreamingPipelineSettings
 {
+    private const int DefaultSegmentDurationSeconds = 6;
+    private const int DefaultPlaylistWindowSize = 5;
+
     private string _inputFilePath = string.Empty;
     private string _outputDirectory = string.Empty;
-    private int _segmentDurationSeconds = 6;
-    private int _playlistWindowSize = 5;
+    private int _segmentDurationSeconds = DefaultSegmentDurationSeconds;
+    private int _playlistWindowSize = DefaultPlaylistWindowSize;
 
     /// <summary>Gets or sets the absolute path of the source media file to encode.</summary>
     /// <exception cref="ArgumentException">Thrown when set to a null or whitespace value.</exception>
