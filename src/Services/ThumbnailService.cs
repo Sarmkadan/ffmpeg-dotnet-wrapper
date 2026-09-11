@@ -14,6 +14,11 @@ namespace FFmpegDotnetWrapper.Services;
 /// </summary>
 public class ThumbnailService
 {
+    private const int DefaultThumbnailCount = 10;
+    private const double DefaultThumbnailTimestampSeconds = 5;
+    private const ThumbnailFormat DefaultThumbnailFormat = ThumbnailFormat.Jpeg;
+    private const string DefaultOutputPattern = "%03d";
+
     private readonly IFFmpegService _ffmpegService;
     private readonly ILogger<ThumbnailService> _logger;
 
@@ -39,8 +44,8 @@ public class ThumbnailService
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(inputMedia);
-        var settings = new ThumbnailSettings { Format = ThumbnailFormat.Jpeg };
-        settings.Times.Add(at ?? TimeSpan.FromSeconds(5));
+        var settings = new ThumbnailSettings { Format = DefaultThumbnailFormat };
+        settings.Times.Add(at ?? TimeSpan.FromSeconds(DefaultThumbnailTimestampSeconds));
 
         _logger.LogInformation("Extracting single thumbnail from {File} at {Time}", inputMedia.Name, settings.Times[0]);
         return await _ffmpegService.ExtractThumbnailsAsync(inputMedia, outputPath, settings, cancellationToken);
@@ -63,7 +68,7 @@ public class ThumbnailService
     public async Task<ThumbnailResult> ExtractStoryboardAsync(
         MediaFile inputMedia,
         string outputPattern,
-        int count = 10,
+        int count = DefaultThumbnailCount,
         int? width = null,
         int? height = null,
         CancellationToken cancellationToken = default)
@@ -71,7 +76,7 @@ public class ThumbnailService
         var settings = new ThumbnailSettings
         {
             Count = count,
-            Format = ThumbnailFormat.Jpeg,
+            Format = DefaultThumbnailFormat,
             Width = width,
             Height = height
         };
