@@ -64,4 +64,16 @@ public class ValidationException : FFmpegException
 
         return new ValidationException(message, formattedErrors);
     }
+
+    public override string ToString()
+    {
+        var baseString = base.ToString();
+        if (ValidationErrors == null || !ValidationErrors.Any())
+        {
+            return baseString;
+        }
+
+        var errors = string.Join(" ", ValidationErrors.Select(kv => $"{kv.Key}: {string.Join("; ", kv.Value)}"));
+        return $"{baseString} ValidationErrors: {errors}";
+    }
 }
