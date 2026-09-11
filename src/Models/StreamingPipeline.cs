@@ -272,6 +272,16 @@ public sealed class StreamingPipelineSettings
     public bool EncodeProfilesConcurrently { get; set; } = true;
 
     /// <summary>
+    /// Returns a concise, single-line, culture-invariant summary of the settings.
+    /// </summary>
+    public override string ToString()
+    {
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture,
+            "Input={0}, Output={1}, Profiles={2}, SegmentDuration={3}s",
+            InputFilePath, OutputDirectory, Profiles.Count, SegmentDurationSeconds);
+    }
+
+    /// <summary>
     /// Validates that all required fields are set and internally consistent.
     /// </summary>
     /// <exception cref="FileNotFoundException">Thrown when <see cref="InputFilePath"/> does not exist on disk.</exception>
