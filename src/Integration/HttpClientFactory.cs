@@ -25,6 +25,13 @@ namespace FFmpegDotnetWrapper.Integration
     /// </summary>
     public static class HttpClientFactoryExtensions
     {
+        private const string WebhookClientName = "webhook";
+        private const string ProbeClientName = "probe";
+        private const string MediaClientName = "media";
+        private const string DefaultUserAgent = "FFmpegDotnetWrapper/1.0";
+        private const string JsonContentType = "application/json";
+        private const int DefaultCustomClientTimeoutSeconds = 30;
+
         /// <summary>
         /// Adds HTTP clients for FFmpeg wrapper integrations.
         /// Configures clients for webhooks and external API calls.
@@ -39,28 +46,28 @@ namespace FFmpegDotnetWrapper.Integration
             config?.Invoke(httpConfig);
 
             // Webhook client for delivering events
-            services.AddHttpClient("webhook")
+            services.AddHttpClient(WebhookClientName)
                 .ConfigureHttpClient(client =>
                 {
                     client.Timeout = TimeSpan.FromSeconds(httpConfig.WebhookTimeoutSeconds);
-                    client.DefaultRequestHeaders.Add("User-Agent", "FFmpegDotnetWrapper/1.0");
-                    client.DefaultRequestHeaders.Add("Content-Type", "application/json");
+                    client.DefaultRequestHeaders.Add("User-Agent", DefaultUserAgent);
+                    client.DefaultRequestHeaders.Add("Content-Type", JsonContentType);
                 });
 
             // External API client for probe operations
-            services.AddHttpClient("probe")
+            services.AddHttpClient(ProbeClientName)
                 .ConfigureHttpClient(client =>
                 {
                     client.Timeout = TimeSpan.FromSeconds(httpConfig.ProbeTimeoutSeconds);
-                    client.DefaultRequestHeaders.Add("User-Agent", "FFmpegDotnetWrapper/1.0");
+                    client.DefaultRequestHeaders.Add("User-Agent", DefaultUserAgent);
                 });
 
             // Upload/download client for large files
-            services.AddHttpClient("media")
+            services.AddHttpClient(MediaClientName)
                 .ConfigureHttpClient(client =>
                 {
                     client.Timeout = TimeSpan.FromMinutes(httpConfig.MediaTransferTimeoutMinutes);
-                    client.DefaultRequestHeaders.Add("User-Agent", "FFmpegDotnetWrapper/1.0");
+                    client.DefaultRequestHeaders.Add("User-Agent", DefaultUserAgent);
                 });
 
             return services;
@@ -88,7 +95,7 @@ namespace FFmpegDotnetWrapper.Integration
                     client.BaseAddress = new Uri(baseAddress);
                 }
 
-                client.Timeout = timeout ?? TimeSpan.FromSeconds(30);
+                client.Timeout = timeout ?? TimeSpan.FromSeconds(DefaultCustomClientTimeoutSeconds);
 
                 if (defaultHeaders != null)
                 {
@@ -108,23 +115,30 @@ namespace FFmpegDotnetWrapper.Integration
     /// </summary>
     public class HttpClientConfig
     {
+        private const int DefaultWebhookTimeoutSeconds = 30;
+        private const int DefaultProbeTimeoutSeconds = 60;
+        private const int DefaultMediaTransferTimeoutMinutes = 30;
+        private const bool DefaultEnableRetries = true;
+        private const int DefaultMaxRetryAttempts = 3;
+        private const int DefaultInitialBackoffMs = 100;
+
         /// <summary>Timeout for webhook delivery in seconds.</summary>
-        public int WebhookTimeoutSeconds { get; set; } = 30;
+        public int WebhookTimeoutSeconds { get; set; } = DefaultWebhookTimeoutSeconds;
 
         /// <summary>Timeout for FFprobe operations in seconds.</summary>
-        public int ProbeTimeoutSeconds { get; set; } = 60;
+        public int ProbeTimeoutSeconds { get; set; } = DefaultProbeTimeoutSeconds;
 
         /// <summary>Timeout for media file transfers in minutes.</summary>
-        public int MediaTransferTimeoutMinutes { get; set; } = 30;
+        public int MediaTransferTimeoutMinutes { get; set; } = DefaultMediaTransferTimeoutMinutes;
 
         /// <summary>Enable automatic retry on transient failures.</summary>
-        public bool EnableRetries { get; set; } = true;
+        public bool EnableRetries { get; set; } = DefaultEnableRetries;
 
         /// <summary>Maximum number of retry attempts.</summary>
-        public int MaxRetryAttempts { get; set; } = 3;
+        public int MaxRetryAttempts { get; set; } = DefaultMaxRetryAttempts;
 
         /// <summary>Initial backoff delay in milliseconds.</summary>
-        public int InitialBackoffMs { get; set; } = 100;
+        public int InitialBackoffMs { get; set; } = DefaultInitialBackoffMs;
 
         /// <summary>
         /// Returns a concise, single-line, culture-invariant summary of the configuration.
@@ -222,6 +236,12 @@ namespace FFmpegDotnetWrapper.Integration
     /// </summary>
     public class ExponentialBackoffRetryPolicy : IRetryPolicy
     {
+        private const int DefaultMaxAttempts = 3;
+        private const int DefaultInitialDelayMilliseconds = 100;
+        private const double DefaultBackoffFactor = 2.0;
+        private const double DefaultJitterFactor = 0.5;
+        private const int JitterDivisor = 2;
+
         private readonly int _maxAttempts;
         private readonly int _initialDelayMilliseconds;
         private readonly double _backoffFactor;
@@ -235,10 +255,10 @@ namespace FFmpegDotnetWrapper.Integration
         /// <param name="backoffFactor">Multiplier for delay between retries (e.g., 2.0 for exponential).</param>
         /// <param name="jitterFactor">Random factor to add jitter to delays (0.0-1.0).</param>
         public ExponentialBackoffRetryPolicy(
-            int maxAttempts = 3,
-            int initialDelayMilliseconds = 100,
-            double backoffFactor = 2.0,
-            double jitterFactor = 0.5)
+            int maxAttempts = DefaultMaxAttempts,
+            int initialDelayMilliseconds = DefaultInitialDelayMilliseconds,
+            double backoffFactor = DefaultBackoffFactor,
+            double jitterFactor = DefaultJitterFactor)
         {
             if (maxAttempts < 1)
             {
@@ -438,9 +458,9 @@ namespace FFmpegDotnetWrapper.Integration
         [Obsolete("Use CalculateDelay() or rely on automatic retry delays instead.")]
         public TimeSpan GetRetryDelay(int attemptNumber)
         {
-            var delayMs = _initialDelayMilliseconds * (int)Math.Pow(2, attemptNumber - 1);
+            var delayMs = _initialDelayMilliseconds * (int)Math.Pow(DefaultBackoffFactor, attemptNumber - 1);
             // Add jitter to prevent thundering herd
-            var jitterMs = new Random().Next(0, delayMs / 2);
+            var jitterMs = new Random().Next(0, delayMs / JitterDivisor);
             return TimeSpan.FromMilliseconds(delayMs + jitterMs);
         }
 
