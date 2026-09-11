@@ -32,6 +32,34 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
     private const int PipelineIdLength = 12;
     private const int KilobitsPerSecondToBitsPerSecond = 1000;
 
+    private const string SegmentFilePattern = "seg_%05d.ts";
+    private const string SegmentFileGlob = "seg_*.ts";
+    private const string PlaylistFileName = "playlist.m3u8";
+    private const string MasterPlaylistFileName = "master.m3u8";
+    private const string DashManifestFileName = "manifest.mpd";
+
+    private const string FfmpegOverwriteFlag = "-y ";
+    private const string FfmpegHardwareAccelFlag = "-hwaccel auto ";
+    private const string FfmpegInputFlag = "-i \"{0}\" ";
+    private const string FfmpegVideoCodecFlag = "-c:v libx264 ";
+    private const string FfmpegVideoBitrateFlag = "-b:v {0}k ";
+    private const string FfmpegMaxRateFlag = "-maxrate {0}k ";
+    private const string FfmpegBufSizeFlag = "-bufsize {0}k ";
+    private const string FfmpegScaleFilterFlag = "-vf \"scale={0}:{1}\" ";
+    private const string FfmpegFrameRateFlag = "-r {0} ";
+    private const string FfmpegAudioCodecFlag = "-c:a aac ";
+    private const string FfmpegAudioBitrateFlag = "-b:a {0}k -ac {1} ";
+    private const string FfmpegHlsMuxerFlag = "-f hls ";
+    private const string FfmpegHlsTimeFlag = "-hls_time {0} ";
+    private const string FfmpegHlsPlaylistTypeFlag = "-hls_playlist_type vod ";
+    private const string FfmpegHlsFlagsFlag = "-hls_flags independent_segments ";
+    private const string FfmpegHlsSegmentFilenameFlag = "-hls_segment_filename \"{0}\" ";
+    private const string FfmpegPlaylistPathFlag = "\"{0}\"";
+
+    private const double MaxRateMultiplier = 1.2;
+    private const int BufSizeMultiplier = 2;
+    private const int AudioChannels = 2;
+
     private sealed record PipelineContext(StreamingPipelineResult Result, CancellationTokenSource Cts);
 
     private readonly ConcurrentDictionary<string, PipelineContext> _activePipelines = new();
@@ -227,8 +255,8 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
         var renditionDir = Path.Combine(settings.OutputDirectory, profile.Name);
         Directory.CreateDirectory(renditionDir);
 
-        var playlistPath = Path.Combine(renditionDir, "playlist.m3u8");
-        var segmentPattern = Path.Combine(renditionDir, "seg_%05d.ts");
+        var playlistPath = Path.Combine(renditionDir, PlaylistFileName);
+        var segmentPattern = Path.Combine(renditionDir, SegmentFilePattern);
         var trackingId = $"{Path.GetFileName(settings.OutputDirectory)}-{profile.Name}";
 
         var ffmpegArgs = BuildHlsArguments(
@@ -269,12 +297,12 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
             // Poll for new .ts files while the encoder is running, then drain any
             // remaining files produced in the final write cycle after exit.
             while (!process.HasExited
-                || Directory.EnumerateFiles(renditionDir, "seg_*.ts").Any(f => !knownFiles.Contains(f)))
+                || Directory.EnumerateFiles(renditionDir, SegmentFileGlob).Any(f => !knownFiles.Contains(f)))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 foreach (var filePath in Directory
-                    .EnumerateFiles(renditionDir, "seg_*.ts")
+                    .EnumerateFiles(renditionDir, SegmentFileGlob)
                     .Where(f => !knownFiles.Contains(f))
                     .OrderBy(f => f))
                 {
@@ -417,7 +445,7 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
     /// <summary>Writes the HLS master playlist (<c>master.m3u8</c>) listing all configured renditions.</summary>
     private static string WriteHlsMasterPlaylist(StreamingPipelineSettings settings)
     {
-        var masterPath = Path.Combine(settings.OutputDirectory, "master.m3u8");
+        var masterPath = Path.Combine(settings.OutputDirectory, MasterPlaylistFileName);
         var sb = new StringBuilder();
         sb.AppendLine("#EXTM3U");
         sb.AppendLine("#EXT-X-VERSION:3");
@@ -426,7 +454,7 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
         {
             sb.AppendLine($"#EXT-X-STREAM-INF:BANDWIDTH={p.TotalBitrateKbps * KilobitsPerSecondToBitsPerSecond}," +
                           $"RESOLUTION={p.Resolution},NAME=\"{p.Name}\"");
-            sb.AppendLine($"{p.Name}/playlist.m3u8");
+            sb.AppendLine($"{p.Name}/{PlaylistFileName}");
         }
 
         File.WriteAllText(masterPath, sb.ToString());
@@ -439,7 +467,7 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
     /// </summary>
     private static string WriteDashManifestStub(StreamingPipelineSettings settings)
     {
-        var path = Path.Combine(settings.OutputDirectory, "manifest.mpd");
+        var path = Path.Combine(settings.OutputDirectory, DashManifestFileName);
         File.WriteAllText(path,
             "<!-- MPEG-DASH manifest — generated by ffmpeg-dotnet-wrapper adaptive bitrate pipeline -->");
         return path;
@@ -457,31 +485,31 @@ public sealed class AdaptiveBitrateService : IAdaptiveBitrateService
         int segmentDuration,
         bool hwAccel)
     {
-        var sb = new StringBuilder("-y ");
+        var sb = new StringBuilder(FfmpegOverwriteFlag);
 
         if (hwAccel)
-            sb.Append("-hwaccel auto ");
+            sb.Append(FfmpegHardwareAccelFlag);
 
-        sb.Append($"-i \"{inputPath}\" ");
-        sb.Append("-c:v libx264 ");
-        sb.Append($"-b:v {profile.VideoBitrateKbps}k ");
-        sb.Append($"-maxrate {(int)(profile.VideoBitrateKbps * 1.2)}k ");
-        sb.Append($"-bufsize {profile.VideoBitrateKbps * 2}k ");
+        sb.AppendFormat(FfmpegInputFlag, inputPath);
+        sb.Append(FfmpegVideoCodecFlag);
+        sb.AppendFormat(FfmpegVideoBitrateFlag, profile.VideoBitrateKbps);
+        sb.AppendFormat(FfmpegMaxRateFlag, (int)(profile.VideoBitrateKbps * MaxRateMultiplier));
+        sb.AppendFormat(FfmpegBufSizeFlag, profile.VideoBitrateKbps * BufSizeMultiplier);
 
         if (profile.Width > 0 && profile.Height > 0)
-            sb.Append($"-vf \"scale={profile.Width}:{profile.Height}\" ");
+            sb.AppendFormat(FfmpegScaleFilterFlag, profile.Width, profile.Height);
 
         if (profile.FrameRate > 0)
-            sb.Append($"-r {profile.FrameRate} ");
+            sb.AppendFormat(FfmpegFrameRateFlag, profile.FrameRate);
 
-        sb.Append("-c:a aac ");
-        sb.Append($"-b:a {profile.AudioBitrateKbps}k -ac 2 ");
-        sb.Append("-f hls ");
-        sb.Append($"-hls_time {segmentDuration} ");
-        sb.Append("-hls_playlist_type vod ");
-        sb.Append("-hls_flags independent_segments ");
-        sb.Append($"-hls_segment_filename \"{segmentPattern}\" ");
-        sb.Append($"\"{playlistPath}\"");
+        sb.Append(FfmpegAudioCodecFlag);
+        sb.AppendFormat(FfmpegAudioBitrateFlag, profile.AudioBitrateKbps, AudioChannels);
+        sb.Append(FfmpegHlsMuxerFlag);
+        sb.AppendFormat(FfmpegHlsTimeFlag, segmentDuration);
+        sb.Append(FfmpegHlsPlaylistTypeFlag);
+        sb.Append(FfmpegHlsFlagsFlag);
+        sb.AppendFormat(FfmpegHlsSegmentFilenameFlag, segmentPattern);
+        sb.AppendFormat(FfmpegPlaylistPathFlag, playlistPath);
 
         return sb.ToString();
     }
