@@ -18,10 +18,24 @@ namespace FFmpegDotnetWrapper.Cli
     /// </summary>
     public class CliOutputFormatter
     {
+        private const int DefaultConsoleWidth = 80;
+        private const int DefaultProgressBarWidth = 40;
+        private const int DefaultKeyWidth = 20;
+        private const int BatchReportKeyWidth = 25;
+        private const int TableColumnWidth = 20;
+        private const int TableStatusColumnWidth = 10;
+        private const int TableTimeColumnWidth = 8;
+        private const int TableSeparatorInputWidth = 23;
+        private const int TableSeparatorOutputWidth = 23;
+        private const int TableSeparatorStatusWidth = 12;
+        private const int TableSeparatorTimeWidth = 10;
+        private const int FileNameColumnWidth = 30;
+        private const int MaxHelpBoxWidth = 80;
+
         private readonly bool _useColors;
         private readonly int _consoleWidth;
 
-        public CliOutputFormatter(bool useColors = true, int consoleWidth = 80)
+        public CliOutputFormatter(bool useColors = true, int consoleWidth = DefaultConsoleWidth)
         {
             _useColors = useColors;
             _consoleWidth = consoleWidth;
@@ -103,10 +117,10 @@ namespace FFmpegDotnetWrapper.Cli
                 var status = result.Success ? "✓ Success" : "✗ Failed";
                 var time = result.Success ? $"{result.ExecutionTime.TotalSeconds:0.0}s" : "-";
 
-                var input = TruncateString(System.IO.Path.GetFileName(result.InputFile), 20);
-                var output = TruncateString(System.IO.Path.GetFileName(result.OutputFile), 20);
+                var input = TruncateString(System.IO.Path.GetFileName(result.InputFile), TableColumnWidth);
+                var output = TruncateString(System.IO.Path.GetFileName(result.OutputFile), TableColumnWidth);
 
-                var row = $"| {input,-20} | {output,-20} | {status,-10} | {time,-8} |";
+                var row = $"| {input,-{TableColumnWidth}} | {output,-{TableColumnWidth}} | {status,-{TableStatusColumnWidth}} | {time,-{TableTimeColumnWidth}} |";
                 lines.AppendLine(row);
             }
 
@@ -118,7 +132,7 @@ namespace FFmpegDotnetWrapper.Cli
         /// <summary>
         /// Formats a progress bar showing percentage completion.
         /// </summary>
-        public string FormatProgressBar(double percentage, int width = 40)
+        public string FormatProgressBar(double percentage, int width = DefaultProgressBarWidth)
         {
             percentage = Math.Clamp(percentage, 0, 100);
             var filledWidth = (int)((percentage / 100) * width);
@@ -179,7 +193,7 @@ namespace FFmpegDotnetWrapper.Cli
             ArgumentNullException.ThrowIfNull(title);
             ArgumentNullException.ThrowIfNull(lines);
             var box = new StringBuilder();
-            var width = Math.Min(_consoleWidth - 4, 80);
+            var width = Math.Min(_consoleWidth - 4, MaxHelpBoxWidth);
 
             // Top border
             box.AppendLine(new string('═', width + 2));
@@ -212,7 +226,7 @@ namespace FFmpegDotnetWrapper.Cli
         /// </summary>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="key"/> is null.</exception>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
-        public string FormatKeyValue(string key, string value, int keyWidth = 20)
+        public string FormatKeyValue(string key, string value, int keyWidth = DefaultKeyWidth)
         {
             ArgumentNullException.ThrowIfNull(key);
             ArgumentNullException.ThrowIfNull(value);
@@ -251,14 +265,14 @@ namespace FFmpegDotnetWrapper.Cli
             header.Append("|");
             foreach (var col in columns)
             {
-                header.Append($" {col,-20} |");
+                header.Append($" {col,-{TableColumnWidth}} |");
             }
             return header.ToString();
         }
 
         private string CreateTableSeparator()
         {
-            return "+" + new string('-', 23) + "+" + new string('-', 23) + "+" + new string('-', 12) + "+" + new string('-', 10) + "+";
+            return "+" + new string('-', TableSeparatorInputWidth) + "+" + new string('-', TableSeparatorOutputWidth) + "+" + new string('-', TableSeparatorStatusWidth) + "+" + new string('-', TableSeparatorTimeWidth) + "+";
         }
 
         private string TruncateString(string value, int maxLength)
@@ -331,17 +345,17 @@ namespace FFmpegDotnetWrapper.Cli
             averageDuration = TimeSpan.FromTicks((long)(totalDuration.Ticks / (double)result.Results.Count(r => r.IsSuccess)));
         }
 
-        report.AppendLine(FormatKeyValue("Operation Type", result.OperationType, 25));
-        report.AppendLine(FormatKeyValue("Total Files", result.TotalFiles.ToString(), 25));
-        report.AppendLine(FormatKeyValue("Successful", FormatSuccess(result.SuccessfulCount.ToString()), 25));
-        report.AppendLine(FormatKeyValue("Failed", FormatError(result.FailedCount.ToString()), 25));
-        report.AppendLine(FormatKeyValue("Success Rate", $"{successRate:F2}%", 25));
-        report.AppendLine(FormatKeyValue("Duration", duration.ToString(), 25));
-        report.AppendLine(FormatKeyValue("Total Processing Time", totalDuration.ToString(), 25));
-        report.AppendLine(FormatKeyValue("Average Processing Time", averageDuration.ToString(), 25));
-        report.AppendLine(FormatKeyValue("Cancelled", result.IsCancelled.ToString(), 25));
-        report.AppendLine(FormatKeyValue("Created", result.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"), 25));
-        report.AppendLine(FormatKeyValue("Completed", result.CompletedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A", 25));
+        report.AppendLine(FormatKeyValue("Operation Type", result.OperationType, BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Total Files", result.TotalFiles.ToString(), BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Successful", FormatSuccess(result.SuccessfulCount.ToString()), BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Failed", FormatError(result.FailedCount.ToString()), BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Success Rate", $"{successRate:F2}%", BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Duration", duration.ToString(), BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Total Processing Time", totalDuration.ToString(), BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Average Processing Time", averageDuration.ToString(), BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Cancelled", result.IsCancelled.ToString(), BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Created", result.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"), BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Completed", result.CompletedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A", BatchReportKeyWidth));
         report.AppendLine();
 
         // Per-item details
@@ -362,7 +376,7 @@ namespace FFmpegDotnetWrapper.Cli
                 var inputFile = System.IO.Path.GetFileName(itemResult.InputFile);
                 var outputFile = itemResult.IsSuccess ? System.IO.Path.GetFileName(itemResult.OutputFilePath) : "-";
 
-                report.AppendLine($"  {status} | {completedAt} | {durationStr.PadRight(8)} | {inputFile,-30} → {outputFile}");
+                report.AppendLine($"  {status} | {completedAt} | {durationStr.PadRight(8)} | {inputFile,-{FileNameColumnWidth}} → {outputFile}");
 
                 if (!itemResult.IsSuccess && !string.IsNullOrEmpty(itemResult.ErrorMessage))
                 {
@@ -411,12 +425,12 @@ namespace FFmpegDotnetWrapper.Cli
         // Summary statistics
         var duration = result.GetDuration();
 
-        report.AppendLine(FormatKeyValue("Total Files", result.TotalFiles.ToString(), 25));
-        report.AppendLine(FormatKeyValue("Files Analyzed", result.AnalyzedFiles.Count.ToString(), 25));
-        report.AppendLine(FormatKeyValue("Cancelled", result.IsCancelled.ToString(), 25));
-        report.AppendLine(FormatKeyValue("Duration", duration.ToString(), 25));
-        report.AppendLine(FormatKeyValue("Created", result.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"), 25));
-        report.AppendLine(FormatKeyValue("Completed", result.CompletedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A", 25));
+        report.AppendLine(FormatKeyValue("Total Files", result.TotalFiles.ToString(), BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Files Analyzed", result.AnalyzedFiles.Count.ToString(), BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Cancelled", result.IsCancelled.ToString(), BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Duration", duration.ToString(), BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Created", result.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"), BatchReportKeyWidth));
+        report.AppendLine(FormatKeyValue("Completed", result.CompletedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A", BatchReportKeyWidth));
         report.AppendLine();
 
         // Per-item details
@@ -428,7 +442,7 @@ namespace FFmpegDotnetWrapper.Cli
                 var durationStr = analyzedFile.Duration.HasValue ? $"{analyzedFile.Duration.Value.TotalSeconds:0.00}s" : "-";
                 var fileSize = analyzedFile.GetFileSizeInMegabytes();
 
-                report.AppendLine($"  ✓ {analyzedFile.FileName,-30} | {durationStr.PadRight(8)} | {fileSize:F2} MB");
+                report.AppendLine($"  ✓ {analyzedFile.FileName,-{FileNameColumnWidth}} | {durationStr.PadRight(8)} | {fileSize:F2} MB");
             }
         }
         else
