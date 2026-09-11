@@ -348,9 +348,30 @@ public sealed class StreamingPipelineResult
 
     /// <summary>Records that the pipeline switched to a different quality profile.</summary>
     /// <param name="bitrateSwitch">The switch event to log.</param>
-    public void RecordSwitch(BitrateSwitch bitrateSwitch) 
+    public void RecordSwitch(BitrateSwitch bitrateSwitch)
     {
         ArgumentNullException.ThrowIfNull(nameof(bitrateSwitch));
         _bitrateSwitches.Add(bitrateSwitch);
+    }
+
+    /// <summary>
+    /// Returns a concise, single-line, culture-invariant summary of the result.
+    /// </summary>
+    public override string ToString()
+    {
+        var profiles = new System.Collections.Generic.HashSet<StreamingProfile>();
+        foreach (var segment in _segments)
+        {
+            profiles.Add(segment.Profile);
+        }
+        var distinctProfileCount = profiles.Count;
+
+        var errorPart = string.IsNullOrEmpty(ErrorMessage)
+            ? ""
+            : ", Error=" + ErrorMessage;
+
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture,
+            "Id={0}, State={1}, Renditions={2}, Segments={3}, Elapsed={4:F2}s{5}",
+            PipelineId, State, distinctProfileCount, _segments.Count, Elapsed.TotalSeconds, errorPart);
     }
 }
