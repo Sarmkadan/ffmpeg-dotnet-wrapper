@@ -60,6 +60,13 @@ namespace FFmpegDotnetWrapper.Events
         public string OutputFile { get; set; } = string.Empty;
         public string OperationType { get; set; } = string.Empty;
         public Dictionary<string, object>? Metadata { get; set; }
+
+        public override string ToString()
+        {
+            var baseString = base.ToString();
+            var metadataString = Metadata == null ? "null" : string.Join(", ", Metadata.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
+            return $"{baseString}, InputFile: {InputFile}, OutputFile: {OutputFile}, OperationType: {OperationType}, Metadata: {metadataString}";
+        }
     }
 
     /// <summary>
