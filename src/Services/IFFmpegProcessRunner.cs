@@ -55,6 +55,19 @@ public sealed class FFmpegProcessRequest
     /// <c>-progress pipe:1 -nostats</c> to <see cref="Arguments"/> when this is set.
     /// </summary>
     public bool ParseProgressFromStdOut { get; init; }
+
+    /// <summary>
+    /// Returns a culture-invariant string representation of the FFmpegProcessRequest.
+    /// </summary>
+    public override string ToString()
+    {
+        string args = Arguments;
+        if (args.Length > 120)
+        {
+            args = args.Substring(0, 120) + "...";
+        }
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "FileName={0}, Arguments={1}, Timeout={2}", FileName, args, Timeout);
+    }
 }
 
 /// <summary>
