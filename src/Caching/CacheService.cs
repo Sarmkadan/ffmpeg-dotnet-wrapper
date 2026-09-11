@@ -34,6 +34,10 @@ namespace FFmpegDotnetWrapper.Caching
             public int AccessCount { get; set; }
         }
 
+        private const int DefaultMaxCacheSize = 1000;
+        private static readonly TimeSpan DefaultExpirationTime = TimeSpan.FromHours(1);
+        private const double PercentFactor = 100;
+
         private readonly Dictionary<string, CacheEntry> _cache = new();
         private readonly ILogger<CacheService> _logger;
         private readonly int _maxCacheSize;
@@ -46,11 +50,11 @@ namespace FFmpegDotnetWrapper.Caching
         /// Initializes a new cache service with configurable size limits and default expiration time.
         /// Default max size is 1000 entries, default expiration is 1 hour.
         /// </summary>
-        public CacheService(ILogger<CacheService> logger, int maxCacheSize = 1000, TimeSpan? defaultExpiration = null)
+        public CacheService(ILogger<CacheService> logger, int maxCacheSize = DefaultMaxCacheSize, TimeSpan? defaultExpiration = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _maxCacheSize = maxCacheSize;
-            _defaultExpiration = defaultExpiration ?? TimeSpan.FromHours(1);
+            _defaultExpiration = defaultExpiration ?? DefaultExpirationTime;
         }
 
         /// <summary>
@@ -190,7 +194,7 @@ namespace FFmpegDotnetWrapper.Caching
         {
             lock (_lockObject)
             {
-                var utilization = ((double)_cache.Count / _maxCacheSize) * 100;
+                var utilization = ((double)_cache.Count / _maxCacheSize) * PercentFactor;
                 return (_cache.Count, _maxCacheSize, utilization);
             }
         }
