@@ -114,6 +114,12 @@ namespace FFmpegDotnetWrapper.Events
         public double ProgressPercentage { get; set; }
         public TimeSpan ElapsedTime { get; set; }
         public string? StatusMessage { get; set; }
+
+        public override string ToString()
+        {
+            var baseString = base.ToString();
+            return $"{baseString}, OperationType: {OperationType}, ProgressPercentage: {ProgressPercentage}, ElapsedTime: {ElapsedTime}, StatusMessage: {StatusMessage ?? "none"}";
+        }
     }
 
     /// <summary>
