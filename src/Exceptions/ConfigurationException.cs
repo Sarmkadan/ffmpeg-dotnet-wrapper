@@ -44,4 +44,11 @@ public class ConfigurationException : FFmpegException
         ConfigurationKey = configurationKey;
         Context[nameof(ConfigurationKey)] = configurationKey ?? string.Empty;
     }
+
+    public override string ToString()
+    {
+        return !string.IsNullOrEmpty(ConfigurationKey)
+            ? $"[ConfigurationKey: {ConfigurationKey}] {base.ToString()}"
+            : base.ToString();
+    }
 }
