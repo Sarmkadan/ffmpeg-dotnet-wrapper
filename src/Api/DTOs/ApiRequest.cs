@@ -108,6 +108,15 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// </summary>
         [StringLength(20)]
         public string? Duration { get; set; }
+
+        /// <summary>
+        /// Returns a string representation of the TrimRequest.
+        /// </summary>
+        /// <returns>A concise, single-line, culture-invariant summary including InputPath, OutputPath and trimming properties.</returns>
+        public override string ToString()
+        {
+            return $"InputPath: {InputPath}, OutputPath: {OutputPath}, Start: {StartTime ?? "none"}, End: {EndTime ?? "none"}, Duration: {Duration ?? "none"}";
+        }
     }
 
     /// <summary>
