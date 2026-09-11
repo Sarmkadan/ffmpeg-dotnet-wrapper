@@ -213,6 +213,11 @@ namespace FFmpegDotnetWrapper.Configuration
 
         /// <summary>Include stack traces in error logs.</summary>
         public bool IncludeStackTraces { get; set; } = true;
+
+        public override string ToString()
+        {
+            return $"LoggingOptions {{ LogRequestBody = {LogRequestBody}, LogResponseBody = {LogResponseBody}, LogPerformanceMetrics = {LogPerformanceMetrics}, LogFFmpegCommands = {LogFFmpegCommands}, MaxValueLength = {MaxValueLength}, IncludeStackTraces = {IncludeStackTraces} }}";
+        }
     }
 
     /// <summary>
@@ -233,5 +238,10 @@ namespace FFmpegDotnetWrapper.Configuration
 
         /// <summary>Default output format (JSON, CSV, Text).</summary>
         public string DefaultOutputFormat { get; set; } = "Text";
+
+        public override string ToString()
+        {
+            return $"CliOptions {{ EnableColoredOutput = {EnableColoredOutput}, ShowProgressBars = {ShowProgressBars}, VerbosityLevel = {VerbosityLevel}, DefaultOutputFormat = {DefaultOutputFormat} }}";
+        }
     }
 }
