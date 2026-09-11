@@ -10,6 +10,19 @@ namespace FFmpegDotnetWrapper.Models;
 /// </summary>
 public static class FFmpegOperationValidation
 {
+    private const int MaxNameLength = 256;
+    private const int MaxInputFilePathLength = 4096;
+    private const int MaxOutputFilePathLength = 4096;
+    private const int MaxOutputDirectoryPathLength = 4096;
+    private const int MaxArgumentLength = 1024;
+    private const int MaxTimeoutHours = 24;
+    private const int MinPriority = 0;
+    private const int MaxPriority = 100;
+    private const int MaxCustomPropertyKeyLength = 256;
+    private const int MaxCustomPropertyValueLength = 1024;
+    private const int FutureToleranceMinutes = 5;
+    private const int MaxAgeYears = 1;
+
     /// <summary>
     /// Validates the specified FFmpeg operation and returns a list of human-readable problems.
     /// </summary>
@@ -37,7 +50,7 @@ public static class FFmpegOperationValidation
         {
             errors.Add("Operation Name cannot be null or whitespace.");
         }
-        else if (value.Name.Length > 256)
+        else if (value.Name.Length > MaxNameLength)
         {
             errors.Add("Operation Name cannot exceed 256 characters.");
         }
@@ -68,7 +81,7 @@ public static class FFmpegOperationValidation
                     break;
                 }
 
-                if (inputFile.Length > 4096)
+                if (inputFile.Length > MaxInputFilePathLength)
                 {
                     errors.Add("Input file path cannot exceed 4096 characters.");
                     break;
@@ -81,7 +94,7 @@ public static class FFmpegOperationValidation
         {
             errors.Add("Output file path cannot be null or whitespace.");
         }
-        else if (value.OutputFile.Length > 4096)
+        else if (value.OutputFile.Length > MaxOutputFilePathLength)
         {
             errors.Add("Output file path cannot exceed 4096 characters.");
         }
@@ -91,7 +104,7 @@ public static class FFmpegOperationValidation
             try
             {
                 var outputDir = Path.GetDirectoryName(value.OutputFile);
-                if (!string.IsNullOrEmpty(outputDir) && outputDir.Length > 4096)
+                if (!string.IsNullOrEmpty(outputDir) && outputDir.Length > MaxOutputDirectoryPathLength)
                 {
                     errors.Add("Output file directory path cannot exceed 4096 characters.");
                 }
@@ -117,7 +130,7 @@ public static class FFmpegOperationValidation
                     break;
                 }
 
-                if (argument.Length > 1024)
+                if (argument.Length > MaxArgumentLength)
                 {
                     errors.Add("Individual argument cannot exceed 1024 characters.");
                     break;
@@ -132,7 +145,7 @@ public static class FFmpegOperationValidation
             {
                 errors.Add("Timeout must be a positive time span.");
             }
-            else if (value.Timeout.Value.TotalMilliseconds > TimeSpan.FromHours(24).TotalMilliseconds)
+            else if (value.Timeout.Value.TotalMilliseconds > TimeSpan.FromHours(MaxTimeoutHours).TotalMilliseconds)
             {
                 errors.Add("Timeout cannot exceed 24 hours.");
             }
@@ -141,11 +154,11 @@ public static class FFmpegOperationValidation
         // Validate Priority
         if (value.Priority.HasValue)
         {
-            if (value.Priority.Value < 0)
+            if (value.Priority.Value < MinPriority)
             {
                 errors.Add("Priority cannot be negative.");
             }
-            else if (value.Priority.Value > 100)
+            else if (value.Priority.Value > MaxPriority)
             {
                 errors.Add("Priority cannot exceed 100.");
             }
@@ -169,13 +182,13 @@ public static class FFmpegOperationValidation
                     break;
                 }
 
-                if (kvp.Key.Length > 256)
+                if (kvp.Key.Length > MaxCustomPropertyKeyLength)
                 {
                     errors.Add("Custom property key cannot exceed 256 characters.");
                     break;
                 }
 
-                if (kvp.Value is not null && kvp.Value.Length > 1024)
+                if (kvp.Value is not null && kvp.Value.Length > MaxCustomPropertyValueLength)
                 {
                     errors.Add("Custom property value cannot exceed 1024 characters.");
                     break;
@@ -192,11 +205,11 @@ public static class FFmpegOperationValidation
         {
             errors.Add("CreatedAt must be in UTC timezone.");
         }
-        else if (value.CreatedAt > DateTime.UtcNow.AddMinutes(5))
+        else if (value.CreatedAt > DateTime.UtcNow.AddMinutes(FutureToleranceMinutes))
         {
             errors.Add("CreatedAt cannot be in the future.");
         }
-        else if (value.CreatedAt < DateTime.UtcNow.AddYears(-1))
+        else if (value.CreatedAt < DateTime.UtcNow.AddYears(-MaxAgeYears))
         {
             errors.Add("CreatedAt cannot be more than one year in the past.");
         }
@@ -212,7 +225,7 @@ public static class FFmpegOperationValidation
             {
                 errors.Add("ExecutedAt must be in UTC timezone.");
             }
-            else if (value.ExecutedAt.Value > DateTime.UtcNow.AddMinutes(5))
+            else if (value.ExecutedAt.Value > DateTime.UtcNow.AddMinutes(FutureToleranceMinutes))
             {
                 errors.Add("ExecutedAt cannot be in the future.");
             }
