@@ -43,4 +43,11 @@ public class FileOperationException : FFmpegException
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
     }
+
+    public override string ToString()
+    {
+        return !string.IsNullOrEmpty(FilePath)
+            ? $"[FilePath: {FilePath}] {base.ToString()}"
+            : base.ToString();
+    }
 }
