@@ -29,6 +29,10 @@ public class FFmpegService : IFFmpegService
     private readonly IRetryPolicy _retryPolicy;
     private readonly IFFmpegProcessRunner _processRunner;
 
+    private static readonly TimeSpan DefaultProbeTimeout = TimeSpan.FromSeconds(60);
+    private const int DefaultSubtitleFontSize = 24;
+    private const string FrameNumberPattern = "%03d";
+
     /// <summary>
     /// Initializes a new instance of <see cref="FFmpegService"/>, resolving the <c>ffmpeg</c>
     /// and <c>ffprobe</c> executable paths and configuring the default operation timeout.
@@ -1113,7 +1117,7 @@ public class FFmpegService : IFFmpegService
                     var timestamp = settings.Times[i];
                     var singleOutput = settings.Times.Count == 1
                         ? outputPattern
-                        : string.Format(outputPattern.Replace("%03d", "{0:D3}"), i + 1);
+                        : string.Format(outputPattern.Replace("FrameNumberPattern", "{0:D3}"), i + 1);
 
                     var operation = BuildThumbnailOperation(inputMedia, singleOutput, settings, timestamp);
                     var opResult = await ExecuteFFmpegAsync(operation, cancellationToken);
@@ -1136,7 +1140,7 @@ public class FFmpegService : IFFmpegService
 
                 var generatedFiles = Directory.GetFiles(directory, searchPattern)
                     .Where(f => f.StartsWith(
-                        Path.Combine(directory, Path.GetFileNameWithoutExtension(fileNameTemplate).Replace("%03d", "").TrimEnd('_')),
+                        Path.Combine(directory, Path.GetFileNameWithoutExtension(fileNameTemplate).Replace("FrameNumberPattern", "").TrimEnd('_')),
                         StringComparison.OrdinalIgnoreCase))
                     .OrderBy(f => f)
                     .ToList();
@@ -1178,7 +1182,7 @@ public class FFmpegService : IFFmpegService
             Name = $"Extract thumbnail from {inputMedia.Name}",
             Type = FFmpegOperationType.Filter,
             OutputFile = outputPath,
-            Timeout = TimeSpan.FromSeconds(60)
+            Timeout = DefaultProbeTimeout
         };
 
         operation.AddInputFile(inputMedia.FilePath);
@@ -1214,7 +1218,7 @@ public class FFmpegService : IFFmpegService
             var escapedPath = settings.SubtitlePath.Replace("\\", "/").Replace(":", "\\:");
             var subtitlesFilter = $"subtitles='{escapedPath}'";
 
-            if (!string.IsNullOrWhiteSpace(settings.FontName) || settings.FontSize != 24)
+            if (!string.IsNullOrWhiteSpace(settings.FontName) || settings.FontSize != DefaultSubtitleFontSize)
             {
                 var fontStyle = $"force_style='FontName={settings.FontName},FontSize={settings.FontSize}'";
                 subtitlesFilter = $"subtitles='{escapedPath}':{fontStyle}";
