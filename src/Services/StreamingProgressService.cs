@@ -55,6 +55,10 @@ public sealed class StreamingProgressService : IStreamingProgressService
     private static readonly Regex BitrateRegex = new(@"bitrate=\s*([\d.]+)kbits/s", RegexOptions.Compiled);
     private static readonly Regex SpeedRegex = new(@"speed=\s*([\d.]+)x", RegexOptions.Compiled);
 
+    private const long BytesPerKilobyte = 1024L;
+    private const double MinPercent = 0.0;
+    private const double MaxPercent = 100.0;
+
     private readonly ILogger<StreamingProgressService> _logger;
 
     /// <summary>
@@ -129,7 +133,7 @@ public sealed class StreamingProgressService : IStreamingProgressService
             return null;
 
         var progressPercent = totalDuration.TotalSeconds > 0
-            ? Math.Clamp(processedDuration.TotalSeconds / totalDuration.TotalSeconds * 100.0, 0.0, 100.0)
+            ? Math.Clamp(processedDuration.TotalSeconds / totalDuration.TotalSeconds * MaxPercent, MinPercent, MaxPercent)
             : 0.0;
 
         return new FFmpegProgressUpdate
@@ -142,7 +146,7 @@ public sealed class StreamingProgressService : IStreamingProgressService
             ElapsedWallTime = elapsed,
             FramesProcessed = ParseInt(FrameRegex, line),
             FramesPerSecond = ParseDouble(FpsRegex, line),
-            OutputSizeBytes = ParseLong(SizeRegex, line) * 1024L,
+            OutputSizeBytes = ParseLong(SizeRegex, line) * BytesPerKilobyte,
             BitrateKbps = ParseDouble(BitrateRegex, line),
             EncodingSpeed = ParseDouble(SpeedRegex, line),
             Timestamp = DateTime.UtcNow,
