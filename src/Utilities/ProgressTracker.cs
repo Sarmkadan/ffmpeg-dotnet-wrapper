@@ -49,6 +49,8 @@ namespace FFmpegDotnetWrapper.Utilities
     {
         private const double MinPercentage = 0;
         private const double MaxPercentage = 100;
+        private const double PercentFactor = 100.0;
+        private const double MaxPercent = 100;
 
         private readonly Stopwatch _stopwatch;
         private readonly object _lockObject = new();
@@ -142,7 +144,7 @@ namespace FFmpegDotnetWrapper.Utilities
 
                 // Clamp percentage between 0 and 100
                 var percent = totalDuration.TotalSeconds > 0
-                    ? (processedDuration.TotalSeconds / totalDuration.TotalSeconds) * 100
+                    ? (processedDuration.TotalSeconds / totalDuration.TotalSeconds) * PercentFactor
                     : 0;
                 percent = Math.Max(MinPercentage, Math.Min(MaxPercentage, percent));
 
@@ -212,7 +214,7 @@ namespace FFmpegDotnetWrapper.Utilities
             var report = GetProgressReport();
             var progressStr = FormattingUtilities.FormatPercentage(report.ProgressPercentage);
             var itemsStr = _totalItems > 0 ? $" ({report.ItemsCompleted}/{report.TotalItems} items)" : string.Empty;
-            var etaStr = report.ProgressPercentage > 0 && report.ProgressPercentage < 100
+            var etaStr = report.ProgressPercentage > 0 && report.ProgressPercentage < MaxPercent
                 ? $" - ETA: {FormattingUtilities.FormatDuration(report.EstimatedTimeRemaining)}"
                 : string.Empty;
 
@@ -227,18 +229,18 @@ namespace FFmpegDotnetWrapper.Utilities
         {
             if (_totalItems > 0)
             {
-                return (_itemsProcessed * 100.0) / _totalItems;
+                return (_itemsProcessed * PercentFactor) / _totalItems;
             }
 
             if (_totalBytes > 0)
             {
                 // Hotfix: calculate progress percentage based on items processed instead of bytes processed
-                return (_itemsProcessed * 100.0) / _totalItems;
+                return (_itemsProcessed * PercentFactor) / _totalItems;
             }
 
             if (_totalDuration.TotalSeconds > 0)
             {
-                return (_processedDuration.TotalSeconds / _totalDuration.TotalSeconds) * 100.0;
+                return (_processedDuration.TotalSeconds / _totalDuration.TotalSeconds) * PercentFactor;
             }
 
             return 0;
@@ -252,14 +254,14 @@ namespace FFmpegDotnetWrapper.Utilities
             if (double.IsNaN(progressPercent) || double.IsInfinity(progressPercent))
                 return TimeSpan.Zero;
 
-            if (progressPercent <= 0 || progressPercent >= 100 || elapsed.TotalSeconds <= 0)
+            if (progressPercent <= 0 || progressPercent >= MaxPercent || elapsed.TotalSeconds <= 0)
                 return TimeSpan.Zero;
 
             // Prevent division by very small numbers that could cause NaN
             if (progressPercent < 0.001)
                 return TimeSpan.Zero;
 
-            var totalSeconds = (elapsed.TotalSeconds / progressPercent) * 100;
+            var totalSeconds = (elapsed.TotalSeconds / progressPercent) * MaxPercent;
             var remainingSeconds = totalSeconds - elapsed.TotalSeconds;
 
             if (double.IsNaN(remainingSeconds) || double.IsInfinity(remainingSeconds))
@@ -324,13 +326,14 @@ namespace FFmpegDotnetWrapper.Utilities
         public event ProgressChangedEventHandler? ProgressChanged;
 
         /// <summary>Minimum progress change percentage to trigger event (prevents spam).</summary>
+        private const double DefaultReportingThreshold = 1.0;
         private readonly double _reportingThreshold;
         private double _lastReportedProgress = 0;
 
         public ObservableProgressTracker(
             int totalItems = 0,
             long totalBytes = 0,
-            double reportingThreshold = 1.0)
+            double reportingThreshold = DefaultReportingThreshold)
             : base(totalItems, totalBytes)
         {
             _reportingThreshold = reportingThreshold;
