@@ -20,6 +20,43 @@ public class TranscodeService : ITranscodeService
     private readonly IFFmpegService _ffmpegService;
     private readonly ILogger<TranscodeService> _logger;
 
+    // Web preset constants
+    private const int WebPresetVideoBitrate = 2500;
+    private const int WebPresetAudioBitrate = 128;
+    private const int WebPresetFrameRate = 30;
+    private const int WebPresetMaxWidth = 1280;
+    private const int WebPresetMaxHeight = 720;
+
+    // H265 preset constants
+    private const int H265PresetVideoBitrate = 1500;
+    private const int H265PresetAudioBitrate = 128;
+    private const int H265PresetFrameRate = 30;
+    private const int H265PresetMaxWidth = 1920;
+    private const int H265PresetMaxHeight = 1080;
+
+    // Mobile preset constants
+    private const int MobilePresetVideoBitrate = 1000;
+    private const int MobilePresetAudioBitrate = 96;
+    private const int MobilePresetFrameRate = 25;
+    private const int MobilePresetMaxWidth = 720;
+    private const int MobilePresetMaxHeight = 480;
+
+    // High quality preset constants
+    private const int HighQualityPresetVideoBitrate = 8000;
+    private const int HighQualityPresetAudioBitrate = 320;
+    private const int HighQualityPresetFrameRate = 30;
+    private const double HighQualityPresetTargetLoudness = -23.0;
+
+    // Resize preset constants
+    private const int ResizePresetVideoBitrate = 3000;
+    private const int ResizePresetAudioBitrate = 128;
+
+    // Extract audio preset constants
+    private const int ExtractAudioAudioBitrate = 192;
+
+    // Default constants
+    private const int DefaultFrameRate = 30;
+
     public TranscodeService(IFFmpegService ffmpegService, ILogger<TranscodeService> logger)
     {
         _ffmpegService = ffmpegService ?? throw new ArgumentNullException(nameof(ffmpegService));
@@ -42,13 +79,13 @@ public class TranscodeService : ITranscodeService
             VideoCodec = VideoCodec.H264,
             AudioCodec = AudioCodec.AAC,
             Container = ContainerFormat.MP4,
-            VideoBitrate = 2500,
-            AudioBitrate = 128,
-            FrameRate = 30,
+            VideoBitrate = WebPresetVideoBitrate,
+            AudioBitrate = WebPresetAudioBitrate,
+            FrameRate = WebPresetFrameRate,
             Quality = QualityPreset.Fast,
             EnableAutoScale = true,
-            MaxWidth = 1280,
-            MaxHeight = 720,
+            MaxWidth = WebPresetMaxWidth,
+            MaxHeight = WebPresetMaxHeight,
             PreserveAspectRatio = true
         };
 
@@ -72,13 +109,13 @@ public class TranscodeService : ITranscodeService
             VideoCodec = VideoCodec.H265,
             AudioCodec = AudioCodec.AAC,
             Container = ContainerFormat.MP4,
-            VideoBitrate = 1500,
-            AudioBitrate = 128,
-            FrameRate = 30,
+            VideoBitrate = H265PresetVideoBitrate,
+            AudioBitrate = H265PresetAudioBitrate,
+            FrameRate = H265PresetFrameRate,
             Quality = QualityPreset.Medium,
             EnableAutoScale = true,
-            MaxWidth = 1920,
-            MaxHeight = 1080
+            MaxWidth = H265PresetMaxWidth,
+            MaxHeight = H265PresetMaxHeight
         };
 
         _logger.LogInformation("Transcoding {File} to H.265 format", inputMedia.Name);
@@ -101,13 +138,13 @@ public class TranscodeService : ITranscodeService
             VideoCodec = VideoCodec.H264,
             AudioCodec = AudioCodec.AAC,
             Container = ContainerFormat.MP4,
-            VideoBitrate = 1000,
-            AudioBitrate = 96,
-            FrameRate = 25,
+            VideoBitrate = MobilePresetVideoBitrate,
+            AudioBitrate = MobilePresetAudioBitrate,
+            FrameRate = MobilePresetFrameRate,
             Quality = QualityPreset.Fast,
             EnableAutoScale = true,
-            MaxWidth = 720,
-            MaxHeight = 480,
+            MaxWidth = MobilePresetMaxWidth,
+            MaxHeight = MobilePresetMaxHeight,
             PreserveAspectRatio = true
         };
 
@@ -131,13 +168,13 @@ public class TranscodeService : ITranscodeService
             VideoCodec = VideoCodec.H264,
             AudioCodec = AudioCodec.FLAC,
             Container = ContainerFormat.MP4,
-            VideoBitrate = 8000,
-            AudioBitrate = 320,
-            FrameRate = 30,
+            VideoBitrate = HighQualityPresetVideoBitrate,
+            AudioBitrate = HighQualityPresetAudioBitrate,
+            FrameRate = HighQualityPresetFrameRate,
             Quality = QualityPreset.Slower,
             TwoPass = true,
             EnableAudioNormalization = true,
-            TargetLoudness = -23.0
+            TargetLoudness = HighQualityPresetTargetLoudness
         };
 
         _logger.LogInformation("Transcoding {File} to high-quality format", inputMedia.Name);
@@ -164,7 +201,7 @@ public class TranscodeService : ITranscodeService
             Container = ContainerFormat.MP4,
             VideoBitrate = videoBitrate,
             AudioBitrate = audioBitrate,
-            FrameRate = 30,
+            FrameRate = DefaultFrameRate,
             Quality = QualityPreset.Medium
         };
 
