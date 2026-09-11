@@ -44,6 +44,8 @@ namespace FFmpegDotnetWrapper.Api.DTOs
     /// </summary>
     public class TranscodeRequest : ApiRequest
     {
+        private const string DefaultOutputFormat = "mp4";
+
         [Required(ErrorMessage = "Input path is required")]
         [StringLength(500)]
         public string InputPath { get; set; } = string.Empty;
@@ -53,7 +55,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         public string OutputPath { get; set; } = string.Empty;
 
         [StringLength(20)]
-        public string OutputFormat { get; set; } = "mp4";
+        public string OutputFormat { get; set; } = DefaultOutputFormat;
 
         [StringLength(50)]
         public string? Codec { get; set; }
@@ -134,6 +136,11 @@ namespace FFmpegDotnetWrapper.Api.DTOs
     /// </summary>
     public class WatermarkRequest : ApiRequest
     {
+        private const int DefaultPositionX = 10;
+        private const int DefaultPositionY = 10;
+        private const double DefaultOpacity = 0.8;
+        private const double DefaultScale = 0.15;
+
         [Required(ErrorMessage = "Input path is required")]
         public string InputPath { get; set; } = string.Empty;
 
@@ -149,28 +156,28 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// Negative values position from the right edge.
         /// </summary>
         [Range(-4096, 4096)]
-        public int PositionX { get; set; } = 10;
+        public int PositionX { get; set; } = DefaultPositionX;
 
         /// <summary>
         /// Vertical position in pixels from the top edge.
         /// Negative values position from the bottom edge.
         /// </summary>
         [Range(-2160, 2160)]
-        public int PositionY { get; set; } = 10;
+        public int PositionY { get; set; } = DefaultPositionY;
 
         /// <summary>
         /// Opacity of the watermark from 0 (transparent) to 1 (opaque).
         /// Allows for subtle, semi-transparent watermarks.
         /// </summary>
         [Range(0.0, 1.0)]
-        public double Opacity { get; set; } = 0.8;
+        public double Opacity { get; set; } = DefaultOpacity;
 
         /// <summary>
         /// Scale factor for the watermark relative to video width.
         /// Example: 0.2 makes watermark 20% of video width.
         /// </summary>
         [Range(0.01, 1.0)]
-        public double Scale { get; set; } = 0.15;
+        public double Scale { get; set; } = DefaultScale;
     }
 
     /// <summary>
@@ -179,6 +186,9 @@ namespace FFmpegDotnetWrapper.Api.DTOs
     /// </summary>
     public class SubtitleRequest : ApiRequest
     {
+        private const string DefaultFontName = "Arial";
+        private const int DefaultFontSize = 24;
+
         [Required(ErrorMessage = "Input path is required")]
         [StringLength(500)]
         public string InputPath { get; set; } = string.Empty;
@@ -207,13 +217,13 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// Font name used when hard-embedding subtitles. Defaults to <c>Arial</c>.
         /// </summary>
         [StringLength(100)]
-        public string FontName { get; set; } = "Arial";
+        public string FontName { get; set; } = DefaultFontName;
 
         /// <summary>
         /// Font size in points when hard-embedding subtitles.
         /// </summary>
         [Range(6, 120)]
-        public int FontSize { get; set; } = 24;
+        public int FontSize { get; set; } = DefaultFontSize;
     }
 
     /// <summary>
@@ -222,6 +232,9 @@ namespace FFmpegDotnetWrapper.Api.DTOs
     /// </summary>
     public class ThumbnailRequest : ApiRequest
     {
+        private const string DefaultFormat = "jpeg";
+        private const int DefaultCount = 1;
+
         [Required(ErrorMessage = "Input path is required")]
         [StringLength(500)]
         public string InputPath { get; set; } = string.Empty;
@@ -244,7 +257,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// Number of evenly-spaced thumbnails to extract. Used when <see cref="TimestampsSeconds"/> is empty.
         /// </summary>
         [Range(1, 100)]
-        public int Count { get; set; } = 1;
+        public int Count { get; set; } = DefaultCount;
 
         /// <summary>
         /// Output width in pixels. Set to -1 to preserve aspect ratio relative to <see cref="Height"/>.
@@ -261,7 +274,7 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// <summary>
         /// Output image format. Defaults to <c>jpeg</c>.
         /// </summary>
-        public string Format { get; set; } = "jpeg";
+        public string Format { get; set; } = DefaultFormat;
     }
 
     /// <summary>
@@ -270,6 +283,9 @@ namespace FFmpegDotnetWrapper.Api.DTOs
     /// </summary>
     public class AudioExtractRequest : ApiRequest
     {
+        private const string DefaultAudioCodec = "mp3";
+        private const int DefaultAudioBitrate = 192;
+
         [Required(ErrorMessage = "Input path is required")]
         [StringLength(500)]
         public string InputPath { get; set; } = string.Empty;
@@ -281,12 +297,12 @@ namespace FFmpegDotnetWrapper.Api.DTOs
         /// <summary>
         /// Target audio codec for extraction. Defaults to MP3.
         /// </summary>
-        public string AudioCodec { get; set; } = "mp3";
+        public string AudioCodec { get; set; } = DefaultAudioCodec;
 
         /// <summary>
         /// Target audio bitrate in kbps. Defaults to 192 kbps.
         /// </summary>
         [Range(32, 320)]
-        public int AudioBitrate { get; set; } = 192;
+        public int AudioBitrate { get; set; } = DefaultAudioBitrate;
     }
 }
