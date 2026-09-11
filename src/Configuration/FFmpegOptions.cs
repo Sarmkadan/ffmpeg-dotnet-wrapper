@@ -161,6 +161,11 @@ namespace FFmpegDotnetWrapper.Configuration
 
         /// <summary>Pre-configured webhook endpoints.</summary>
         public List<PreConfiguredWebhook> PreConfiguredWebhooks { get; set; } = new();
+
+        public override string ToString()
+        {
+            return $"WebhookOptions {{ Enabled = {Enabled}, PreConfiguredWebhooksCount = {PreConfiguredWebhooks.Count} }}";
+        }
     }
 
     /// <summary>
