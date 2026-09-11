@@ -79,6 +79,12 @@ namespace FFmpegDotnetWrapper.Events
         public string OperationType { get; set; } = string.Empty;
         public TimeSpan Duration { get; set; }
         public long OutputFileSize { get; set; }
+
+        public override string ToString()
+        {
+            var baseString = base.ToString();
+            return $"{baseString}, InputFile: {InputFile}, OutputFile: {OutputFile}, OperationType: {OperationType}, Duration: {Duration}, OutputFileSize: {OutputFileSize}";
+        }
     }
 
     /// <summary>
