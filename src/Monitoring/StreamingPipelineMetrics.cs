@@ -197,6 +197,15 @@ public sealed class StreamingPipelineMetrics
         Interlocked.Exchange(ref _cumulativeDurationTicks, 0);
         _perProfile.Clear();
     }
+
+    /// <summary>
+    /// Returns a string representation of the streaming pipeline metrics.
+    /// </summary>
+    /// <returns>A string summarizing pipeline id (aggregated), profile count, and key totals.</returns>
+    public override string ToString()
+    {
+        return $"StreamingPipelineMetrics[PipelineId=Aggregated, Profiles={_perProfile.Count}, TotalSegmentsProduced={TotalSegmentsProduced}, TotalBytesProduced={TotalBytesProduced}, TotalBitrateSwitches={TotalBitrateSwitches}, TotalUpgrades={TotalUpgrades}, TotalDowngrades={TotalDowngrades}, CompletedPipelines={CompletedPipelines}, FailedPipelines={FailedPipelines}, AveragePipelineDuration={AveragePipelineDuration}]";
+    }
 }
 
 /// <summary>
