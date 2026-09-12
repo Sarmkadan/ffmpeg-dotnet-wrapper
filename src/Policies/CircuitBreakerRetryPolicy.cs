@@ -250,6 +250,15 @@ public class CircuitBreakerRetryPolicy : IRetryPolicy
             _lastFailureTime = DateTime.MinValue;
         }
     }
+
+    /// <summary>
+    /// Returns a string that represents the current circuit breaker policy.
+    /// </summary>
+    /// <returns>A string that represents the current circuit breaker policy.</returns>
+    public override string ToString()
+    {
+        return $"{base.ToString()} FailureThreshold={_failureThreshold}, BreakDuration={_breakDuration}, HalfOpenAttempts={_halfOpenAttempts}, State={_state}, FailureCount={_failureCount}";
+    }
 }
 
 /// <summary>
