@@ -279,5 +279,18 @@ namespace FFmpegDotnetWrapper.Middleware
                 _logger.LogInformation("Cleared all rate limiting windows ({Count} entries)", count);
             }
         }
+
+        /// <summary>
+        /// Returns a string representation of the sliding window rate limiter, including its policies and tracked client count.
+        /// </summary>
+        /// <returns>A string describing the policies and number of tracked clients.</returns>
+        public override string ToString()
+        {
+            lock (_lockObject) // atomic update
+            {
+                var policiesString = string.Join(", ", _policies.Values.Select(p => p.ToString()));
+                return $"SlidingWindowRateLimiter {{ Policies = [{policiesString}], TrackedClients = {_windows.Count} }}";
+            }
+        }
     }
 }
