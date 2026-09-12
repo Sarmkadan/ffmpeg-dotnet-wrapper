@@ -194,6 +194,14 @@ namespace FFmpegDotnetWrapper.Monitoring
         }
 
         /// <summary>
+        /// Returns a concise, single-line, culture-invariant summary of the operation statistics.
+        /// </summary>
+        public override string ToString()
+        {
+            return GetAggregateStatistics().ToString();
+        }
+
+        /// <summary>
         /// Gets performance report with percentiles and distribution.
         /// Useful for understanding performance characteristics.
         /// </summary>
