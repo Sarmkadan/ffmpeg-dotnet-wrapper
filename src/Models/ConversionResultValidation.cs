@@ -81,10 +81,15 @@ public static class ConversionResultValidation
             problems.Add("ConversionResult.Duration must not be negative.");
         }
 
-        // Validate ErrorMessage
+        // Validate ErrorMessage consistency
         if (value.IsSuccess && !string.IsNullOrEmpty(value.ErrorMessage))
         {
-            problems.Add("ConversionResult.ErrorMessage must be null or empty when IsSuccess is true.");
+            problems.Add("ConversionResult has IsSuccess=true but contains an ErrorMessage.");
+        }
+
+        if (!value.IsSuccess && string.IsNullOrEmpty(value.ErrorMessage))
+        {
+            problems.Add("ConversionResult has IsSuccess=false but ErrorMessage is null or empty.");
         }
 
         // Validate WarningMessage
@@ -128,17 +133,6 @@ public static class ConversionResultValidation
         if (value.IsSuccess && string.IsNullOrWhiteSpace(value.FFmpegOutput))
         {
             problems.Add("ConversionResult.FFmpegOutput must not be null or empty when IsSuccess is true.");
-        }
-
-        // Validate consistency between IsSuccess and error state
-        if (value.IsSuccess && !string.IsNullOrEmpty(value.ErrorMessage))
-        {
-            problems.Add("ConversionResult has IsSuccess=true but contains an ErrorMessage.");
-        }
-
-        if (!value.IsSuccess && string.IsNullOrEmpty(value.ErrorMessage))
-        {
-            problems.Add("ConversionResult has IsSuccess=false but ErrorMessage is null or empty.");
         }
 
         return problems.AsReadOnly();

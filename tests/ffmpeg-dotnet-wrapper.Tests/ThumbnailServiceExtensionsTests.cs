@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using FFmpegDotnetWrapper.Models;
 using FFmpegDotnetWrapper.Services;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 
@@ -15,9 +17,16 @@ public class ThumbnailServiceExtensionsTests
 {
     private static readonly CancellationToken DefaultToken = CancellationToken.None;
 
+    private static Mock<ThumbnailService> CreateMockThumbnailService()
+    {
+        var mockFfmpeg = new Mock<IFFmpegService>();
+        var logger = NullLogger<ThumbnailService>.Instance;
+        return new Mock<ThumbnailService>(mockFfmpeg.Object, logger);
+    }
+
     private static Mock<ThumbnailService> CreateMockService(ThumbnailResult? result = null)
     {
-        var mock = new Mock<ThumbnailService>();
+        var mock = CreateMockThumbnailService();
         mock.Setup(s => s.ExtractSingleAsync(
                 It.IsAny<MediaFile>(),
                 It.IsAny<string>(),
@@ -35,7 +44,7 @@ public class ThumbnailServiceExtensionsTests
     {
         // Arrange
         var expected = new ThumbnailResult();
-        var mock = new Mock<ThumbnailService>();
+        var mock = CreateMockThumbnailService();
         mock.Setup(s => s.ExtractSingleAsync(
                 It.IsAny<MediaFile>(),
                 It.IsAny<string>(),
@@ -61,7 +70,7 @@ public class ThumbnailServiceExtensionsTests
         var media = new MediaFile { Duration = duration };
         var expected = new ThumbnailResult();
 
-        var mock = new Mock<ThumbnailService>();
+        var mock = CreateMockThumbnailService();
         mock.Setup(s => s.ExtractSingleAsync(
                 It.IsAny<MediaFile>(),
                 It.IsAny<string>(),
@@ -86,7 +95,7 @@ public class ThumbnailServiceExtensionsTests
         var media = new MediaFile { Duration = duration };
         var expected = new ThumbnailResult();
 
-        var mock = new Mock<ThumbnailService>();
+        var mock = CreateMockThumbnailService();
         mock.Setup(s => s.ExtractSingleAsync(
                 It.IsAny<MediaFile>(),
                 It.IsAny<string>(),
@@ -112,7 +121,7 @@ public class ThumbnailServiceExtensionsTests
         var percentage = 25.0;
         var expected = new ThumbnailResult();
 
-        var mock = new Mock<ThumbnailService>();
+        var mock = CreateMockThumbnailService();
         mock.Setup(s => s.ExtractSingleAsync(
                 It.IsAny<MediaFile>(),
                 It.IsAny<string>(),
@@ -167,11 +176,11 @@ public class ThumbnailServiceExtensionsTests
         var media = new MediaFile { Duration = TimeSpan.FromSeconds(1) };
 
         // Null
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAnyAsync<ArgumentException>(async () =>
             await mock.Object.ExtractFirstFrameAsync(media, null!, DefaultToken));
 
         // Empty
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAnyAsync<ArgumentException>(async () =>
             await mock.Object.ExtractFirstFrameAsync(media, string.Empty, DefaultToken));
     }
 

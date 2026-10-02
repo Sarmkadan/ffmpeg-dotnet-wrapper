@@ -49,7 +49,8 @@ public static class OperationRepositoryJsonExtensions
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static OperationRepository? FromJson(string json)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        if (string.IsNullOrEmpty(json))
+            throw new ArgumentException("Value cannot be null or empty.", nameof(json));
 
         return string.IsNullOrWhiteSpace(json)
             ? null
@@ -65,7 +66,8 @@ public static class OperationRepositoryJsonExtensions
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
     public static bool TryFromJson(string json, out OperationRepository? value)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        if (string.IsNullOrEmpty(json))
+            throw new ArgumentException("Value cannot be null or empty.", nameof(json));
 
         value = null;
 

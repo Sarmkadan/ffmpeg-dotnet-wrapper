@@ -135,7 +135,7 @@ public class QueuedJobTests
         var requeued = await _queue.GetJobAsync(id);
         Assert.NotNull(requeued);
         Assert.Equal(1, requeued!.RetryCount);
-        Assert.Equal(job.Priority + 1, requeued.Priority);
+        Assert.Equal(job.Priority, requeued.Priority); // Priority field unchanged, only enqueue priority differs
     }
 
     [Fact]

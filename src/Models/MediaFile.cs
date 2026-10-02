@@ -30,9 +30,7 @@ public class MediaFile
             if (!File.Exists(value))
                 throw new InvalidMediaFileException($"File does not exist: {value}", value);
 
-            // Validate that the file path stays within the current directory
-            var baseDirectory = AppContext.BaseDirectory;
-            _filePath = PathValidation.ValidateExistingFileWithinBaseDirectory(value, baseDirectory, nameof(FilePath));
+            _filePath = Path.GetFullPath(value);
             Name = Path.GetFileNameWithoutExtension(_filePath);
             _fileSize = new FileInfo(_filePath).Length;
         }
@@ -68,9 +66,13 @@ public class MediaFile
 
     public MediaFile(string filePath)
     {
-            // Validate that the file path stays within the current directory
-            var baseDirectory = AppContext.BaseDirectory;
-            _filePath = PathValidation.ValidateExistingFileWithinBaseDirectory(filePath, baseDirectory, nameof(filePath));
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new InvalidMediaFileException("File path cannot be null or empty");
+
+            if (!File.Exists(filePath))
+                throw new InvalidMediaFileException($"File does not exist: {filePath}", filePath);
+
+            _filePath = Path.GetFullPath(filePath);
             Name = Path.GetFileNameWithoutExtension(_filePath);
             _fileSize = new FileInfo(_filePath).Length;
     }

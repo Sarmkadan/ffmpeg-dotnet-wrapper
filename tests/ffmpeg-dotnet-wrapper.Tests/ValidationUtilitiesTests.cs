@@ -79,10 +79,6 @@ public class ValidationUtilitiesTests
     [InlineData("divx")]
     public void IsValidCodec_UnsupportedOrEmpty_ReturnsFalse(string? codec)
     {
-        if (codec != null)
-        {
-            ArgumentException.ThrowIfNullOrEmpty(codec);
-        }
         ValidationUtilities.IsValidCodec(codec).Should().BeFalse();
     }
 

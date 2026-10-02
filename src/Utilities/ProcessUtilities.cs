@@ -183,7 +183,7 @@ namespace FFmpegDotnetWrapper.Utilities
             CancellationToken cancellationToken = default)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
-            ArgumentException.ThrowIfNullOrWhiteSpace(arguments);
+            arguments ??= string.Empty;
 
             timeout ??= DefaultProcessTimeout;
 

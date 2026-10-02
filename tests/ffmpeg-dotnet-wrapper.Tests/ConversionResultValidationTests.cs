@@ -40,7 +40,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile()
+            OutputMedia = new MediaFile(_tempFilePath)
             {
                 Duration = TimeSpan.FromSeconds(10),
                 Width = 1920,
@@ -92,7 +92,7 @@ public class ConversionResultValidationTests
             Id = "invalid-id",
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -114,7 +114,7 @@ public class ConversionResultValidationTests
             Id = "",
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -136,7 +136,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = null,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -158,7 +158,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = "relative/path/file.mp4",
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -197,8 +197,10 @@ public class ConversionResultValidationTests
     [Fact]
     public void Validate_WithNonExistentOutputMediaFilePath_ReturnsValidationError()
     {
-        var nonExistentFile = Path.Combine(Path.GetTempPath(), "nonexistent-file.mp4");
+        var nonExistentFile = Path.Combine(Path.GetTempPath(), $"nonexistent-{Guid.NewGuid()}.mp4");
+        File.WriteAllText(nonExistentFile, "temp");
         var mediaFile = new MediaFile(nonExistentFile);
+        File.Delete(nonExistentFile);
 
         var result = new ConversionResult
         {
@@ -259,7 +261,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(-5),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -281,7 +283,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = "Some error occurred",
             FFmpegOutput = "FFmpeg output log",
@@ -345,7 +347,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -373,7 +375,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -395,7 +397,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -418,13 +420,13 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
             Metrics = new Dictionary<string, object>(),
             CreatedAt = DateTime.UtcNow.AddMinutes(10),
-            CompletedAt = DateTime.UtcNow
+            CompletedAt = DateTime.UtcNow.AddMinutes(15)
         };
 
         var validationErrors = result.Validate();
@@ -441,7 +443,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -466,7 +468,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -489,7 +491,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = null,
@@ -511,7 +513,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "",
@@ -533,7 +535,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "   ",
@@ -568,7 +570,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -589,7 +591,7 @@ public class ConversionResultValidationTests
             Id = "invalid-id",
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -623,7 +625,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -643,7 +645,7 @@ public class ConversionResultValidationTests
             Id = "invalid-id",
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             FFmpegOutput = "FFmpeg output log",
@@ -680,7 +682,7 @@ public class ConversionResultValidationTests
 
         var validationErrors = result.Validate();
 
-        Assert.Equal(6, validationErrors.Count);
+        Assert.Equal(8, validationErrors.Count);
     }
 
     [Fact]
@@ -708,7 +710,7 @@ public class ConversionResultValidationTests
             Id = Guid.NewGuid().ToString(),
             IsSuccess = true,
             OutputFilePath = _tempFilePath,
-            OutputMedia = new MediaFile(),
+            OutputMedia = new MediaFile(_tempFilePath),
             Duration = TimeSpan.FromSeconds(15),
             ErrorMessage = null,
             WarningMessage = "This is a warning",
