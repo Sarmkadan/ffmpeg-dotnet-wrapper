@@ -50,7 +50,8 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static bool IsValidInputFile(string? path)
         {
-            ArgumentException.ThrowIfNullOrEmpty(path);
+            if (string.IsNullOrWhiteSpace(path))
+                return false;
 
             if (!File.Exists(path))
                 return false;
@@ -84,7 +85,11 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static bool IsValidOutputPath(string? path, bool createDirectoryIfNeeded = true)
         {
-            ArgumentException.ThrowIfNullOrEmpty(path);
+            if (string.IsNullOrWhiteSpace(path))
+                return false;
+
+            if (!Path.IsPathRooted(path))
+                return false;
 
             try
             {
@@ -127,9 +132,10 @@ namespace FFmpegDotnetWrapper.Utilities
         /// Returns the file extension in lowercase without the dot (e.g., "mp4", "avi").
         /// Handles files without extensions by returning an empty string.
         /// </summary>
-        public static string GetFileExtension(string filePath)
+        public static string GetFileExtension(string? filePath)
         {
-            ArgumentException.ThrowIfNullOrEmpty(filePath);
+            if (string.IsNullOrWhiteSpace(filePath))
+                return string.Empty;
 
             var extension = Path.GetExtension(filePath);
             return string.IsNullOrEmpty(extension) ? string.Empty : extension.TrimStart('.').ToLowerInvariant();
@@ -215,7 +221,6 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public static string GetTempFilePath(string? extension = null)
         {
-            ArgumentNullException.ThrowIfNull(extension);
 
             var tempPath = Path.Combine(
                 Path.GetTempPath(),

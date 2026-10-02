@@ -26,22 +26,26 @@ public class FileOperationException : FFmpegException
         : base(message)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
+        ArgumentNullException.ThrowIfNull(filePath);
         FilePath = filePath;
-        Context[nameof(FilePath)] = filePath ?? string.Empty;
+        Context[nameof(FilePath)] = filePath;
     }
 
     public FileOperationException(string message, string filePath, Exception innerException)
         : base(message, innerException)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
+        ArgumentNullException.ThrowIfNull(filePath);
+        ArgumentNullException.ThrowIfNull(innerException);
         FilePath = filePath;
-        Context[nameof(FilePath)] = filePath ?? string.Empty;
+        Context[nameof(FilePath)] = filePath;
     }
 
     public FileOperationException(string message, Exception innerException)
         : base(message, innerException)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
+        ArgumentNullException.ThrowIfNull(innerException);
     }
 
     public override string ToString()

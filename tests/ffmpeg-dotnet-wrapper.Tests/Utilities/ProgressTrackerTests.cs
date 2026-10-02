@@ -343,13 +343,12 @@ public class ProgressTrackerTests
             System.Threading.Thread.Sleep(10); // Ensure some time passes
 
             // Act
+            var reportBeforeReset = tracker.GetProgressReport();
             tracker.Reset();
-            var report1 = tracker.GetProgressReport();
-            System.Threading.Thread.Sleep(10);
-            var report2 = tracker.GetProgressReport();
+            var reportAfterReset = tracker.GetProgressReport();
 
             // Assert - elapsed time should be less after reset
-            report2.ElapsedTime.Should().BeLessThan(report1.ElapsedTime);
+            reportAfterReset.ElapsedTime.Should().BeLessThan(reportBeforeReset.ElapsedTime);
         }
 
         /// <summary>
@@ -586,8 +585,8 @@ public class ObservableProgressTrackerTests
                 lastReport = report;
             };
 
-            // Act - report 15 items (should trigger event at 10%)
-            for (int i = 0; i < 15; i++)
+            // Act - report 20 items (should trigger event at 10% and 20%)
+            for (int i = 0; i < 20; i++)
             {
                 tracker.ReportItemProgress();
             }
@@ -595,8 +594,8 @@ public class ObservableProgressTrackerTests
             // Assert
             eventRaised.Should().BeTrue();
             lastReport.Should().NotBeNull();
-            lastReport.ItemsCompleted.Should().Be(15);
-            lastReport.ProgressPercentage.Should().BeApproximately(15.0, 0.001);
+            lastReport.ItemsCompleted.Should().Be(20);
+            lastReport.ProgressPercentage.Should().BeApproximately(20.0, 0.001);
         }
 
         /// <summary>

@@ -59,6 +59,7 @@ namespace FFmpegDotnetWrapper.Utilities
         private long _bytesProcessed = 0;
         private long _totalBytes = 0;
         private string _currentStatus = string.Empty;
+        private double _lastReportedPercentage = 0;
 
         // New fields for duration‑based tracking
         private TimeSpan _processedDuration = TimeSpan.Zero;
@@ -77,7 +78,6 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public void ReportItemProgress(string? statusMessage = null)
         {
-            ArgumentException.ThrowIfNullOrEmpty(statusMessage);
             lock (_lockObject)
             {
                 _itemsProcessed++;
@@ -94,7 +94,6 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public void ReportBytesProgress(long bytesProcessed, string? statusMessage = null)
         {
-            ArgumentException.ThrowIfNullOrEmpty(statusMessage);
             lock (_lockObject)
             {
                 _bytesProcessed = bytesProcessed;
@@ -111,11 +110,11 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public void ReportPercentageProgress(double percentage, string? statusMessage = null)
         {
-            ArgumentException.ThrowIfNullOrEmpty(statusMessage);
             lock (_lockObject)
             {
                 // Clamp to 0‑100
                 percentage = Math.Max(MinPercentage, Math.Min(MaxPercentage, percentage));
+                _lastReportedPercentage = percentage;
 
                 // Calculate items completed based on percentage
                 if (_totalItems > 0)
@@ -136,7 +135,6 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public void ReportDurationProgress(TimeSpan processedDuration, TimeSpan totalDuration, string? statusMessage = null)
         {
-            ArgumentException.ThrowIfNullOrEmpty(statusMessage);
             lock (_lockObject)
             {
                 _processedDuration = processedDuration;
@@ -202,6 +200,7 @@ namespace FFmpegDotnetWrapper.Utilities
                 _processedDuration = TimeSpan.Zero;
                 _totalDuration = TimeSpan.Zero;
                 _currentStatus = string.Empty;
+                _lastReportedPercentage = 0;
                 _stopwatch.Restart();
             }
         }
@@ -218,7 +217,8 @@ namespace FFmpegDotnetWrapper.Utilities
                 ? $" - ETA: {FormattingUtilities.FormatDuration(report.EstimatedTimeRemaining)}"
                 : string.Empty;
 
-            return $"{progressStr}{itemsStr}{etaStr}";
+            var statusStr = !string.IsNullOrEmpty(report.StatusMessage) ? $" - {report.StatusMessage}" : string.Empty;
+            return $"{progressStr}{itemsStr}{etaStr}{statusStr}";
         }
 
         /// <summary>
@@ -227,6 +227,12 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         private double CalculateProgressPercentage()
         {
+            // Duration-based tracking takes priority when active
+            if (_totalDuration.TotalSeconds > 0)
+            {
+                return (_processedDuration.TotalSeconds / _totalDuration.TotalSeconds) * PercentFactor;
+            }
+
             if (_totalItems > 0)
             {
                 return (_itemsProcessed * PercentFactor) / _totalItems;
@@ -234,13 +240,12 @@ namespace FFmpegDotnetWrapper.Utilities
 
             if (_totalBytes > 0)
             {
-                // Hotfix: calculate progress percentage based on items processed instead of bytes processed
-                return (_itemsProcessed * PercentFactor) / _totalItems;
+                return (_bytesProcessed * PercentFactor) / _totalBytes;
             }
 
-            if (_totalDuration.TotalSeconds > 0)
+            if (_lastReportedPercentage > 0)
             {
-                return (_processedDuration.TotalSeconds / _totalDuration.TotalSeconds) * PercentFactor;
+                return _lastReportedPercentage;
             }
 
             return 0;

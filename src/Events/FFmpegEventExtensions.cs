@@ -135,7 +135,7 @@ namespace FFmpegDotnetWrapper.Events
 
             return ffmpegEvent switch
             {
-                ProgressReportedEvent e => e.ProgressPercentage,
+                ProgressReportedEvent e when e.ProgressPercentage > 0 => e.ProgressPercentage,
                 _ => null
             };
         }

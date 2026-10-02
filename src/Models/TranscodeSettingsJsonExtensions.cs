@@ -47,7 +47,8 @@ public static class TranscodeSettingsJsonExtensions
     /// <exception cref="JsonException">Thrown when the JSON is invalid or cannot be deserialized.</exception>
     public static TranscodeSettings? FromJson(string json)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        if (string.IsNullOrWhiteSpace(json))
+            throw new ArgumentException("Value cannot be null, empty, or whitespace.", nameof(json));
 
         return JsonSerializer.Deserialize<TranscodeSettings>(json, _jsonOptions);
     }
@@ -61,7 +62,8 @@ public static class TranscodeSettingsJsonExtensions
     /// <exception cref="ArgumentException">Thrown when <paramref name="json"/> is <see langword="null"/>, empty, or whitespace.</exception>
     public static bool TryFromJson(string json, out TranscodeSettings? value)
     {
-        ArgumentException.ThrowIfNullOrEmpty(json);
+        if (string.IsNullOrWhiteSpace(json))
+            throw new ArgumentException("Value cannot be null, empty, or whitespace.", nameof(json));
 
         try
         {

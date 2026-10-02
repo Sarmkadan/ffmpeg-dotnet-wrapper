@@ -3,10 +3,12 @@
 // CTO & Software Architect
 // =============================================================================
 
+using FFmpegDotnetWrapper.Events;
 using FFmpegDotnetWrapper.Monitoring;
 using FFmpegDotnetWrapper.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace FFmpegDotnetWrapper.Configuration;
 
@@ -160,6 +162,12 @@ public static class StreamingPipelineExtensions
   private static void RegisterCoreServices(IServiceCollection services)
   {
     ArgumentNullException.ThrowIfNull(services);
+
+    // Register logging if not already registered
+    services.AddLogging();
+
+    // Register event publisher if not already registered
+    services.TryAddSingleton<IEventPublisher, EventPublisher>();
 
     // Singleton — aggregates metrics across all pipeline runs for the lifetime of the process.
     services.AddSingleton<StreamingPipelineMetrics>();

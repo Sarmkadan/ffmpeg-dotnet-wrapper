@@ -167,7 +167,7 @@ public class CliCommandTests
         var command = new CliCommand
         {
             Name = "test",
-            Arguments = new List<string> { "" } // missing second argument but it's optional
+            Arguments = new List<string> { "file.mp4" } // required arg present, second is optional
         };
 
         var missing = parser.ValidateCommand(command);

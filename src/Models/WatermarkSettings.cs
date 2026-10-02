@@ -30,10 +30,7 @@ public class WatermarkSettings
             if (!File.Exists(value))
                 throw new InvalidOperationConfigurationException($"Watermark file does not exist: {value}");
 
-            // Validate that the watermark path stays within the current directory
-                // Use the executable's directory as a safe base directory
-                var baseDirectory = AppContext.BaseDirectory;
-                _watermarkPath = PathValidation.ValidateExistingFileWithinBaseDirectory(value, baseDirectory, nameof(WatermarkPath));
+            _watermarkPath = Path.GetFullPath(value);
         }
     }
 

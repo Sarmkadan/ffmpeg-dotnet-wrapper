@@ -149,8 +149,7 @@ public class FormattingUtilitiesTests
     [InlineData("")]
     public void TruncateString_NullOrEmpty_ReturnsEmptyString(string? input)
     {
-        ArgumentException.ThrowIfNullOrEmpty(input);
-        FormattingUtilities.TruncateString(input).Should().BeEmpty();
+        FormattingUtilities.TruncateString(input!).Should().BeEmpty();
     }
 
     // -------------------------------------------------------------------------
@@ -168,7 +167,6 @@ public class FormattingUtilitiesTests
     [InlineData("transcode", "Transcode")]
     public void TitleCase_KebabOrSnakeCase_ReturnsTitleCase(string input, string expected)
     {
-        ArgumentException.ThrowIfNullOrEmpty(input);
         ArgumentException.ThrowIfNullOrEmpty(expected);
         FormattingUtilities.TitleCase(input).Should().Be(expected);
     }

@@ -125,7 +125,7 @@ public class BackgroundJobValidationTests
         {
             JobId = null,
             JobName = null,
-            State = (JobState)0, // assume this is not a defined enum value
+            State = (JobState)999, // invalid enum value
             ProgressPercentage = 101,
             StatusMessage = null,
             CreatedAt = default,

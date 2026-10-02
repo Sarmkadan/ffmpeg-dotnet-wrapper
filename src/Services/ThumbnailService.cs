@@ -37,7 +37,7 @@ public class ThumbnailService
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="inputMedia"/> is null.</exception>
     /// <returns>A <see cref="ThumbnailResult"/> containing the extracted image path.</returns>
-    public async Task<ThumbnailResult> ExtractSingleAsync(
+    public virtual async Task<ThumbnailResult> ExtractSingleAsync(
         MediaFile inputMedia,
         string outputPath,
         TimeSpan? at = null,

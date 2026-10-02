@@ -117,7 +117,11 @@ namespace FFmpegDotnetWrapper.Utilities
         public static T? SingleOrNull<T>(this IEnumerable<T?> source) where T : class
         {
             ArgumentNullException.ThrowIfNull(source);
-            return source.Where(x => x != null).SingleOrDefault();
+            using var enumerator = source.Where(x => x != null).GetEnumerator();
+            if (!enumerator.MoveNext())
+                return null;
+            var result = enumerator.Current;
+            return enumerator.MoveNext() ? null : result;
         }
 
         /// <summary>
