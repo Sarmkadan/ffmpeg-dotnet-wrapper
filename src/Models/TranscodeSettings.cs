@@ -21,11 +21,11 @@ public class TranscodeSettings
     /// <summary>
     /// Video codec to use for encoding. Defaults to <see cref="VideoCodec.H264"/>.
     /// </summary>
-    public VideoCodec VideoCodec { get; set; } = VideoCodec.H264;
+    public VideoCodec VideoCodec { get; set; } = FFmpegConstants.TranscodeDefaults.DefaultVideoCodec;
     /// <summary>
     /// Audio codec to use for encoding. Defaults to <see cref="AudioCodec.AAC"/>.
     /// </summary>
-    public AudioCodec AudioCodec { get; set; } = AudioCodec.AAC;
+    public AudioCodec AudioCodec { get; set; } = FFmpegConstants.TranscodeDefaults.DefaultAudioCodec;
     /// <summary>
     /// Container format for the output file. Defaults to <see cref="ContainerFormat.MP4"/>.
     /// </summary>
@@ -93,7 +93,7 @@ public class TranscodeSettings
     /// <summary>
     /// Encoding quality preset. Defaults to <see cref="QualityPreset.Medium"/>.
     /// </summary>
-    public QualityPreset Quality { get; set; } = QualityPreset.Medium;
+    public QualityPreset Quality { get; set; } = FFmpegConstants.TranscodeDefaults.DefaultQualityPreset;
     /// <summary>
     /// Whether to automatically scale the output to fit within <see cref="MaxWidth"/> and <see cref="MaxHeight"/>.
     /// Defaults to <c>true</c>.

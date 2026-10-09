@@ -69,6 +69,16 @@ public static class FFmpegConstants
         public const int AutoDimension = -1;
     }
 
+    public static class TranscodeDefaults
+    {
+        /// <summary>The default video codec used for transcoding.</summary>
+        public const VideoCodec DefaultVideoCodec = VideoCodec.H264;
+        /// <summary>The default audio codec used for transcoding.</summary>
+        public const AudioCodec DefaultAudioCodec = AudioCodec.AAC;
+        /// <summary>The default encoding quality preset used for transcoding.</summary>
+        public const QualityPreset DefaultQualityPreset = QualityPreset.Medium;
+    }
+
     public static class FileExtensions
     {
         /// <summary>The MP4 file extension.</summary>
