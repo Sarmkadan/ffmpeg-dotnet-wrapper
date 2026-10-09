@@ -21,6 +21,14 @@ namespace FFmpegDotnetWrapper.Api.Controllers
     /// </summary>
     public class FFmpegController
     {
+        private const string ProbeRoute = "probe";
+        private const string PathParameterRequired = "Path parameter is required";
+        private const string FileNotFound = "File not found";
+        private const string MediaFileProbedSuccessfully = "Media file probed successfully";
+        private const int StatusCodeBadRequest = 400;
+        private const int StatusCodeNotFound = 404;
+        private const int StatusCodeInternalServerError = 500;
+
         private readonly IFFmpegService _ffmpegService;
         private readonly ILogger<FFmpegController> _logger;
         private readonly MediaProbeService _mediaProbeService;
@@ -352,7 +360,7 @@ namespace FFmpegDotnetWrapper.Api.Controllers
         /// </summary>
         /// <param name="path">Path to the media file to probe.</param>
         /// <returns>Media file information including duration, bitrate, codecs, and resolution.</returns>
-        [HttpGet("probe")]
+        [HttpGet(ProbeRoute)]
         public ApiResponse<MediaFile> Probe([FromQuery] string path)
         {
             try
@@ -360,13 +368,13 @@ namespace FFmpegDotnetWrapper.Api.Controllers
                 if (string.IsNullOrWhiteSpace(path))
                 {
                     _logger.LogWarning("Probe request with missing path parameter");
-                    return ApiResponse<MediaFile>.Failure("Path parameter is required", 400);
+                    return ApiResponse<MediaFile>.Failure(PathParameterRequired, StatusCodeBadRequest);
                 }
 
                 if (!System.IO.File.Exists(path))
                 {
                     _logger.LogWarning("Probe request for non-existent file: {Path}", path);
-                    return ApiResponse<MediaFile>.Failure("File not found", 404);
+                    return ApiResponse<MediaFile>.Failure(FileNotFound, StatusCodeNotFound);
                 }
 
                 // Probe the media file
@@ -394,12 +402,12 @@ namespace FFmpegDotnetWrapper.Api.Controllers
                 }
 
                 _logger.LogInformation("Media probe completed successfully for: {Path}", path);
-                return ApiResponse<MediaFile>.Ok(mediaFile, "Media file probed successfully");
+                return ApiResponse<MediaFile>.Ok(mediaFile, MediaFileProbedSuccessfully);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Media probe failed for path: {Path}", path);
-                return ApiResponse<MediaFile>.Failure(ex.Message, 500);
+                return ApiResponse<MediaFile>.Failure(ex.Message, StatusCodeInternalServerError);
             }
         }
     }
