@@ -191,14 +191,17 @@ public sealed class StreamingPipelineSettings
     private string _outputDirectory = string.Empty;
     private int _segmentDurationSeconds = DefaultSegmentDurationSeconds;
     private int _playlistWindowSize = DefaultPlaylistWindowSize;
+    private IList<StreamingProfile> _profiles = [.. StreamingProfile.DefaultLadder];
 
     /// <summary>Gets or sets the absolute path of the source media file to encode.</summary>
-    /// <exception cref="ArgumentException">Thrown when set to a null or whitespace value.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when set to <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown when set to an empty or whitespace value.</exception>
     public required string InputFilePath
     {
         get => _inputFilePath;
         set
         {
+            ArgumentNullException.ThrowIfNull(value);
             if (string.IsNullOrWhiteSpace(value))
                 throw new ArgumentException("Input file path cannot be empty.", nameof(value));
             _inputFilePath = value;
@@ -209,12 +212,14 @@ public sealed class StreamingPipelineSettings
     /// Gets or sets the directory where all segment files, per-rendition playlists,
     /// and the master manifest are written.
     /// </summary>
-    /// <exception cref="ArgumentException">Thrown when set to a null or whitespace value.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when set to <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">Thrown when set to an empty or whitespace value.</exception>
     public required string OutputDirectory
     {
         get => _outputDirectory;
         set
         {
+            ArgumentNullException.ThrowIfNull(value);
             if (string.IsNullOrWhiteSpace(value))
                 throw new ArgumentException("Output directory cannot be empty.", nameof(value));
             _outputDirectory = value;
@@ -228,7 +233,21 @@ public sealed class StreamingPipelineSettings
     /// Gets or sets the ordered list of quality profiles to encode.
     /// Profiles are automatically sorted highest-to-lowest by video bitrate before encoding.
     /// </summary>
-    public IList<StreamingProfile> Profiles { get; set; } = [.. StreamingProfile.DefaultLadder];
+    /// <exception cref="ArgumentNullException">Thrown when set to <see langword="null"/>, or when the list contains a <see langword="null"/> profile.</exception>
+    /// <exception cref="ArgumentException">Thrown when set to an empty list.</exception>
+    public IList<StreamingProfile> Profiles
+    {
+        get => _profiles;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            if (value.Count == 0)
+                throw new ArgumentException("At least one streaming profile must be specified.", nameof(value));
+            if (value.Any(p => p is null))
+                throw new ArgumentException("Streaming profiles cannot contain null entries.", nameof(value));
+            _profiles = value;
+        }
+    }
 
     /// <summary>
     /// Gets or sets the target segment duration in seconds.
@@ -340,17 +359,19 @@ public sealed class StreamingPipelineResult
 
     /// <summary>Appends a completed segment to the result collection.</summary>
     /// <param name="segment">The segment to record.</param>
-    public void AddSegment(StreamingSegment segment) 
+    /// <exception cref="ArgumentNullException"><paramref name="segment"/> is <see langword="null"/>.</exception>
+    public void AddSegment(StreamingSegment segment)
     {
-        ArgumentNullException.ThrowIfNull(nameof(segment));
+        ArgumentNullException.ThrowIfNull(segment);
         _segments.Add(segment);
     }
 
     /// <summary>Records that the pipeline switched to a different quality profile.</summary>
     /// <param name="bitrateSwitch">The switch event to log.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="bitrateSwitch"/> is <see langword="null"/>.</exception>
     public void RecordSwitch(BitrateSwitch bitrateSwitch)
     {
-        ArgumentNullException.ThrowIfNull(nameof(bitrateSwitch));
+        ArgumentNullException.ThrowIfNull(bitrateSwitch);
         _bitrateSwitches.Add(bitrateSwitch);
     }
 
