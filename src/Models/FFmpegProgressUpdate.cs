@@ -15,31 +15,31 @@ public class FFmpegProgressUpdate
     public string OperationId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Completion percentage in the range [0, 100].
+    /// Completion percentage in the range [0, 100] (unit: percent).
     /// Derived from the ratio of <see cref="ProcessedDuration"/> to <see cref="TotalDuration"/>.
     /// </summary>
     public double ProgressPercentage { get; set; }
 
-    /// <summary>Amount of media time encoded so far, parsed from FFmpeg's <c>time=</c> field.</summary>
+    /// <summary>Amount of media time encoded so far in seconds, parsed from FFmpeg's <c>time=</c> field.</summary>
     public TimeSpan ProcessedDuration { get; set; }
 
-    /// <summary>Total media duration supplied by the caller, used for percentage and ETA calculations.</summary>
+    /// <summary>Total media duration in seconds supplied by the caller, used for percentage and ETA calculations.</summary>
     public TimeSpan TotalDuration { get; set; }
 
-    /// <summary>Estimated wall-clock time remaining until the operation completes.</summary>
+    /// <summary>Estimated wall-clock time remaining until the operation completes in seconds.</summary>
     public TimeSpan EstimatedTimeRemaining { get; set; }
 
-    /// <summary>Wall-clock time elapsed since the operation started.</summary>
+    /// <summary>Wall-clock time elapsed since the operation started in seconds.</summary>
     public TimeSpan ElapsedWallTime { get; set; }
 
-    /// <summary>Number of video frames encoded, parsed from FFmpeg's <c>frame=</c> field.</summary>
+    /// <summary>Number of video frames encoded (unit: frames), parsed from FFmpeg's <c>frame=</c> field.</summary>
     public int FramesProcessed { get; set; }
 
-    /// <summary>Current encoding frame rate, parsed from FFmpeg's <c>fps=</c> field.</summary>
+    /// <summary>Current encoding frame rate in frames per second (fps), parsed from FFmpeg's <c>fps=</c> field.</summary>
     public double FramesPerSecond { get; set; }
 
     /// <summary>
-    /// Encoding speed relative to real-time playback.
+    /// Encoding speed relative to real-time playback (unit: ratio).
     /// A value of <c>2.0</c> means FFmpeg encodes twice as fast as the video plays back.
     /// Parsed from FFmpeg's <c>speed=</c> field.
     /// </summary>
@@ -48,7 +48,7 @@ public class FFmpegProgressUpdate
     /// <summary>Current output file size in bytes, converted from FFmpeg's <c>size=</c> field (kB).</summary>
     public long OutputSizeBytes { get; set; }
 
-    /// <summary>Current output bitrate in kilobits per second, parsed from FFmpeg's <c>bitrate=</c> field.</summary>
+    /// <summary>Current output bitrate in kilobits per second (kbps), parsed from FFmpeg's <c>bitrate=</c> field.</summary>
     public double BitrateKbps { get; set; }
 
     /// <summary>UTC timestamp when this snapshot was captured.</summary>
