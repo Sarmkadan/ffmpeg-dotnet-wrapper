@@ -61,6 +61,10 @@ public class ConcatenationSegment
     /// <summary>Checks whether any trim parameters have been configured for this segment.</summary>
     public bool HasTrim => TrimStart.HasValue || TrimEnd.HasValue || TrimDuration.HasValue;
 
+    private const string TrimStartPrefix = "TrimStart=";
+    private const string TrimEndPrefix = "TrimEnd=";
+    private const string TrimDurationPrefix = "TrimDuration=";
+
     /// <summary>
     /// Returns a concise, single-line, culture-invariant summary including file path plus start/duration trimming values when set.
     /// </summary>
@@ -69,11 +73,11 @@ public class ConcatenationSegment
     {
         var parts = new List<string> { FilePath };
         if (TrimStart.HasValue)
-            parts.Add($"TrimStart={TrimStart.Value.ToString()}");
+            parts.Add(TrimStartPrefix + TrimStart.Value.ToString());
         if (TrimEnd.HasValue)
-            parts.Add($"TrimEnd={TrimEnd.Value.ToString()}");
+            parts.Add(TrimEndPrefix + TrimEnd.Value.ToString());
         if (TrimDuration.HasValue)
-            parts.Add($"TrimDuration={TrimDuration.Value.ToString()}");
+            parts.Add(TrimDurationPrefix + TrimDuration.Value.ToString());
         return string.Join(" ", parts);
     }
 }
