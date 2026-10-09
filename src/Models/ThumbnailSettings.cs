@@ -3,6 +3,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Exceptions;
 
 namespace FFmpegDotnetWrapper.Models;
@@ -24,8 +25,8 @@ public enum ThumbnailFormat
 /// </summary>
 public class ThumbnailSettings
 {
-    private int _count = 1;
-    private int _jpegQuality = 2;
+    private int _count = FFmpegConstants.ThumbnailDefaults.DefaultCount;
+    private int _jpegQuality = FFmpegConstants.ThumbnailDefaults.DefaultJpegQuality;
 
     /// <summary>
     /// Explicit list of timestamps at which to capture frames.
@@ -36,15 +37,16 @@ public class ThumbnailSettings
     /// <summary>
     /// Number of thumbnails to extract when <see cref="Times"/> is empty.
     /// The frames are distributed evenly across the video duration.
-    /// Must be between 1 and 500.
+    /// Must be between <see cref="FFmpegConstants.ThumbnailDefaults.MinCount"/> and <see cref="FFmpegConstants.ThumbnailDefaults.MaxCount"/>.
     /// </summary>
     public int Count
     {
         get => _count;
         set
         {
-            if (value < 1 || value > 500)
-                throw new InvalidOperationConfigurationException("Count must be between 1 and 500");
+            if (value < FFmpegConstants.ThumbnailDefaults.MinCount || value > FFmpegConstants.ThumbnailDefaults.MaxCount)
+                throw new InvalidOperationConfigurationException(
+                    $"Count must be between {FFmpegConstants.ThumbnailDefaults.MinCount} and {FFmpegConstants.ThumbnailDefaults.MaxCount}");
             _count = value;
         }
     }
@@ -76,9 +78,10 @@ public class ThumbnailSettings
         get => _jpegQuality;
         set
         {
-            if (value.HasValue && (value < 1 || value > 31))
-                throw new InvalidOperationConfigurationException("JpegQuality must be between 1 and 31");
-            _jpegQuality = value ?? 2;
+            if (value.HasValue && (value < FFmpegConstants.ThumbnailDefaults.MinJpegQuality || value > FFmpegConstants.ThumbnailDefaults.MaxJpegQuality))
+                throw new InvalidOperationConfigurationException(
+                    $"JpegQuality must be between {FFmpegConstants.ThumbnailDefaults.MinJpegQuality} and {FFmpegConstants.ThumbnailDefaults.MaxJpegQuality}");
+            _jpegQuality = value ?? FFmpegConstants.ThumbnailDefaults.DefaultJpegQuality;
         }
     }
 
@@ -90,7 +93,7 @@ public class ThumbnailSettings
     /// <param name="inputMedia">The video file that thumbnails will be extracted from.</param>
     public void Validate(MediaFile inputMedia)
     {
-        if (Times.Count == 0 && _count < 1)
+        if (Times.Count == 0 && _count < FFmpegConstants.ThumbnailDefaults.MinCount)
             throw new InvalidOperationConfigurationException("Count must be at least 1 when no explicit timestamps are provided");
 
         if (inputMedia.Duration.HasValue)
@@ -106,11 +109,11 @@ public class ThumbnailSettings
             }
         }
 
-        if (Width.HasValue && Width.Value != -1 && Width.Value < 1)
-            throw new InvalidOperationConfigurationException("Width must be greater than 0 (or -1 for auto)");
+        if (Width.HasValue && Width.Value != FFmpegConstants.ThumbnailDefaults.AutoDimension && Width.Value < 1)
+            throw new InvalidOperationConfigurationException($"Width must be greater than 0 (or {FFmpegConstants.ThumbnailDefaults.AutoDimension} for auto)");
 
-        if (Height.HasValue && Height.Value != -1 && Height.Value < 1)
-            throw new InvalidOperationConfigurationException("Height must be greater than 0 (or -1 for auto)");
+        if (Height.HasValue && Height.Value != FFmpegConstants.ThumbnailDefaults.AutoDimension && Height.Value < 1)
+            throw new InvalidOperationConfigurationException($"Height must be greater than 0 (or {FFmpegConstants.ThumbnailDefaults.AutoDimension} for auto)");
     }
 
     /// <summary>
