@@ -64,17 +64,24 @@ public class MediaFile
     {
     }
 
+    /// <summary>
+    /// Initializes a new media file from an existing file on disk.
+    /// </summary>
+    /// <param name="filePath">Path to an existing media file.</param>
+    /// <exception cref="InvalidMediaFileException">
+    /// <paramref name="filePath"/> is null, empty, whitespace, or does not point to an existing file.
+    /// </exception>
     public MediaFile(string filePath)
     {
-            if (string.IsNullOrWhiteSpace(filePath))
-                throw new InvalidMediaFileException("File path cannot be null or empty");
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new InvalidMediaFileException("File path cannot be null or empty");
 
-            if (!File.Exists(filePath))
-                throw new InvalidMediaFileException($"File does not exist: {filePath}", filePath);
+        if (!File.Exists(filePath))
+            throw new InvalidMediaFileException($"File does not exist: {filePath}", filePath);
 
-            _filePath = Path.GetFullPath(filePath);
-            Name = Path.GetFileNameWithoutExtension(_filePath);
-            _fileSize = new FileInfo(_filePath).Length;
+        _filePath = Path.GetFullPath(filePath);
+        Name = Path.GetFileNameWithoutExtension(_filePath);
+        _fileSize = new FileInfo(_filePath).Length;
     }
 
     /// <summary>
