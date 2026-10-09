@@ -12,6 +12,22 @@ namespace FFmpegDotnetWrapper.Models;
 /// </summary>
 public class MergeSettings
 {
+    // Constants for default values
+    private const bool DefaultPreserveAudio = true;
+    private const bool DefaultPreserveVideo = true;
+    private const bool DefaultTranscodeOnMerge = false;
+    private const double DefaultCrossfadeDuration = 1.0; // seconds
+
+    // Constants for validation messages
+    private const string AtLeastOneInputFileRequired = "At least one input file is required";
+    private const string FilePathCannotBeNullOrEmpty = "File path cannot be null or empty";
+    private const string FileDoesNotExistFormat = "File does not exist: {0}";
+    private const string AtLeastTwoInputFilesRequired = "At least two input files are required for merging";
+    private const string InputFileDoesNotExistFormat = "Input file does not exist: {0}";
+    private const string AtLeastAudioOrVideoMustBePreserved = "At least audio or video must be preserved";
+    private const string TranscodeSettingsRequiredWhenEnabled = "TranscodeSettings is required when TranscodeOnMerge is enabled";
+    private const string CrossfadeDurationMustBeGreaterThanZero = "Crossfade duration must be greater than zero";
+
     private List<string> _inputFiles = new();
 
     public List<string> InputFiles
@@ -20,17 +36,17 @@ public class MergeSettings
         set
         {
             if (value == null || value.Count == 0)
-                throw new InvalidOperationConfigurationException("At least one input file is required");
+                throw new InvalidOperationConfigurationException(AtLeastOneInputFileRequired);
             _inputFiles = value;
         }
     }
 
-    public bool PreserveAudio { get; set; } = true;
-    public bool PreserveVideo { get; set; } = true;
-    public bool TranscodeOnMerge { get; set; } = false;
+    public bool PreserveAudio { get; set; } = DefaultPreserveAudio;
+    public bool PreserveVideo { get; set; } = DefaultPreserveVideo;
+    public bool TranscodeOnMerge { get; set; } = DefaultTranscodeOnMerge;
     public TranscodeSettings? TranscodeSettings { get; set; }
     public bool Crossfade { get; set; } = false;
-    public double CrossfadeDuration { get; set; } = 1.0; // seconds
+    public double CrossfadeDuration { get; set; } = DefaultCrossfadeDuration;
 
     public override string ToString() => $"MergeSettings {{ PreserveAudio = {PreserveAudio}, PreserveVideo = {PreserveVideo}, TranscodeOnMerge = {TranscodeOnMerge}, TranscodeSettings = {TranscodeSettings}, Crossfade = {Crossfade}, CrossfadeDuration = {CrossfadeDuration} }}";
 
@@ -40,10 +56,10 @@ public class MergeSettings
     public void AddInputFile(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
-            throw new InvalidOperationConfigurationException("File path cannot be null or empty");
+            throw new InvalidOperationConfigurationException(FilePathCannotBeNullOrEmpty);
 
         if (!File.Exists(filePath))
-            throw new InvalidOperationConfigurationException($"File does not exist: {filePath}");
+            throw new InvalidOperationConfigurationException(string.Format(FileDoesNotExistFormat, filePath));
 
         _inputFiles.Add(filePath);
     }
@@ -63,22 +79,22 @@ public class MergeSettings
     public void Validate()
     {
         if (InputFiles.Count < 2)
-            throw new InvalidOperationConfigurationException("At least two input files are required for merging");
+            throw new InvalidOperationConfigurationException(AtLeastTwoInputFilesRequired);
 
         foreach (var file in InputFiles)
         {
             if (!File.Exists(file))
-                throw new InvalidOperationConfigurationException($"Input file does not exist: {file}");
+                throw new InvalidOperationConfigurationException(string.Format(InputFileDoesNotExistFormat, file));
         }
 
         if (!PreserveAudio && !PreserveVideo)
-            throw new InvalidOperationConfigurationException("At least audio or video must be preserved");
+            throw new InvalidOperationConfigurationException(AtLeastAudioOrVideoMustBePreserved);
 
         if (TranscodeOnMerge && TranscodeSettings == null)
-            throw new InvalidOperationConfigurationException("TranscodeSettings is required when TranscodeOnMerge is enabled");
+            throw new InvalidOperationConfigurationException(TranscodeSettingsRequiredWhenEnabled);
 
         if (Crossfade && CrossfadeDuration <= 0)
-            throw new InvalidOperationConfigurationException("Crossfade duration must be greater than zero");
+            throw new InvalidOperationConfigurationException(CrossfadeDurationMustBeGreaterThanZero);
 
         TranscodeSettings?.Validate();
     }
