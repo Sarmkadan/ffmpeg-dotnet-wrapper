@@ -43,6 +43,14 @@ public static class FFmpegConstants
     /// <summary>The maximum video frame rate.</summary>
     public const int MaxFrameRate = 120;
 
+    public static class SubtitleDefaults
+    {
+        /// <summary>The default font name used when hard-embedding subtitles.</summary>
+        public const string FontName = "Arial";
+        /// <summary>The default font size in points used when hard-embedding subtitles.</summary>
+        public const int FontSize = 24;
+    }
+
     public static class FileExtensions
     {
         /// <summary>The MP4 file extension.</summary>

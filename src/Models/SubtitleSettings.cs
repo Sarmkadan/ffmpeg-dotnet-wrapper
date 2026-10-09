@@ -3,6 +3,7 @@
 // CTO & Software Architect
 // =============================================================================
 
+using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Utilities;
 
@@ -72,14 +73,14 @@ public class SubtitleSettings
     /// Font name used when hard-embedding subtitles. Only applies when <see cref="HardEmbed"/> is <c>true</c>.
     /// Defaults to <c>Arial</c>.
     /// </summary>
-    public string? FontName { get; set; } = "Arial";
+    public string? FontName { get; set; } = FFmpegConstants.SubtitleDefaults.FontName;
 
     /// <summary>
     /// Font size in points used when hard-embedding subtitles.
     /// Only applies when <see cref="HardEmbed"/> is <c>true</c>.
     /// Must be between 6 and 120.
     /// </summary>
-    public int FontSize { get; set; } = 24;
+    public int FontSize { get; set; } = FFmpegConstants.SubtitleDefaults.FontSize;
 
     /// <summary>
     /// Zero-based index of the subtitle stream to embed when the input file contains
