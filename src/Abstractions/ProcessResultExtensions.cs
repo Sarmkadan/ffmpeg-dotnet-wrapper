@@ -22,6 +22,19 @@ namespace FFmpegDotnetWrapper.Abstraction
         }
 
         /// <summary>
+        /// Determines whether the process result indicates failure.
+        /// </summary>
+        /// <param name="result">The process result.</param>
+        /// <returns>
+        /// <see langword="true"/> if the exit code is non-zero, the process timed out, or it was cancelled; otherwise, <see langword="false"/>.
+        /// </returns>
+        public static bool IsFailure(this ProcessResult result)
+        {
+            ArgumentNullException.ThrowIfNull(result);
+            return !result.IsSuccess();
+        }
+
+        /// <summary>
         /// Determines whether the process result contains standard error output.
         /// </summary>
         /// <param name="result">The process result.</param>
