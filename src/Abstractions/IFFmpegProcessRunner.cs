@@ -3,6 +3,9 @@ using FFmpegDotnetWrapper.Models;
 
 namespace FFmpegDotnetWrapper.Abstraction
 {
+    /// <summary>
+    /// Defines a contract for running FFmpeg commands asynchronously.
+    /// </summary>
     public interface IFFmpegProcessRunner
     {
         /// <summary>
