@@ -130,9 +130,9 @@ public class AdaptiveBitrateServiceTests
         var settings = new StreamingPipelineSettings
         {
             InputFilePath = testFile,
-            OutputDirectory = tempDir,
-            Profiles = []
+            OutputDirectory = tempDir
         };
+        settings.Profiles.Clear();
 
         try
         {
