@@ -75,6 +75,8 @@ namespace FFmpegDotnetWrapper.Integration
     {
         private const int DefaultRetryMaxAttempts = 3;
         private const int DefaultRetryInitialDelayMilliseconds = 1000;
+        private const string EventTypeHeaderName = "X-Event-Type";
+        private const string EventIdHeaderName = "X-Event-Id";
 
         private readonly ILogger<WebhookService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
@@ -251,8 +253,8 @@ namespace FFmpegDotnetWrapper.Integration
                     }
 
                     // Add event type header
-                    request.Headers.Add("X-Event-Type", eventType);
-                    request.Headers.Add("X-Event-Id", Guid.NewGuid().ToString());
+                    request.Headers.Add(EventTypeHeaderName, eventType);
+                    request.Headers.Add(EventIdHeaderName, Guid.NewGuid().ToString());
 
                     using var response = await httpClient.SendAsync(request, _);
 
