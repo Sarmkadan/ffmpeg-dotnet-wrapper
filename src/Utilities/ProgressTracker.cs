@@ -67,6 +67,11 @@ namespace FFmpegDotnetWrapper.Utilities
 
         public ProgressTracker(int totalItems = 0, long totalBytes = 0)
         {
+            if (totalItems < 0)
+                throw new ArgumentOutOfRangeException(nameof(totalItems));
+            if (totalBytes < 0)
+                throw new ArgumentOutOfRangeException(nameof(totalBytes));
+
             _stopwatch = Stopwatch.StartNew();
             _totalItems = totalItems;
             _totalBytes = totalBytes;
@@ -94,6 +99,9 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public void ReportBytesProgress(long bytesProcessed, string? statusMessage = null)
         {
+            if (bytesProcessed < 0)
+                throw new ArgumentOutOfRangeException(nameof(bytesProcessed));
+
             lock (_lockObject)
             {
                 _bytesProcessed = bytesProcessed;
@@ -110,6 +118,9 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public void ReportPercentageProgress(double percentage, string? statusMessage = null)
         {
+            if (double.IsNaN(percentage) || double.IsInfinity(percentage))
+                throw new ArgumentOutOfRangeException(nameof(percentage));
+
             lock (_lockObject)
             {
                 // Clamp to 0‑100
@@ -135,6 +146,11 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public void ReportDurationProgress(TimeSpan processedDuration, TimeSpan totalDuration, string? statusMessage = null)
         {
+            if (processedDuration < TimeSpan.Zero)
+                throw new ArgumentOutOfRangeException(nameof(processedDuration));
+            if (totalDuration < TimeSpan.Zero)
+                throw new ArgumentOutOfRangeException(nameof(totalDuration));
+
             lock (_lockObject)
             {
                 _processedDuration = processedDuration;
@@ -191,6 +207,11 @@ namespace FFmpegDotnetWrapper.Utilities
         /// </summary>
         public void Reset(int totalItems = 0, long totalBytes = 0)
         {
+            if (totalItems < 0)
+                throw new ArgumentOutOfRangeException(nameof(totalItems));
+            if (totalBytes < 0)
+                throw new ArgumentOutOfRangeException(nameof(totalBytes));
+
             lock (_lockObject)
             {
                 _itemsProcessed = 0;
@@ -341,6 +362,13 @@ namespace FFmpegDotnetWrapper.Utilities
             double reportingThreshold = DefaultReportingThreshold)
             : base(totalItems, totalBytes)
         {
+            if (totalItems < 0)
+                throw new ArgumentOutOfRangeException(nameof(totalItems));
+            if (totalBytes < 0)
+                throw new ArgumentOutOfRangeException(nameof(totalBytes));
+            if (reportingThreshold <= 0)
+                throw new ArgumentOutOfRangeException(nameof(reportingThreshold));
+
             _reportingThreshold = reportingThreshold;
         }
 
