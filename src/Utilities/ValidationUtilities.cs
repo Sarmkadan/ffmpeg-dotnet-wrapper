@@ -146,6 +146,8 @@ namespace FFmpegDotnetWrapper.Utilities
         {
             if (seconds < MinimumTimeComponent)
                 seconds = MinimumTimeComponent;
+            else if (seconds > TimeSpan.MaxValue.TotalSeconds)
+                seconds = TimeSpan.MaxValue.TotalSeconds;
 
             var timeSpan = TimeSpan.FromSeconds(seconds);
             return $"{timeSpan.Hours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
