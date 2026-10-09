@@ -51,6 +51,24 @@ public static class FFmpegConstants
         public const int FontSize = 24;
     }
 
+    public static class ThumbnailDefaults
+    {
+        /// <summary>The minimum number of thumbnails to extract.</summary>
+        public const int MinCount = 1;
+        /// <summary>The maximum number of thumbnails to extract.</summary>
+        public const int MaxCount = 500;
+        /// <summary>The default number of thumbnails to extract.</summary>
+        public const int DefaultCount = 1;
+        /// <summary>The best (largest file) JPEG quality factor.</summary>
+        public const int MinJpegQuality = 1;
+        /// <summary>The worst (smallest file) JPEG quality factor.</summary>
+        public const int MaxJpegQuality = 31;
+        /// <summary>The default JPEG quality factor (near-lossless).</summary>
+        public const int DefaultJpegQuality = 2;
+        /// <summary>The sentinel width/height value that derives the dimension from the aspect ratio.</summary>
+        public const int AutoDimension = -1;
+    }
+
     public static class FileExtensions
     {
         /// <summary>The MP4 file extension.</summary>
