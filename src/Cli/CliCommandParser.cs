@@ -17,6 +17,10 @@ namespace FFmpegDotnetWrapper.Cli
     /// </summary>
     public class CliCommandParser
     {
+        private const string LongOptionPrefix = "--";
+        private const string ShortOptionPrefix = "-";
+        private const string RelativePathPrefix = "./";
+
         private readonly Dictionary<string, CliCommandDefinition> _commands = new();
 
         /// <summary>
@@ -60,13 +64,13 @@ namespace FFmpegDotnetWrapper.Cli
                 var arg = args[i];
 
                 // Parse options (--option or -o)
-                if (arg.StartsWith("--"))
+                if (arg.StartsWith(LongOptionPrefix))
                 {
-                    var optionName = arg.Substring(2);
+                    var optionName = arg.Substring(LongOptionPrefix.Length);
                     var optionValue = null as string;
 
                     // Check if next arg is value or another option
-                    if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+                    if (i + 1 < args.Length && !args[i + 1].StartsWith(ShortOptionPrefix))
                     {
                         optionValue = args[i + 1];
                         i += 2;
@@ -78,12 +82,12 @@ namespace FFmpegDotnetWrapper.Cli
 
                     command.Options[optionName] = optionValue;
                 }
-                else if (arg.StartsWith("-") && arg.Length == 2)
+                else if (arg.StartsWith(ShortOptionPrefix) && arg.Length == ShortOptionPrefix.Length + 1)
                 {
-                    var optionName = arg.Substring(1);
+                    var optionName = arg.Substring(ShortOptionPrefix.Length);
                     var optionValue = null as string;
 
-                    if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+                    if (i + 1 < args.Length && !args[i + 1].StartsWith(ShortOptionPrefix))
                     {
                         optionValue = args[i + 1];
                         i += 2;
@@ -127,9 +131,9 @@ namespace FFmpegDotnetWrapper.Cli
                 var safeArg = rawArg;
 
                 // If a positional argument looks like an option, treat it as a file path.
-                if (safeArg.StartsWith("-"))
+                if (safeArg.StartsWith(ShortOptionPrefix))
                 {
-                    safeArg = "./" + safeArg;
+                    safeArg = RelativePathPrefix + safeArg;
                 }
 
                 result.Add(EscapeArgument(safeArg));
@@ -142,7 +146,7 @@ namespace FFmpegDotnetWrapper.Cli
                 var optValue = kvp.Value;
 
                 // Use long form (--) for names longer than one character, short form (-) otherwise.
-                var prefix = optName.Length == 1 ? "-" : "--";
+                var prefix = optName.Length == 1 ? ShortOptionPrefix : LongOptionPrefix;
                 result.Add($"{prefix}{optName}");
 
                 if (optValue != null)
