@@ -192,4 +192,146 @@ public class QueuedJobExtensionsTests
     }
 
     #endregion
+
+    #region FilterPending
+
+    [Fact]
+    public void FilterPending_ReturnsJobsWithNoDueDate()
+    {
+        // Arrange
+        var jobs = new List<QueuedJob>
+        {
+            new QueuedJob { DueAt = null },
+            new QueuedJob { DueAt = DateTime.UtcNow.AddHours(1) }, // Future
+            new QueuedJob { DueAt = DateTime.UtcNow.AddHours(-1) } // Past
+        };
+
+        // Act
+        var result = jobs.FilterPending().ToList();
+
+        // Assert
+        Assert.Equal(2, result.Count);
+        Assert.Null(result[0].DueAt);
+        Assert.True(result[1].DueAt <= DateTime.UtcNow);
+    }
+
+    [Fact]
+    public void FilterPending_ReturnsEmpty_WhenAllJobsHaveFutureDueDate()
+    {
+        // Arrange
+        var jobs = new List<QueuedJob>
+        {
+            new QueuedJob { DueAt = DateTime.UtcNow.AddHours(1) },
+            new QueuedJob { DueAt = DateTime.UtcNow.AddHours(2) }
+        };
+
+        // Act
+        var result = jobs.FilterPending().ToList();
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void FilterPending_ReturnsAll_WhenAllJobsHaveNoDueDate()
+    {
+        // Arrange
+        var jobs = new List<QueuedJob>
+        {
+            new QueuedJob { DueAt = null },
+            new QueuedJob { DueAt = null }
+        };
+
+        // Act
+        var result = jobs.FilterPending().ToList();
+
+        // Assert
+        Assert.Equal(2, result.Count);
+        Assert.All(result, j => Assert.Null(j.DueAt));
+    }
+
+    [Fact]
+    public void FilterPending_ThrowsArgumentNullException_WhenJobsIsNull()
+    {
+        // Arrange
+        IEnumerable<QueuedJob> jobs = null;
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => jobs.FilterPending());
+    }
+
+    #endregion
+
+    #region GroupByPriority
+
+    [Fact]
+    public void GroupByPriority_GroupsJobsByPriorityLevel()
+    {
+        // Arrange
+        var jobs = new List<QueuedJob>
+        {
+            new QueuedJob { Priority = 1 },
+            new QueuedJob { Priority = 1 },
+            new QueuedJob { Priority = 5 },
+            new QueuedJob { Priority = 10 }
+        };
+
+        // Act
+        var result = jobs.GroupByPriority().ToList();
+
+        // Assert
+        Assert.Equal(3, result.Count);
+        Assert.Equal(1, result[0].Key);
+        Assert.Equal(2, result[0].Count());
+        Assert.Equal(5, result[1].Key);
+        Assert.Equal(1, result[1].Count());
+        Assert.Equal(10, result[2].Key);
+        Assert.Equal(1, result[2].Count());
+    }
+
+    [Fact]
+    public void GroupByPriority_ReturnsEmpty_WhenNoJobs()
+    {
+        // Arrange
+        var jobs = new List<QueuedJob>();
+
+        // Act
+        var result = jobs.GroupByPriority().ToList();
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void GroupByPriority_OrdersGroupsByPriorityAscending()
+    {
+        // Arrange
+        var jobs = new List<QueuedJob>
+        {
+            new QueuedJob { Priority = 10 },
+            new QueuedJob { Priority = 1 },
+            new QueuedJob { Priority = 5 }
+        };
+
+        // Act
+        var result = jobs.GroupByPriority().ToList();
+
+        // Assert
+        Assert.Equal(3, result.Count);
+        Assert.Equal(1, result[0].Key);
+        Assert.Equal(5, result[1].Key);
+        Assert.Equal(10, result[2].Key);
+    }
+
+    [Fact]
+    public void GroupByPriority_ThrowsArgumentNullException_WhenJobsIsNull()
+    {
+        // Arrange
+        IEnumerable<QueuedJob> jobs = null;
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => jobs.GroupByPriority());
+    }
+
+    #endregion
 }
