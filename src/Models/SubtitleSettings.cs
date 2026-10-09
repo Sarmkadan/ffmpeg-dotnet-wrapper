@@ -126,5 +126,9 @@ public class SubtitleSettings
             Language = Language
         };
 
+    /// <summary>
+    /// Returns a string representation of the subtitle settings.
+    /// </summary>
+    /// <returns>A string containing the current settings values.</returns>
     public override string ToString() => $"SubtitleSettings {{ HardEmbed = {HardEmbed}, FontName = {FontName}, FontSize = {FontSize}, SubtitleStreamIndex = {SubtitleStreamIndex}, Language = {Language} }}";
 }
