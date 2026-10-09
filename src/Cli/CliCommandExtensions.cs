@@ -61,5 +61,22 @@ public static class CliCommandExtensions
 
             return command.Options.TryGetValue(optionName, out value);
         }
+
+        /// <summary>
+        /// Gets the value of the specified option, or a default value if the option is not found.
+        /// </summary>
+        /// <param name="command">The CLI command to check.</param>
+        /// <param name="optionName">The name of the option to check for.</param>
+        /// <param name="defaultValue">The value to return if the option is not found.</param>
+        /// <returns>The value of the option if it exists; otherwise, <paramref name="defaultValue"/>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="command"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="optionName"/> is null or empty.</exception>
+        public static string GetOptionOrDefault(this CliCommand command, string optionName, string defaultValue)
+        {
+            ArgumentNullException.ThrowIfNull(command);
+            ArgumentException.ThrowIfNullOrEmpty(optionName);
+
+            return command.Options.TryGetValue(optionName, out var value) ? value : defaultValue;
+        }
     }
 }
