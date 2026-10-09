@@ -5,6 +5,7 @@
 
 using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Exceptions;
+using FFmpegDotnetWrapper.Utilities;
 
 namespace FFmpegDotnetWrapper.Models;
 
@@ -156,6 +157,7 @@ public class TranscodeSettings
     /// </summary>
     public void Validate()
     {
+        ValidateEnumArguments();
         ValidateCodecContainerCompatibility();
 
         if (Width.HasValue && Width < 1)
@@ -181,6 +183,31 @@ public class TranscodeSettings
             if (TargetLoudness < -40 || TargetLoudness > -5)
                 throw new InvalidOperationConfigurationException("Target loudness must be between -40 and -5 LUFS");
         }
+    }
+
+    private void ValidateEnumArguments()
+    {
+        // Enum properties accept any cast integer; reject values that have no mapping to FFmpeg arguments.
+        if (!Enum.IsDefined(VideoCodec))
+            throw new InvalidOperationConfigurationException($"Unknown video codec: {(int)VideoCodec}");
+
+        if (!ValidationUtilities.IsValidCodec(VideoCodec.ToString()))
+            throw new InvalidOperationConfigurationException($"Video codec {VideoCodec} is not supported");
+
+        if (!Enum.IsDefined(AudioCodec))
+            throw new InvalidOperationConfigurationException($"Unknown audio codec: {(int)AudioCodec}");
+
+        if (!Enum.IsDefined(Container))
+            throw new InvalidOperationConfigurationException($"Unknown container format: {(int)Container}");
+
+        if (!Enum.IsDefined(Quality))
+            throw new InvalidOperationConfigurationException($"Unknown quality preset: {(int)Quality}");
+
+        if (!Enum.IsDefined(ScalingMode))
+            throw new InvalidOperationConfigurationException($"Unknown scaling mode: {(int)ScalingMode}");
+
+        if (!Enum.IsDefined(HardwareAcceleration))
+            throw new InvalidOperationConfigurationException($"Unknown hardware acceleration: {(int)HardwareAcceleration}");
     }
 
     private void ValidateCodecContainerCompatibility()
