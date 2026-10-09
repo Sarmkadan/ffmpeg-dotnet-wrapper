@@ -42,5 +42,33 @@ namespace FFmpegDotNetWrapper.Services.Extensions
         {
             return TimeSpan.FromMilliseconds(totalDuration.TotalMilliseconds * 0.99);
         }
+
+        /// <summary>
+        /// Reports a value through the progress callback when one is supplied; does nothing when <paramref name="progress"/> is <c>null</c>.
+        /// </summary>
+        /// <typeparam name="T">The type of the progress value.</typeparam>
+        /// <param name="progress">The optional progress callback to report to.</param>
+        /// <param name="value">The value to report.</param>
+        public static void SafeReport<T>(this IProgress<T>? progress, T value)
+        {
+            progress?.Report(value);
+        }
+
+        /// <summary>
+        /// Clamps a percentage into the inclusive 0–100 range. <see cref="double.NaN"/> is treated as 0 so it never propagates into progress output.
+        /// </summary>
+        /// <param name="percentage">The percentage to clamp.</param>
+        /// <returns>
+        /// <paramref name="percentage"/> limited to 0–100, or 0 when it is <see cref="double.NaN"/>.
+        /// </returns>
+        public static double ClampPercentage(this double percentage)
+        {
+            if (double.IsNaN(percentage))
+            {
+                return 0.0;
+            }
+
+            return Math.Clamp(percentage, 0.0, 100.0);
+        }
     }
 }
