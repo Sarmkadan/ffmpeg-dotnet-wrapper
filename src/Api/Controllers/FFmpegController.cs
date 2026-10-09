@@ -4,6 +4,7 @@
 // =============================================================================
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using FFmpegDotnetWrapper.Api.DTOs;
 using FFmpegDotnetWrapper.Services;
@@ -82,6 +83,9 @@ namespace FFmpegDotnetWrapper.Api.Controllers
             ArgumentNullException.ThrowIfNull(request);
             try
             {
+                if (!System.IO.File.Exists(request.InputPath))
+                    return ApiResponse<ConversionResult>.Failure("Input file does not exist");
+
                 var settings = new TrimSettings
                 {
                     StartTime = request.StartTime,
@@ -117,6 +121,12 @@ namespace FFmpegDotnetWrapper.Api.Controllers
             ArgumentNullException.ThrowIfNull(request);
             try
             {
+                if (request.InputPaths == null || request.InputPaths.Count == 0)
+                    return ApiResponse<ConversionResult>.Failure("No input files provided");
+
+                if (request.InputPaths.Any(p => !System.IO.File.Exists(p)))
+                    return ApiResponse<ConversionResult>.Failure("One or more input files do not exist");
+
                 var settings = new MergeSettings
                 {
                     MaintainAspectRatio = request.MaintainAspectRatio
@@ -148,6 +158,9 @@ namespace FFmpegDotnetWrapper.Api.Controllers
             ArgumentNullException.ThrowIfNull(request);
             try
             {
+                if (!System.IO.File.Exists(request.InputPath))
+                    return ApiResponse<ConversionResult>.Failure("Input file does not exist");
+
                 var settings = new WatermarkSettings
                 {
                     WatermarkPath = request.WatermarkPath,
