@@ -14,7 +14,7 @@ namespace FFmpegDotnetWrapper.Exceptions
         /// <returns><see langword="true"/> if the exit code is 0; otherwise, <see langword="false"/>.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="ex"/> is <see langword="null"/>.</exception>
         /// <remarks>
-        /// This method checks the <see cref="ProcessExecutionException.ExitCode"/> property to determine success.
+        /// This method checks the <see cref="FFmpegException.ExitCode"/> property to determine success.
         /// A null exit code will be treated as unsuccessful.
         /// </remarks>
         public static bool IsSuccessful(this ProcessExecutionException ex)
@@ -24,13 +24,13 @@ namespace FFmpegDotnetWrapper.Exceptions
         }
 
         /// <summary>
-        /// Gets the primary error message from the exception, preferring <see cref="ProcessExecutionException.ErrorOutput"/> over <see cref="Exception.Message"/>.
+        /// Gets the primary error message from the exception, preferring <see cref="FFmpegException.ErrorOutput"/> over <see cref="Exception.Message"/>.
         /// </summary>
         /// <param name="ex">The exception containing process execution information.</param>
         /// <returns>The error output if available; otherwise, the exception message.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="ex"/> is <see langword="null"/>.</exception>
         /// <remarks>
-        /// This method prioritizes the <see cref="ProcessExecutionException.ErrorOutput"/> property as the primary error source.
+        /// This method prioritizes the <see cref="FFmpegException.ErrorOutput"/> property as the primary error source.
         /// </remarks>
         public static string GetErrorMessage(this ProcessExecutionException ex)
         {

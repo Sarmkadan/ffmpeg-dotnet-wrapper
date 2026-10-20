@@ -242,7 +242,7 @@ public sealed class ProfileMetrics
     /// <summary>
     /// Returns a culture-invariant string representing the profile metrics.
     /// </summary>
-    /// <returns>A string in the format "ProfileName: Segments=<total>, Bytes=<total>".</returns>
+    /// <returns>A string in the format "ProfileName: Segments=&lt;total&gt;, Bytes=&lt;total&gt;".</returns>
     public override string ToString()
     {
         return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}: Segments={1}, Bytes={2}", ProfileName, TotalSegments, TotalBytes);

@@ -95,10 +95,6 @@ namespace FFmpegDotnetWrapper.Monitoring
             TimeSpan executionTime,
             long bytesProcessed)
         {
-            if (type == null)
-                throw new ArgumentNullException(nameof(type));
-            if (executionTime == null)
-                throw new ArgumentNullException(nameof(executionTime));
             lock (_lockObject)
             {
                 if (!_statistics.TryGetValue(type, out var stats))

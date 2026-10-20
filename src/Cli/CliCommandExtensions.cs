@@ -76,7 +76,7 @@ public static class CliCommandExtensions
             ArgumentNullException.ThrowIfNull(command);
             ArgumentException.ThrowIfNullOrEmpty(optionName);
 
-            return command.Options.TryGetValue(optionName, out var value) ? value : defaultValue;
+            return command.Options.TryGetValue(optionName, out var value) && value is not null ? value : defaultValue;
         }
     }
 }
