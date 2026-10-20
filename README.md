@@ -1,5 +1,66 @@
 // ... (rest of README.md content remains unchanged)
 
+## Table of Contents
+
+**Getting Started**
+- [IntegrationExample](#integrationexample)
+
+**Services**
+- [ICacheService](#icacheservice)
+- [MediaProbeService](#mediaprobeservice)
+- [StreamingProgressService](#streamingprogressservice)
+- [BackgroundJobService](#backgroundjobservice)
+- [GifExportService](#gifexportservice)
+- [WebhookService](#webhookservice)
+
+**Models**
+- [StreamingPipelineMetrics](#streamingpipelinemetrics)
+- [OperationStats](#operationstats)
+- [ProgressReport](#progressreport)
+
+**Infrastructure**
+- [ApplicationStartupJsonExtensions](#applicationstartupjsonextensions)
+- [SlidingWindowRateLimiter](#slidingwindowratelimiter)
+- [CircuitBreakerRetryPolicy](#circuitbreakerretrypolicy)
+- [JobQueue](#jobqueue)
+- [EventPublisher](#eventpublisher)
+- [ConcatenationBuilder](#concatenationbuilder)
+
+**Utilities**
+- [FileUtilities](#fileutilities)
+- [ProcessUtilities](#processutilities)
+- [ExtensionMethods](#extensionmethods)
+- [ValidationUtilities](#validationutilities)
+- [FormattingUtilities](#formattingutilities)
+- [CliCommandParser](#clicommandparser)
+- [CliOutputFormatterValidation](#clioutputformattervalidation)
+- [FFmpegEventExtensions](#ffmpegeventextensions)
+- [FFmpegServiceBenchmarksExtensions](#ffmpegservicebenchmarksextensions)
+- [MediaRepositoryValidation](#mediarepositoryvalidation)
+
+**Tests**
+- [ConcatenationBuilderTests](#concatenationbuildertests)
+- [ValidationUtilitiesTests](#validationutilitiestests)
+- [TranscodeServiceTests](#transcodeservicetests)
+- [ThumbnailSettingsTests](#thumbnailsettingstests)
+- [FileUtilitiesTests](#fileutilitiestests)
+- [SubtitleSettingsTests](#subtitlesettingstests)
+- [TranscodeSettingsTests](#transcodesettingstests)
+- [MediaFileTests](#mediafiletests)
+- [FFmpegOperationTests](#ffmpegoperationtests)
+- [MediaFileTests](#mediafiletests-1)
+- [FFmpegServiceIntegrationTests](#ffmpegserviceintegrationtests)
+- [FormattingUtilitiesTests](#formattingutilitiestests)
+- [ProgressTrackerTests](#progresstrackertests)
+- [ProcessExecutionExceptionValidationTests](#processexecutionexceptionvalidationtests)
+- [JobQueueTests](#jobqueuetests)
+- [FileOperationExceptionExtensionsTests](#fileoperationexceptionextensionstests)
+- [ValidationExceptionTests](#validationexceptiontests)
+- [ProcessUtilitiesTests](#processutilitiestests)
+- [AdaptiveBitrateServiceTests](#adaptivebitrateservicetests)
+- [FFmpegExceptionExtensionsTests](#ffmpegexceptionextensionstests)
+- [RepositoryExceptionExtensionsTests](#repositoryexceptionextensionstests)
+
 ## IntegrationExample
 
 The `IntegrationExample` class demonstrates how to integrate the FFmpeg .NET Wrapper into ASP.NET Core applications. It shows dependency injection setup, service registration, and usage patterns in controllers and services. This example serves as a starting point for building web applications that leverage FFmpeg capabilities.
