@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Utilities;
 using Microsoft.Extensions.Logging;
@@ -70,7 +71,8 @@ namespace FFmpegDotnetWrapper.Services
 
                 _logger.LogInformation("ffprobe completed in {ElapsedMilliseconds} ms. Stream count: {StreamCount}", stopwatch.ElapsedMilliseconds, GetStreamCount(result.StandardOutput));
 
-                // Parse the JSON output
+                // Parse the JSON output - use PropertyNameCaseInsensitive = true to handle
+                // ffprobe's snake_case naming convention (e.g. codec_name -> CodecName)
                 var probeData = JsonSerializer.Deserialize<ProbeJson>(result.StandardOutput, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
@@ -152,6 +154,7 @@ namespace FFmpegDotnetWrapper.Services
 
         private sealed class StreamInfo
         {
+            [JsonPropertyName("codec_name")]
             public string? CodecName { get; set; }
             public int? Width { get; set; }
             public int? Height { get; set; }
