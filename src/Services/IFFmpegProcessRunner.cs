@@ -37,6 +37,13 @@ public sealed class FFmpegProcessRequest
     public TimeSpan? Timeout { get; init; }
 
     /// <summary>
+    /// Optional conversion options. When set, <see cref="ConversionOptions.Validate"/> runs before the
+    /// process is started, so invalid input fails with <see cref="FFmpegDotnetWrapper.Exceptions.OptionsValidationException"/>
+    /// instead of an ffmpeg error. When <see langword="null"/>, no validation is performed.
+    /// </summary>
+    public ConversionOptions? ConversionOptions { get; init; }
+
+    /// <summary>
     /// Identifier propagated into <see cref="FFmpegProgressUpdate.OperationId"/> for progress
     /// snapshots reported while this request executes.
     /// </summary>
