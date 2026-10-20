@@ -204,6 +204,55 @@ public string? ConfigurationKey { get; set; }
 }
 
 /// <summary>
+/// Thrown when a stream selection cannot be satisfied by the available streams.
+/// </summary>
+public class InvalidStreamSelectionException : FFmpegException
+{
+    /// <summary>
+    /// Gets or sets the stream selector that caused the error.
+    /// </summary>
+    public string? SelectorDescription { get; set; }
+
+    /// <summary>
+    /// Gets or sets the available streams that were found.
+    /// </summary>
+    public string? AvailableStreams { get; set; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InvalidStreamSelectionException"/> class.
+    /// </summary>
+    public InvalidStreamSelectionException()
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InvalidStreamSelectionException"/> class with a specified error message.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
+    public InvalidStreamSelectionException(string message) : base(message)
+    {
+        if (string.IsNullOrEmpty(message))
+        {
+            throw new ArgumentException("Message cannot be null or empty", nameof(message));
+        }
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InvalidStreamSelectionException"/> class with a specified error message and selector description.
+    /// </summary>
+    /// <param name="message">The message that describes the error.</param>
+    /// <param name="selectorDescription">Description of the stream selector that failed.</param>
+    public InvalidStreamSelectionException(string message, string selectorDescription) : base(message)
+    {
+        if (string.IsNullOrEmpty(message))
+        {
+            throw new ArgumentException("Message cannot be null or empty", nameof(message));
+        }
+        SelectorDescription = selectorDescription;
+    }
+}
+
+/// <summary>
 /// Thrown when an operation is not supported or not implemented.
 /// </summary>
 public class UnsupportedOperationException : FFmpegException
