@@ -3,6 +3,7 @@
 ## Table of Contents
 
 **Getting Started**
+- [Getting Started](#getting-started)
 - [IntegrationExample](#integrationexample)
 
 **Services**
@@ -60,6 +61,142 @@
 - [AdaptiveBitrateServiceTests](#adaptivebitrateservicetests)
 - [FFmpegExceptionExtensionsTests](#ffmpegexceptionextensionstests)
 - [RepositoryExceptionExtensionsTests](#repositoryexceptionextensionstests)
+
+## Getting Started
+
+This section walks through a minimal console app that converts `input.mov` to `output.mp4`, prints the progress percentage, and stops cleanly on Ctrl+C.
+
+### Prerequisites
+
+- **.NET 10 SDK** (the package targets `net10.0`).
+- **FFmpeg** installed and runnable as `ffmpeg`:
+  - By default the runner starts `ffmpeg` from `PATH`. Check with `ffmpeg -version`.
+  - To use a specific binary, set `FileName` on `FFmpegProcessRequest` to its full path. The example below reads it from the `FFMPEG_PATH` environment variable.
+  - The example encodes with `libx264` and `aac`, so the FFmpeg build must include both (standard builds do). ffprobe is not required.
+
+### Install
+
+```bash
+dotnet add package FFmpegDotnetWrapper
+```
+
+### Example: convert input.mov to output.mp4
+
+Create the project, then replace the generated `Program.cs` with the code below:
+
+```bash
+dotnet new console -n FfmpegQuickStart
+cd FfmpegQuickStart
+dotnet add package FFmpegDotnetWrapper
+```
+
+Place `input.mov` in the directory you run the app from, then run `dotnet run`. The app prints a live percentage and writes `output.mp4`. An existing file with that name is overwritten.
+
+```csharp
+using System.Globalization;
+using System.Text.RegularExpressions;
+using FFmpegDotnetWrapper.Models;
+using FFmpegDotnetWrapper.Services;
+
+const string inputPath = "input.mov";
+const string outputPath = "output.mp4";
+
+// "ffmpeg" is resolved from PATH. Set FFMPEG_PATH to use a specific binary instead.
+var ffmpeg = Environment.GetEnvironmentVariable("FFMPEG_PATH") ?? "ffmpeg";
+
+if (!File.Exists(inputPath))
+{
+    Console.Error.WriteLine($"Input file not found: {Path.GetFullPath(inputPath)}");
+    return 1;
+}
+
+// Ctrl+C cancels the conversion instead of killing the process. FFmpeg receives 'q' and finalizes the output.
+using var cts = new CancellationTokenSource();
+Console.CancelKeyPress += (_, e) =>
+{
+    e.Cancel = true;
+    cts.Cancel();
+};
+
+var runner = new FFmpegProcessRunner();
+
+try
+{
+    var totalDuration = await GetDurationAsync(runner, ffmpeg, inputPath, cts.Token);
+    if (totalDuration == TimeSpan.Zero)
+    {
+        Console.WriteLine("Duration unknown; percentage progress is unavailable.");
+    }
+
+    var request = new FFmpegProcessRequest
+    {
+        FileName = ffmpeg,
+        Arguments = $"-hide_banner -i \"{inputPath}\" -c:v libx264 -c:a aac -progress pipe:1 -nostats -y \"{outputPath}\"",
+        OperationId = Guid.NewGuid().ToString(),
+        TotalDuration = totalDuration,
+        ParseProgressFromStdOut = true
+    };
+
+    var result = await runner.RunAsync(request, new ConsoleProgress(), cts.Token);
+
+    if (result.WasCancelled)
+    {
+        Console.WriteLine("\nConversion cancelled.");
+        return 130;
+    }
+
+    if (!result.Success)
+    {
+        Console.Error.WriteLine($"\nFFmpeg failed with exit code {result.ExitCode}:");
+        Console.Error.WriteLine(result.StdErrTail);
+        return 1;
+    }
+
+    // The last progress block can stop slightly short of the probed duration, so show completion explicitly.
+    Console.WriteLine("\rConverting: 100.0%");
+    Console.WriteLine($"Done in {result.ExecutionTime.TotalSeconds:F1}s: {Path.GetFullPath(outputPath)}");
+    return 0;
+}
+catch (Exception ex)
+{
+    Console.Error.WriteLine($"Error: {ex.Message}");
+    return 1;
+}
+
+// "ffmpeg -i" without an output file always fails, but it prints the input duration to stderr.
+static async Task<TimeSpan> GetDurationAsync(FFmpegProcessRunner runner, string ffmpeg, string input, CancellationToken cancellationToken)
+{
+    var probe = await runner.RunAsync(
+        new FFmpegProcessRequest { FileName = ffmpeg, Arguments = $"-hide_banner -i \"{input}\"" },
+        null,
+        cancellationToken);
+
+    var match = Regex.Match(probe.StdErrTail, @"Duration:\s*(\d+):(\d{2}):(\d{2}(?:\.\d+)?)");
+    if (!match.Success)
+    {
+        return TimeSpan.Zero;
+    }
+
+    return TimeSpan.FromHours(int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture))
+        + TimeSpan.FromMinutes(int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture))
+        + TimeSpan.FromSeconds(double.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture));
+}
+
+// Writes each update in place. Progress<T> would post callbacks to the thread pool, so lines could print out of order.
+file sealed class ConsoleProgress : IProgress<FFmpegProgressUpdate>
+{
+    public void Report(FFmpegProgressUpdate update)
+    {
+        Console.Write($"\rConverting: {update.PercentComplete,6:F1}%");
+    }
+}
+```
+
+How it works:
+
+- **Runner and request.** `FFmpegProcessRunner.RunAsync` starts `ffmpeg` with an `FFmpegProcessRequest` and returns an `FFmpegProcessResult`, which contains the exit code, execution time, and captured stderr.
+- **Progress.** Setting `ParseProgressFromStdOut = true` makes the runner read FFmpeg's `-progress pipe:1` output and report an `FFmpegProgressUpdate` to your `IProgress<FFmpegProgressUpdate>` for each update. `PercentComplete` is clamped to 0–100. Percentages need `TotalDuration`, which the example takes from the `ffmpeg -i` banner. If the duration is unknown, the percentage stays at 0.
+- **Cancellation.** The `CancellationToken` is passed to `RunAsync`, and Ctrl+C cancels it. The runner sends `q` so FFmpeg can finalize the output, waits up to 5 seconds, then kills the process. The result reports `WasCancelled == true`.
 
 ## IntegrationExample
 
