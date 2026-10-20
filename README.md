@@ -4,6 +4,7 @@
 
 **Getting Started**
 - [Getting Started](#getting-started)
+- [Inspecting media](#inspecting-media)
 - [IntegrationExample](#integrationexample)
 
 **Services**
@@ -197,6 +198,111 @@ How it works:
 - **Runner and request.** `FFmpegProcessRunner.RunAsync` starts `ffmpeg` with an `FFmpegProcessRequest` and returns an `FFmpegProcessResult`, which contains the exit code, execution time, and captured stderr.
 - **Progress.** Setting `ParseProgressFromStdOut = true` makes the runner read FFmpeg's `-progress pipe:1` output and report an `FFmpegProgressUpdate` to your `IProgress<FFmpegProgressUpdate>` for each update. `PercentComplete` is clamped to 0–100. Percentages need `TotalDuration`, which the example takes from the `ffmpeg -i` banner. If the duration is unknown, the percentage stays at 0.
 - **Cancellation.** The `CancellationToken` is passed to `RunAsync`, and Ctrl+C cancels it. The runner sends `q` so FFmpeg can finalize the output, waits up to 5 seconds, then kills the process. The result reports `WasCancelled == true`.
+
+## Inspecting media
+
+This example probes a file with `MediaProbeService`, prints its duration, resolution, codecs and every stream, then uses `StreamSelector` to pick the English audio track and copy only that track into a new file with `-c copy` (no re-encoding).
+
+Prerequisites: `ffmpeg` and `ffprobe` must be on `PATH`. `MediaProbeService` runs `ffprobe`, so unlike the conversion example above, `ffprobe` is required here. The input needs an audio track tagged `language=eng`.
+
+Create the project:
+
+```bash
+dotnet new console -n InspectMedia
+cd InspectMedia
+dotnet add package FFmpegDotnetWrapper
+```
+
+Replace the generated `Program.cs` with the code below:
+
+```csharp
+using FFmpegDotnetWrapper.Models;
+using FFmpegDotnetWrapper.Services;
+using FFmpegDotnetWrapper.Utilities;
+
+if (args.Length != 1)
+{
+    Console.Error.WriteLine("Usage: InspectMedia <input-file>");
+    return 1;
+}
+
+var inputPath = Path.GetFullPath(args[0]);
+var outputPath = Path.Combine(
+    Path.GetDirectoryName(inputPath)!,
+    Path.GetFileNameWithoutExtension(inputPath) + ".english.mkv");
+
+// 1. Probe the input with ffprobe through MediaProbeService.
+var probeService = new MediaProbeService();
+var probe = probeService.Probe(inputPath);
+
+var video = probe.Streams.FirstOrDefault(s => s.Width is not null);
+var audio = probe.Streams.FirstOrDefault(s => s.Channels is not null);
+
+Console.WriteLine($"File:        {Path.GetFileName(inputPath)}");
+Console.WriteLine($"Duration:    {(probe.Duration is { } d ? d.ToString(@"hh\:mm\:ss\.fff") : "unknown")}");
+Console.WriteLine($"Resolution:  {(video is null ? "n/a" : $"{video.Width}x{video.Height}")}");
+Console.WriteLine($"Video codec: {video?.Codec ?? "n/a"}");
+Console.WriteLine($"Audio codec: {audio?.Codec ?? "n/a"}");
+
+// 2. List every stream. MediaStreamInfo has no codec_type field, so the type is inferred from its dimensions or channel count.
+Console.WriteLine("Streams:");
+for (var i = 0; i < probe.Streams.Count; i++)
+{
+    var s = probe.Streams[i];
+    var kind = s.Width is { } w && s.Height is { } h ? $"video {w}x{h}"
+        : s.Channels is { } c ? $"audio {c} ch"
+        : "other";
+    Console.WriteLine($"  #{i} {s.Codec,-6} {kind}");
+}
+
+// 3. Select the English audio track and copy only that track into a new file.
+var selector = new StreamSelector().SelectAudioByLanguage("eng");
+var mapArgs = string.Join(' ', selector.BuildMapArguments());
+var ffmpegArgs = $"-y -i \"{inputPath}\" {mapArgs} -c copy \"{outputPath}\"";
+
+var remux = ProcessUtilities.ExecuteProcess("ffmpeg", ffmpegArgs);
+if (!remux.Success)
+{
+    Console.Error.WriteLine($"ffmpeg failed with exit code {remux.ExitCode}:");
+    Console.Error.WriteLine(remux.StandardError);
+    return remux.ExitCode;
+}
+
+// 4. Re-probe the output to confirm it contains only the selected track.
+var output = probeService.Probe(outputPath);
+Console.WriteLine();
+Console.WriteLine($"Wrote {Path.GetFileName(outputPath)}: {output.Streams.Count} stream(s), {output.Streams[0].Codec}, {output.Streams[0].Channels} ch");
+return 0;
+```
+
+Run it against a file in the current directory:
+
+```bash
+dotnet run -- movie.mkv
+```
+
+Expected console output (the duration and stream details depend on your file; this run used a 2-second test clip with a stereo English track, a mono Spanish track, and H.264 video):
+
+```text
+File:        movie.mkv
+Duration:    00:00:02.023
+Resolution:  320x240
+Video codec: h264
+Audio codec: aac
+Streams:
+  #0 h264   video 320x240
+  #1 aac    audio 2 ch
+  #2 aac    audio 1 ch
+
+Wrote movie.english.mkv: 1 stream(s), aac, 2 ch
+```
+
+Notes:
+
+- `movie.english.mkv` is overwritten if it already exists (`-y`).
+- `MediaStreamInfo` exposes only the codec, dimensions and channel count. It does not expose the stream's language, so the English match is done by FFmpeg itself. `SelectAudioByLanguage("eng")` produces `-map 0:a:m:language:eng`.
+- `StreamSelector` only builds `-map` arguments. Nothing in the library runs them, so the example passes them to `ffmpeg` through `ProcessUtilities.ExecuteProcess`.
+- If the input has no track tagged `eng`, FFmpeg fails with a "matches no streams" error. The program prints FFmpeg's log to stderr and returns FFmpeg's exit code (234 when tested).
 
 ## IntegrationExample
 
