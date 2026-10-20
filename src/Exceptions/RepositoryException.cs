@@ -55,7 +55,7 @@ public class RepositoryException : FFmpegException
     /// <param name="message">The error message that explains the reason for the exception.</param>
     /// <param name="repositoryName">The name of the repository that caused this exception.</param>
     /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
-    public RepositoryException(string message, string repositoryName, Exception innerException)
+    public RepositoryException(string message, string? repositoryName, Exception? innerException)
         : base(message, innerException)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);

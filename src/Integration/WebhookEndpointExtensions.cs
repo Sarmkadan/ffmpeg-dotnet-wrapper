@@ -46,7 +46,7 @@ namespace FFmpegDotnetWrapper.Integration
 			endpoint.Headers ??= new Dictionary<string, string>();
 			foreach (var (key, value) in newHeaders)
 			{
-				if (!string.IsNullOrEmpty(key))
+				if (!string.IsNullOrEmpty(key) && value is not null)
 				{
 					endpoint.Headers[key] = value;
 				}

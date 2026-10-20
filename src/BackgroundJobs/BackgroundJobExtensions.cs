@@ -85,7 +85,7 @@ namespace FFmpegDotnetWrapper.BackgroundJobs
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="job"/> is null</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="key"/> is null or empty</exception>
         /// <returns>The converted metadata value or default</returns>
-        public static T GetMetadataValue<T>(this BackgroundJob job, string key, T defaultValue = default)
+        public static T? GetMetadataValue<T>(this BackgroundJob job, string key, T? defaultValue = default)
         {
             ArgumentNullException.ThrowIfNull(job);
 

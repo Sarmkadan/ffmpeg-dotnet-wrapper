@@ -12,7 +12,7 @@ using System.Collections.Generic;
 namespace FFmpegDotnetWrapper.Serialization
 {
     /// <summary>
-    /// Provides validation helpers for <see cref="JsonOutputFormatter"/> instances.
+    /// Provides validation helpers for <c>JsonOutputFormatter</c> instances.
     /// </summary>
     public static class JsonOutputFormatterValidation
     {

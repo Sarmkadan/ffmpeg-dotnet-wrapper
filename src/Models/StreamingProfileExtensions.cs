@@ -52,7 +52,7 @@ public static class StreamingProfileExtensions
     /// <param name="profiles">The sequence of streaming profiles.</param>
     /// <returns>The profile with the highest bitrate, or <see langword="null"/> if empty.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="profiles"/> is <see langword="null"/>.</exception>
-    public static StreamingProfile GetHighestQuality(this IEnumerable<StreamingProfile> profiles)
+    public static StreamingProfile? GetHighestQuality(this IEnumerable<StreamingProfile> profiles)
     {
         ArgumentNullException.ThrowIfNull(profiles);
         return profiles.OrderByDescending(p => p.TotalBitrateKbps).FirstOrDefault();
@@ -65,7 +65,7 @@ public static class StreamingProfileExtensions
     /// <param name="profiles">The sequence of streaming profiles.</param>
     /// <returns>The profile with the lowest bitrate, or <see langword="null"/> if empty.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="profiles"/> is <see langword="null"/>.</exception>
-    public static StreamingProfile GetLowestQuality(this IEnumerable<StreamingProfile> profiles)
+    public static StreamingProfile? GetLowestQuality(this IEnumerable<StreamingProfile> profiles)
     {
         ArgumentNullException.ThrowIfNull(profiles);
         return profiles.OrderBy(p => p.TotalBitrateKbps).FirstOrDefault();

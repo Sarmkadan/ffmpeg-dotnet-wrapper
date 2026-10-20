@@ -277,7 +277,7 @@ public class ExponentialBackoffRetryPolicy : IRetryPolicy
             OperationCanceledException => false, // Cancellation is not a retryable failure
             IOException => true, // IO errors are often transient
             UnauthorizedAccessException => false, // Permission issues are not transient
-            AggregateException aggEx => ShouldRetry(aggEx.InnerException),
+            AggregateException aggEx => aggEx.InnerException is { } inner && ShouldRetry(inner),
             _ => false // Default: don't retry unknown exceptions
         };
     }

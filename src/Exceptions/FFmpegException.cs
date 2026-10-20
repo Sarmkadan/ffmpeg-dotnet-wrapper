@@ -42,7 +42,7 @@ public class FFmpegException : Exception
     /// </summary>
     /// <param name="message">The message that describes the error.</param>
     /// <param name="innerException">The exception that is the cause of the current exception.</param>
-    public FFmpegException(string message, Exception innerException)
+    public FFmpegException(string message, Exception? innerException)
         : base(message, innerException)
     {
         ArgumentException.ThrowIfNullOrEmpty(message);
