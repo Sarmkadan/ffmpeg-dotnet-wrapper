@@ -40,6 +40,9 @@ private const double PercentScale = 100.0;
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        // Validate before spawning so bad options never reach ffmpeg.
+        request.ConversionOptions?.Validate();
+
         var startInfo = new ProcessStartInfo
         {
             FileName = request.FileName,
