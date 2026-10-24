@@ -33,6 +33,12 @@ private const double PercentScale = 100.0;
     /// </summary>
     private static readonly TimeSpan GracefulShutdownGracePeriod = TimeSpan.FromSeconds(5);
 
+    /// <summary>
+    /// Upper bound on the full argument string, matching the Windows <c>CreateProcess</c> command-line limit,
+    /// so an oversized request fails here with a clear message rather than a platform-specific process-start error.
+    /// </summary>
+    private const int MaxArgumentsLength = 32_767;
+
     /// <inheritdoc/>
     public async Task<FFmpegProcessResult> RunAsync(
         FFmpegProcessRequest request,
@@ -43,6 +49,7 @@ private const double PercentScale = 100.0;
 
         // Validate before spawning so bad options never reach ffmpeg.
         request.ConversionOptions?.Validate();
+        ValidateArguments(request);
 
         var startInfo = new ProcessStartInfo
         {
@@ -100,6 +107,25 @@ private const double PercentScale = 100.0;
             TimedOut = timedOut,
             WasCancelled = wasCancelled
         };
+    }
+
+    /// <summary>
+    /// Rejects argument strings that exceed the command-line limit or contain NUL, which would be
+    /// silently truncated by the operating system before ffmpeg ever sees them.
+    /// </summary>
+    /// <param name="request">The request whose <see cref="FFmpegProcessRequest.Arguments"/> are checked.</param>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <see cref="FFmpegProcessRequest.Arguments"/> is longer than the command-line limit or contains a NUL character.
+    /// </exception>
+    private static void ValidateArguments(FFmpegProcessRequest request)
+    {
+        if (request.Arguments.Length > MaxArgumentsLength)
+            throw new ArgumentException(
+                $"Arguments are {request.Arguments.Length} characters long; the limit is {MaxArgumentsLength}.",
+                nameof(request));
+
+        if (request.Arguments.Contains('\0'))
+            throw new ArgumentException("Arguments must not contain NUL characters.", nameof(request));
     }
 
     /// <summary>
