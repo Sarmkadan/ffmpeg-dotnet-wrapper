@@ -52,8 +52,14 @@ public class FFmpegOperation
     }
 
     /// <summary>
-    /// Builds the complete FFmpeg command line.
+    /// Builds the complete FFmpeg command line. Input and output paths are wrapped in double quotes;
+    /// an output path starting with <c>-</c> is anchored with <c>./</c> so ffmpeg does not read it as an option.
     /// </summary>
+    /// <returns>The command line string passed to the process runner.</returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown when an input or output path is null, empty, or whitespace; contains a double quote, NUL, or line break;
+    /// ends with a backslash; or is a bare <c>-</c> (stdin for inputs, stdout for outputs).
+    /// </exception>
     public string BuildCommandLine()
     {
         var cmd = new System.Text.StringBuilder("ffmpeg");
@@ -61,7 +67,7 @@ public class FFmpegOperation
         // Add input files
         foreach (var input in InputFiles)
         {
-            cmd.Append($" -i \"{input}\"");
+            cmd.Append($" -i {QuoteInputPath(input)}");
         }
 
         // Add arguments
@@ -71,10 +77,63 @@ public class FFmpegOperation
         }
 
         // Add output file
-        cmd.Append($" \"{OutputFile}\"");
+        cmd.Append($" {QuoteOutputPath(OutputFile)}");
 
         return cmd.ToString();
     }
+
+    /// <summary>
+    /// Path that ffmpeg interprets as standard input (for inputs) or standard output (for outputs).
+    /// </summary>
+    private const string StdioPath = "-";
+
+    /// <summary>
+    /// Characters that cannot appear inside a quoted path on the command line.
+    /// </summary>
+    private static readonly char[] UnquotablePathChars = ['"', '\0', '\r', '\n'];
+
+    /// <summary>
+    /// Validates and quotes an input path for the <c>-i</c> option.
+    /// </summary>
+    private static string QuoteInputPath(string path)
+    {
+        ValidateQuotablePath(path, nameof(InputFiles));
+
+        if (path == StdioPath)
+            throw new ArgumentException("ffmpeg would read from standard input, which the process runner never closes.", nameof(InputFiles));
+
+        return Quote(path);
+    }
+
+    /// <summary>
+    /// Validates and quotes the output path. A leading dash is anchored with <c>./</c> so it is treated as a path.
+    /// </summary>
+    private static string QuoteOutputPath(string path)
+    {
+        ValidateQuotablePath(path, nameof(OutputFile));
+
+        if (path == StdioPath)
+            throw new ArgumentException("ffmpeg would write to standard output, which carries progress data.", nameof(OutputFile));
+
+        return Quote(path.StartsWith('-') ? $"./{path}" : path);
+    }
+
+    /// <summary>
+    /// Ensures a path can be wrapped in double quotes without the quoting being broken out of.
+    /// </summary>
+    private static void ValidateQuotablePath(string path, string paramName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path, paramName);
+
+        if (path.AsSpan().IndexOfAny(UnquotablePathChars) >= 0)
+            throw new ArgumentException("Path contains a double quote, NUL, or line break and cannot be passed safely to ffmpeg.", paramName);
+
+        // A trailing backslash would be read as an escape for the closing quote on Windows-style argument parsing.
+        if (path[^1] == '\\')
+            throw new ArgumentException("Path ends with a backslash, which would escape its closing quote.", paramName);
+    }
+
+    private static string Quote(string path) => $"\"{path}\"";
 
     /// <summary>
     /// Validates the operation before execution.
