@@ -1,12 +1,15 @@
 namespace FFmpegDotnetWrapper.Tests;
 
-using Xunit;
-using FluentAssertions;
+using System;
+using System.Threading.Tasks;
+
 using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Models;
 using FFmpegDotnetWrapper.Services;
-using System;
-using System.Threading.Tasks;
+
+using FluentAssertions;
+
+using Xunit;
 
 public class FFmpegProcessRunnerValidationTests
 {

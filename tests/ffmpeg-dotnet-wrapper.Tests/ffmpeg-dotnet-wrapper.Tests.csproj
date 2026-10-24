@@ -4,9 +4,15 @@
     <TargetFramework>net10.0</TargetFramework>
     <Version>2.0.2</Version>
     <IsPackable>false</IsPackable>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <!--
+      Test-only relaxation of TreatWarningsAsErrors. These codes still show as warnings, they just don't fail the build:
+      - CS8600/CS8602/CS8604/CS8605/CS8620/CS8625: nullable warnings from tests that pass null on purpose to
+        exercise ArgumentNullException and validation paths. Annotating each call with null! would hide that intent.
+      - CA1416: tests call File.SetUnixFileMode, which is Unix-only and is not platform-guarded in the test code.
+      - xUnit1031: some progress-tracker tests block on tasks synchronously; they are not async-deadlock risks here.
+      - xUnit2013: Assert.Equal used for collection counts in older tests; the assertion is correct as written.
+    -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS8600;CS8602;CS8604;CS8605;CS8620;CS8625;CA1416;xUnit1031;xUnit2013</WarningsNotAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

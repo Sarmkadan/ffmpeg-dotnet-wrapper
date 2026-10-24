@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+
 using FFmpegDotnetWrapper.Events;
+
 using FluentAssertions;
+
 using Moq;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

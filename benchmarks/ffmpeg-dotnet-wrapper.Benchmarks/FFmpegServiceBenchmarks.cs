@@ -1,9 +1,11 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
+
 using FFmpegDotnetWrapper.Configuration;
 using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Models;
 using FFmpegDotnetWrapper.Services;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

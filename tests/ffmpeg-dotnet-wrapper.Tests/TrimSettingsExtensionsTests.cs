@@ -1,10 +1,13 @@
 namespace FFmpegDotnetWrapper.Tests;
 
-using Xunit;
-using FluentAssertions;
-using FFmpegDotnetWrapper.Models;
 using System;
+
 using FFmpegDotnetWrapper.Exceptions;
+using FFmpegDotnetWrapper.Models;
+
+using FluentAssertions;
+
+using Xunit;
 
 public class TrimSettingsExtensionsTests
 {

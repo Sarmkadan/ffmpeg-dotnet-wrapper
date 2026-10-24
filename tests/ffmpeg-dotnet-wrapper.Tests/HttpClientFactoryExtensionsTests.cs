@@ -8,9 +8,13 @@
 
 using System;
 using System.Collections.Generic;
+
 using FFmpegDotnetWrapper.Integration;
+
 using FluentAssertions;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

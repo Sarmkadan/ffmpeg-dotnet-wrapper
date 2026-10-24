@@ -2,13 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+
 using FFmpegDotnetWrapper.Events;
 using FFmpegDotnetWrapper.Integration;
+
 using FluentAssertions;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Moq;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

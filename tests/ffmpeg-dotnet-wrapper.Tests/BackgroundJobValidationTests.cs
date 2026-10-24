@@ -4,7 +4,9 @@
 
 using System;
 using System.Collections.Generic;
+
 using FFmpegDotnetWrapper.BackgroundJobs;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

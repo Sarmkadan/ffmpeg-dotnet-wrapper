@@ -1,4 +1,5 @@
 using BenchmarkDotNet.Attributes;
+
 using FFmpegDotnetWrapper.Exceptions;
 
 namespace FFmpegDotnetWrapper.Benchmarks;

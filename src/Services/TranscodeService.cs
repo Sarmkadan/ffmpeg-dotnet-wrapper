@@ -3,12 +3,14 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System;
+
 using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Models;
 using FFmpegDotnetWrapper.Repository;
+
 using Microsoft.Extensions.Logging;
-using System;
 
 namespace FFmpegDotnetWrapper.Services;
 

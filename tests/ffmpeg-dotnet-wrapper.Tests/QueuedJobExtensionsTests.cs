@@ -1,5 +1,7 @@
 using System;
+
 using FFmpegDotnetWrapper.BackgroundJobs;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

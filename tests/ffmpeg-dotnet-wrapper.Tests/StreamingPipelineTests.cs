@@ -4,7 +4,9 @@
 // =============================================================================
 
 using FFmpegDotnetWrapper.Models;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

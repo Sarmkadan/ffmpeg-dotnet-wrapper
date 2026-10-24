@@ -1,66 +1,68 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using BenchmarkDotNet.Attributes;
+
 using FFmpegDotnetWrapper.Exceptions;
 
-namespace FFmpegDotnetWrapper.Benchmarks
+namespace FFmpegDotnetWrapper.Benchmarks;
+
+[MemoryDiagnoser]
+public class FFmpegExceptionBenchmarks
 {
-    [MemoryDiagnoser]
-    public class FFmpegExceptionBenchmarks
+    // Initialised here to satisfy nullable analysis; real values are assigned in Setup()
+    private string _message = string.Empty;
+    private string _errorOutput = string.Empty;
+    private List<KeyValuePair<string, string>> _contextEntries = new();
+
+    [Params(10, 100, 1000)]
+    public int ContextSize;
+
+    [GlobalSetup]
+    public void Setup()
     {
-        private string _message;
-        private string _errorOutput;
-        private List<KeyValuePair<string, string>> _contextEntries;
-
-        [Params(10, 100, 1000)]
-        public int ContextSize;
-
-        [GlobalSetup]
-        public void Setup()
+        _message = "Test exception message";
+        _errorOutput = "Test error output";
+        _contextEntries = new List<KeyValuePair<string, string>>(ContextSize);
+        for (int i = 0; i < ContextSize; i++)
         {
-            _message = "Test exception message";
-            _errorOutput = "Test error output";
-            _contextEntries = new List<KeyValuePair<string, string>>(ContextSize);
-            for (int i = 0; i < ContextSize; i++)
-            {
-                _contextEntries.Add(new KeyValuePair<string, string>($"key{i}", $"value{i}"));
-            }
+            _contextEntries.Add(new KeyValuePair<string, string>($"key{i}", $"value{i}"));
         }
+    }
 
-        [Benchmark]
-        public FFmpegException ConstructWithMessage()
-        {
-            return new FFmpegException(_message);
-        }
+    [Benchmark]
+    public FFmpegException ConstructWithMessage()
+    {
+        return new FFmpegException(_message);
+    }
 
-        [Benchmark]
-        public FFmpegException ConstructWithExitCode()
-        {
-            return new FFmpegException(_message, 1, _errorOutput);
-        }
+    [Benchmark]
+    public FFmpegException ConstructWithExitCode()
+    {
+        return new FFmpegException(_message, 1, _errorOutput);
+    }
 
-        [Benchmark]
-        public FFmpegException AddContextEntries()
+    [Benchmark]
+    public FFmpegException AddContextEntries()
+    {
+        var ex = new FFmpegException(_message);
+        foreach (var kv in _contextEntries)
         {
-            var ex = new FFmpegException(_message);
-            foreach (var kv in _contextEntries)
-            {
-                ex.Context.Add(kv.Key, kv.Value);
-            }
-            return ex;
+            ex.Context.Add(kv.Key, kv.Value);
         }
+        return ex;
+    }
 
-        [Benchmark]
-        public string BuildContextString()
+    [Benchmark]
+    public string BuildContextString()
+    {
+        var ex = new FFmpegException(_message);
+        foreach (var kv in _contextEntries)
         {
-            var ex = new FFmpegException(_message);
-            foreach (var kv in _contextEntries)
-            {
-                ex.Context.Add(kv.Key, kv.Value);
-            }
-            // Build a string representation of the context dictionary
-            return string.Join(", ", ex.Context.Select(kv => $"{kv.Key}={kv.Value}"));
+            ex.Context.Add(kv.Key, kv.Value);
         }
+        // Build a string representation of the context dictionary
+        return string.Join(", ", ex.Context.Select(kv => $"{kv.Key}={kv.Value}"));
     }
 }

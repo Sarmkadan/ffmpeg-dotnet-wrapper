@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+
 using FFmpegDotnetWrapper.Cli;
+
 using Xunit;
 
 namespace ffmpeg_dotnet_wrapper.Tests;

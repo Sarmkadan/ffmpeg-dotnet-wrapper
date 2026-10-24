@@ -1,6 +1,8 @@
 using System;
-using FFmpegDotnetWrapper.Models;
+
 using FFmpegDotnetWrapper.Exceptions;
+using FFmpegDotnetWrapper.Models;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

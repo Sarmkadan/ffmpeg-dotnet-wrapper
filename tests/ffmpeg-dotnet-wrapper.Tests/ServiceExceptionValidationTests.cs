@@ -1,5 +1,7 @@
 using System;
+
 using FFmpegDotnetWrapper.Exceptions;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

@@ -6,10 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
 using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Models;
 using FFmpegDotnetWrapper.Services;
 using FFmpegDotnetWrapper.Utilities;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

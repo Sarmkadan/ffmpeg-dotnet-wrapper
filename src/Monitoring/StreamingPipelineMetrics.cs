@@ -4,6 +4,7 @@
 // =============================================================================
 
 using System.Collections.Concurrent;
+
 using FFmpegDotnetWrapper.Models;
 
 namespace FFmpegDotnetWrapper.Monitoring;

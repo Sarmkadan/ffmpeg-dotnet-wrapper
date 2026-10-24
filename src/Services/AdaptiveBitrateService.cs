@@ -8,10 +8,12 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Channels;
+
 using FFmpegDotnetWrapper.Configuration;
 using FFmpegDotnetWrapper.Events;
 using FFmpegDotnetWrapper.Models;
 using FFmpegDotnetWrapper.Monitoring;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
