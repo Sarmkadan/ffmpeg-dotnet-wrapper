@@ -4,6 +4,7 @@
 // =====================================================================
 
 using FFmpegDotnetWrapper.Models;
+
 using Microsoft.Extensions.Logging;
 
 namespace FFmpegDotnetWrapper.Services;

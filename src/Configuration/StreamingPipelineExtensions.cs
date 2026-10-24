@@ -6,6 +6,7 @@
 using FFmpegDotnetWrapper.Events;
 using FFmpegDotnetWrapper.Monitoring;
 using FFmpegDotnetWrapper.Services;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;

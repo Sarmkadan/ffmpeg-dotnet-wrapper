@@ -1,6 +1,8 @@
-using Xunit;
-using FluentAssertions;
 using FFmpegDotnetWrapper.Exceptions;
+
+using FluentAssertions;
+
+using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;
 

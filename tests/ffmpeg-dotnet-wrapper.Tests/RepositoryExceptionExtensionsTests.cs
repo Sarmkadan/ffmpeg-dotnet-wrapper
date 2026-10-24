@@ -1,6 +1,9 @@
 using System;
+
 using FFmpegDotnetWrapper.Exceptions;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests.Exceptions;

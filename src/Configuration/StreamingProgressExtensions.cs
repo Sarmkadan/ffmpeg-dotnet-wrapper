@@ -4,6 +4,7 @@
 // =============================================================================
 
 using FFmpegDotnetWrapper.Services;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FFmpegDotnetWrapper.Configuration;

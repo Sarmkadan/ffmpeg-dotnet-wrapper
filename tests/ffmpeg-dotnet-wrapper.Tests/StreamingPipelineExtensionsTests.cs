@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+
+using FFmpegDotnetWrapper.Configuration;
+using FFmpegDotnetWrapper.Monitoring;
+using FFmpegDotnetWrapper.Services;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+
 using Xunit;
-using FFmpegDotnetWrapper.Configuration;
-using FFmpegDotnetWrapper.Services;
-using FFmpegDotnetWrapper.Monitoring;
 
 namespace FFmpegDotnetWrapper.Tests.Configuration;
 

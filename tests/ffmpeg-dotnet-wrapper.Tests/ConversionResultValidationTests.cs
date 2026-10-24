@@ -3,7 +3,9 @@
 // ===================================================================
 
 using System;
+
 using FFmpegDotnetWrapper.Models;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

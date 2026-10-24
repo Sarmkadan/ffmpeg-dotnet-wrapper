@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+
 using FFmpegDotnetWrapper.BackgroundJobs;
+
 using Microsoft.Extensions.Logging.Abstractions;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

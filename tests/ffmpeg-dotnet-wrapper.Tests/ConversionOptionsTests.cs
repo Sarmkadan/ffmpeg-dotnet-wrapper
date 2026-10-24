@@ -1,11 +1,14 @@
 namespace FFmpegDotnetWrapper.Tests;
 
-using Xunit;
-using FluentAssertions;
-using FFmpegDotnetWrapper.Models;
-using FFmpegDotnetWrapper.Exceptions;
 using System;
 using System.IO;
+
+using FFmpegDotnetWrapper.Exceptions;
+using FFmpegDotnetWrapper.Models;
+
+using FluentAssertions;
+
+using Xunit;
 
 public class ConversionOptionsTests : IDisposable
 {

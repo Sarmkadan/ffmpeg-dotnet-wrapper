@@ -1,7 +1,10 @@
-using Moq;
-using Xunit;
-using FluentAssertions;
 using FFmpegDotnetWrapper.Services;
+
+using FluentAssertions;
+
+using Moq;
+
+using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;
 

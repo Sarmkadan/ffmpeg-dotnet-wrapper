@@ -3,11 +3,12 @@
 // CTO & Software Architect
 // =============================================================================
 
+using System.Threading;
+using System.Threading.Tasks;
+
 using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Models;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace FFmpegDotnetWrapper.Services;
 

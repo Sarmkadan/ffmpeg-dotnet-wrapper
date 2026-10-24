@@ -1,6 +1,8 @@
 using FFmpegDotnetWrapper.Models;
 using FFmpegDotnetWrapper.Monitoring;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

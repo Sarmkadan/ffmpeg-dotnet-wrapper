@@ -1,8 +1,11 @@
 using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Models;
 using FFmpegDotnetWrapper.Services;
+
 using FluentAssertions;
+
 using Moq;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

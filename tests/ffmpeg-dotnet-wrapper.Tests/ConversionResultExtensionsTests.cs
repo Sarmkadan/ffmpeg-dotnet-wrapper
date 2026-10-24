@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+
 using FFmpegDotnetWrapper.Models;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

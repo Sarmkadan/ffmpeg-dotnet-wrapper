@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+
 using FFmpegDotnetWrapper.Events;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

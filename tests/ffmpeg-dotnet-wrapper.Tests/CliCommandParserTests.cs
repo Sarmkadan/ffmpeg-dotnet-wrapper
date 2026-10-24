@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+
 using FFmpegDotnetWrapper.Cli;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

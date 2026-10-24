@@ -2,7 +2,9 @@
 // Copyright © 2024
 
 using System;
+
 using FFmpegDotnetWrapper.Exceptions;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

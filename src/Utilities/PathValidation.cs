@@ -5,6 +5,7 @@
 
 using System;
 using System.IO;
+
 using FFmpegDotnetWrapper.Exceptions;
 
 namespace FFmpegDotnetWrapper.Utilities;

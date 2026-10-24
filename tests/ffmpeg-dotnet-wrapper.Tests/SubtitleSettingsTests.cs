@@ -1,6 +1,8 @@
 using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Models;
+
 using FluentAssertions;
+
 using Xunit;
 
 /// <summary>

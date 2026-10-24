@@ -2,9 +2,13 @@ using FFmpegDotnetWrapper.Constants;
 using FFmpegDotnetWrapper.Exceptions;
 using FFmpegDotnetWrapper.Models;
 using FFmpegDotnetWrapper.Services;
+
 using FluentAssertions;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

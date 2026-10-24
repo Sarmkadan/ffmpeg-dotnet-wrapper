@@ -12,278 +12,279 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+
 using FFmpegDotnetWrapper.Events;
 using FFmpegDotnetWrapper.Policies;
+
 using Microsoft.Extensions.Logging;
 
-namespace FFmpegDotnetWrapper.Integration
+namespace FFmpegDotnetWrapper.Integration;
+
+/// <summary>
+/// Webhook endpoint configuration for delivering events to external systems.
+/// Supports retries, filtering by event type, and authentication.
+/// </summary>
+public class WebhookEndpoint
 {
+    /// <summary>Unique identifier for this webhook.</summary>
+    public string WebhookId { get; set; } = Guid.NewGuid().ToString();
+
+    /// <summary>URL where events should be delivered.</summary>
+    public string Url { get; set; } = string.Empty;
+
+    /// <summary>Types of events to deliver (empty = all events).</summary>
+    public List<string> EventTypes { get; set; } = new();
+
+    /// <summary>Authentication token for webhook requests.</summary>
+    public string? AuthToken { get; set; }
+
+    /// <summary>Whether this webhook is active.</summary>
+    public bool IsActive { get; set; } = true;
+
+    /// <summary>Number of delivery retry attempts on failure.</summary>
+    public int MaxRetries { get; set; } = 3;
+
+    /// <summary>When the webhook was created.</summary>
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>Custom headers to include in webhook requests.</summary>
+    public Dictionary<string, string> Headers { get; set; } = new();
+
     /// <summary>
-    /// Webhook endpoint configuration for delivering events to external systems.
-    /// Supports retries, filtering by event type, and authentication.
+    /// Returns a concise, single-line, culture-invariant summary of the webhook endpoint.
     /// </summary>
-    public class WebhookEndpoint
+    /// <returns>A string containing WebhookId, Url, IsActive, and EventTypes count.</returns>
+    public override string ToString()
     {
-        /// <summary>Unique identifier for this webhook.</summary>
-        public string WebhookId { get; set; } = Guid.NewGuid().ToString();
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "Id={0}, Url={1}, IsActive={2}, EventTypesCount={3}", WebhookId, Url, IsActive, EventTypes.Count);
+    }
+}
 
-        /// <summary>URL where events should be delivered.</summary>
-        public string Url { get; set; } = string.Empty;
+/// <summary>
+/// Service for delivering events to external systems via HTTP webhooks.
+/// Handles retries, backoff, and failure tracking.
+/// Integrates with event system to automatically deliver events.
+/// </summary>
+public interface IWebhookService
+{
+    Task RegisterWebhookAsync(WebhookEndpoint endpoint);
+    Task UnregisterWebhookAsync(string webhookId);
+    Task<WebhookEndpoint?> GetWebhookAsync(string webhookId);
+    Task<IEnumerable<WebhookEndpoint>> GetActiveWebhooksAsync();
+}
 
-        /// <summary>Types of events to deliver (empty = all events).</summary>
-        public List<string> EventTypes { get; set; } = new();
+public class WebhookService : IWebhookService, IEventHandler<OperationCompletedEvent>, IEventHandler<OperationFailedEvent>, IEventHandler<OperationStartedEvent>
+{
+    private const int DefaultRetryMaxAttempts = 3;
+    private const int DefaultRetryInitialDelayMilliseconds = 1000;
+    private const string EventTypeHeaderName = "X-Event-Type";
+    private const string EventIdHeaderName = "X-Event-Id";
 
-        /// <summary>Authentication token for webhook requests.</summary>
-        public string? AuthToken { get; set; }
+    private readonly ILogger<WebhookService> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IRetryPolicy _retryPolicy;
+    private readonly Dictionary<string, WebhookEndpoint> _webhooks = new();
+    private readonly object _lockObject = new();
 
-        /// <summary>Whether this webhook is active.</summary>
-        public bool IsActive { get; set; } = true;
+    public WebhookService(
+        ILogger<WebhookService> logger,
+        IHttpClientFactory httpClientFactory,
+        IRetryPolicy? retryPolicy = null)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+        _retryPolicy = retryPolicy ?? new ExponentialBackoffRetryPolicy(maxAttempts: DefaultRetryMaxAttempts, initialDelayMilliseconds: DefaultRetryInitialDelayMilliseconds);
+    }
 
-        /// <summary>Number of delivery retry attempts on failure.</summary>
-        public int MaxRetries { get; set; } = 3;
+    /// <summary>
+    /// Registers a new webhook endpoint for event delivery.
+    /// The webhook will receive events matching its configured event types.
+    /// </summary>
+    public Task RegisterWebhookAsync(WebhookEndpoint endpoint)
+    {
+        if (endpoint == null)
+            throw new ArgumentNullException(nameof(endpoint));
+        if (string.IsNullOrEmpty(endpoint.Url))
+            throw new ArgumentException("Webhook URL cannot be empty", nameof(endpoint));
 
-        /// <summary>When the webhook was created.</summary>
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        /// <summary>Custom headers to include in webhook requests.</summary>
-        public Dictionary<string, string> Headers { get; set; } = new();
-
-        /// <summary>
-        /// Returns a concise, single-line, culture-invariant summary of the webhook endpoint.
-        /// </summary>
-        /// <returns>A string containing WebhookId, Url, IsActive, and EventTypes count.</returns>
-        public override string ToString()
+        lock (_lockObject)
         {
-            return string.Format(System.Globalization.CultureInfo.InvariantCulture, "Id={0}, Url={1}, IsActive={2}, EventTypesCount={3}", WebhookId, Url, IsActive, EventTypes.Count);
+            _webhooks[endpoint.WebhookId] = endpoint;
+        }
+
+        _logger.LogInformation(
+            "Webhook registered: {WebhookId} -> {Url}",
+            endpoint.WebhookId,
+            endpoint.Url);
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Unregisters and removes a webhook endpoint.
+    /// The webhook will no longer receive event notifications.
+    /// </summary>
+    public Task UnregisterWebhookAsync(string webhookId)
+    {
+        if (string.IsNullOrEmpty(webhookId))
+            return Task.CompletedTask;
+
+        lock (_lockObject)
+        {
+            if (_webhooks.Remove(webhookId))
+            {
+                _logger.LogInformation("Webhook unregistered: {WebhookId}", webhookId);
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Retrieves webhook configuration by ID.
+    /// Returns null if webhook doesn't exist.
+    /// </summary>
+    public Task<WebhookEndpoint?> GetWebhookAsync(string webhookId)
+    {
+        lock (_lockObject)
+        {
+            _webhooks.TryGetValue(webhookId, out var endpoint);
+            return Task.FromResult(endpoint);
         }
     }
 
     /// <summary>
-    /// Service for delivering events to external systems via HTTP webhooks.
-    /// Handles retries, backoff, and failure tracking.
-    /// Integrates with event system to automatically deliver events.
+    /// Gets all active webhooks that are registered.
     /// </summary>
-    public interface IWebhookService
+    public Task<IEnumerable<WebhookEndpoint>> GetActiveWebhooksAsync()
     {
-        Task RegisterWebhookAsync(WebhookEndpoint endpoint);
-        Task UnregisterWebhookAsync(string webhookId);
-        Task<WebhookEndpoint?> GetWebhookAsync(string webhookId);
-        Task<IEnumerable<WebhookEndpoint>> GetActiveWebhooksAsync();
+        lock (_lockObject)
+        {
+            var active = new List<WebhookEndpoint>();
+            foreach (var endpoint in _webhooks.Values)
+            {
+                if (endpoint.IsActive)
+                    active.Add(endpoint);
+            }
+            return Task.FromResult<IEnumerable<WebhookEndpoint>>(active);
+        }
     }
 
-    public class WebhookService : IWebhookService, IEventHandler<OperationCompletedEvent>, IEventHandler<OperationFailedEvent>, IEventHandler<OperationStartedEvent>
+    /// <summary>
+    /// Event handler for operation completion events.
+    /// Delivers the event to all registered webhooks.
+    /// </summary>
+    async Task IEventHandler<OperationCompletedEvent>.HandleAsync(OperationCompletedEvent @event)
     {
-        private const int DefaultRetryMaxAttempts = 3;
-        private const int DefaultRetryInitialDelayMilliseconds = 1000;
-        private const string EventTypeHeaderName = "X-Event-Type";
-        private const string EventIdHeaderName = "X-Event-Id";
+        await DeliverEventToWebhooksAsync(@event, nameof(OperationCompletedEvent));
+    }
 
-        private readonly ILogger<WebhookService> _logger;
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IRetryPolicy _retryPolicy;
-        private readonly Dictionary<string, WebhookEndpoint> _webhooks = new();
-        private readonly object _lockObject = new();
+    /// <summary>
+    /// Event handler for operation failure events.
+    /// Ensures all webhooks are notified of operation failures.
+    /// </summary>
+    async Task IEventHandler<OperationFailedEvent>.HandleAsync(OperationFailedEvent @event)
+    {
+        await DeliverEventToWebhooksAsync(@event, nameof(OperationFailedEvent));
+    }
 
-        public WebhookService(
-            ILogger<WebhookService> logger,
-            IHttpClientFactory httpClientFactory,
-            IRetryPolicy? retryPolicy = null)
+    /// <summary>
+    /// Event handler for operation started events.
+    /// Notifies webhooks of new operations beginning.
+    /// </summary>
+    async Task IEventHandler<OperationStartedEvent>.HandleAsync(OperationStartedEvent @event)
+    {
+        await DeliverEventToWebhooksAsync(@event, nameof(OperationStartedEvent));
+    }
+
+    /// <summary>
+    /// Delivers an event to all registered webhooks that are interested in it.
+    /// Implements retry logic using configured policy.
+    /// </summary>
+    private async Task DeliverEventToWebhooksAsync<T>(T @event, string eventTypeName) where T : FFmpegEvent
+    {
+        ArgumentNullException.ThrowIfNull(@event);
+
+        List<WebhookEndpoint> webhooksToNotify;
+
+        lock (_lockObject)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-            _retryPolicy = retryPolicy ?? new ExponentialBackoffRetryPolicy(maxAttempts: DefaultRetryMaxAttempts, initialDelayMilliseconds: DefaultRetryInitialDelayMilliseconds);
+            webhooksToNotify = _webhooks.Values
+                .Where(w => w.IsActive && (w.EventTypes.Count == 0 || w.EventTypes.Contains(eventTypeName)))
+                .ToList();
         }
 
-        /// <summary>
-        /// Registers a new webhook endpoint for event delivery.
-        /// The webhook will receive events matching its configured event types.
-        /// </summary>
-        public Task RegisterWebhookAsync(WebhookEndpoint endpoint)
+        if (webhooksToNotify.Count == 0)
+            return;
+
+        var payload = JsonSerializer.Serialize(@event);
+        var tasks = webhooksToNotify.Select(wh => DeliverEventWithPolicyAsync(wh, payload, eventTypeName));
+
+        await Task.WhenAll(tasks);
+    }
+
+    /// <summary>
+    /// Delivers event payload to a webhook with retry policy.
+    /// Uses the configured retry policy for handling transient failures.
+    /// </summary>
+    private async Task DeliverEventWithPolicyAsync(WebhookEndpoint webhook, string payload, string eventType)
+    {
+        ArgumentNullException.ThrowIfNull(webhook);
+        ArgumentException.ThrowIfNullOrWhiteSpace(payload);
+        ArgumentException.ThrowIfNullOrWhiteSpace(eventType);
+
+        var httpClient = _httpClientFactory.CreateClient("webhook");
+
+        try
         {
-            if (endpoint == null)
-                throw new ArgumentNullException(nameof(endpoint));
-            if (string.IsNullOrEmpty(endpoint.Url))
-                throw new ArgumentException("Webhook URL cannot be empty", nameof(endpoint));
-
-            lock (_lockObject)
+            await _retryPolicy.ExecuteAsync(async _ =>
             {
-                _webhooks[endpoint.WebhookId] = endpoint;
-            }
+                using var request = new HttpRequestMessage(HttpMethod.Post, webhook.Url);
+                request.Content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json");
 
-            _logger.LogInformation(
-                "Webhook registered: {WebhookId} -> {Url}",
-                endpoint.WebhookId,
-                endpoint.Url);
-
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Unregisters and removes a webhook endpoint.
-        /// The webhook will no longer receive event notifications.
-        /// </summary>
-        public Task UnregisterWebhookAsync(string webhookId)
-        {
-            if (string.IsNullOrEmpty(webhookId))
-                return Task.CompletedTask;
-
-            lock (_lockObject)
-            {
-                if (_webhooks.Remove(webhookId))
+                // Add authentication if configured
+                if (!string.IsNullOrEmpty(webhook.AuthToken))
                 {
-                    _logger.LogInformation("Webhook unregistered: {WebhookId}", webhookId);
+                    request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", webhook.AuthToken);
                 }
-            }
 
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Retrieves webhook configuration by ID.
-        /// Returns null if webhook doesn't exist.
-        /// </summary>
-        public Task<WebhookEndpoint?> GetWebhookAsync(string webhookId)
-        {
-            lock (_lockObject)
-            {
-                _webhooks.TryGetValue(webhookId, out var endpoint);
-                return Task.FromResult(endpoint);
-            }
-        }
-
-        /// <summary>
-        /// Gets all active webhooks that are registered.
-        /// </summary>
-        public Task<IEnumerable<WebhookEndpoint>> GetActiveWebhooksAsync()
-        {
-            lock (_lockObject)
-            {
-                var active = new List<WebhookEndpoint>();
-                foreach (var endpoint in _webhooks.Values)
+                // Add custom headers
+                foreach (var header in webhook.Headers)
                 {
-                    if (endpoint.IsActive)
-                        active.Add(endpoint);
+                    request.Headers.Add(header.Key, header.Value);
                 }
-                return Task.FromResult<IEnumerable<WebhookEndpoint>>(active);
-            }
-        }
 
-        /// <summary>
-        /// Event handler for operation completion events.
-        /// Delivers the event to all registered webhooks.
-        /// </summary>
-        async Task IEventHandler<OperationCompletedEvent>.HandleAsync(OperationCompletedEvent @event)
-        {
-            await DeliverEventToWebhooksAsync(@event, nameof(OperationCompletedEvent));
-        }
+                // Add event type header
+                request.Headers.Add(EventTypeHeaderName, eventType);
+                request.Headers.Add(EventIdHeaderName, Guid.NewGuid().ToString());
 
-        /// <summary>
-        /// Event handler for operation failure events.
-        /// Ensures all webhooks are notified of operation failures.
-        /// </summary>
-        async Task IEventHandler<OperationFailedEvent>.HandleAsync(OperationFailedEvent @event)
-        {
-            await DeliverEventToWebhooksAsync(@event, nameof(OperationFailedEvent));
-        }
+                using var response = await httpClient.SendAsync(request, _);
 
-        /// <summary>
-        /// Event handler for operation started events.
-        /// Notifies webhooks of new operations beginning.
-        /// </summary>
-        async Task IEventHandler<OperationStartedEvent>.HandleAsync(OperationStartedEvent @event)
-        {
-            await DeliverEventToWebhooksAsync(@event, nameof(OperationStartedEvent));
-        }
-
-        /// <summary>
-        /// Delivers an event to all registered webhooks that are interested in it.
-        /// Implements retry logic using configured policy.
-        /// </summary>
-        private async Task DeliverEventToWebhooksAsync<T>(T @event, string eventTypeName) where T : FFmpegEvent
-        {
-            ArgumentNullException.ThrowIfNull(@event);
-
-            List<WebhookEndpoint> webhooksToNotify;
-
-            lock (_lockObject)
-            {
-                webhooksToNotify = _webhooks.Values
-                    .Where(w => w.IsActive && (w.EventTypes.Count == 0 || w.EventTypes.Contains(eventTypeName)))
-                    .ToList();
-            }
-
-            if (webhooksToNotify.Count == 0)
-                return;
-
-            var payload = JsonSerializer.Serialize(@event);
-            var tasks = webhooksToNotify.Select(wh => DeliverEventWithPolicyAsync(wh, payload, eventTypeName));
-
-            await Task.WhenAll(tasks);
-        }
-
-        /// <summary>
-        /// Delivers event payload to a webhook with retry policy.
-        /// Uses the configured retry policy for handling transient failures.
-        /// </summary>
-        private async Task DeliverEventWithPolicyAsync(WebhookEndpoint webhook, string payload, string eventType)
-        {
-            ArgumentNullException.ThrowIfNull(webhook);
-            ArgumentException.ThrowIfNullOrWhiteSpace(payload);
-            ArgumentException.ThrowIfNullOrWhiteSpace(eventType);
-
-            var httpClient = _httpClientFactory.CreateClient("webhook");
-
-            try
-            {
-                await _retryPolicy.ExecuteAsync(async _ =>
+                if (response.IsSuccessStatusCode)
                 {
-                    using var request = new HttpRequestMessage(HttpMethod.Post, webhook.Url);
-                    request.Content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json");
-
-                    // Add authentication if configured
-                    if (!string.IsNullOrEmpty(webhook.AuthToken))
-                    {
-                        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", webhook.AuthToken);
-                    }
-
-                    // Add custom headers
-                    foreach (var header in webhook.Headers)
-                    {
-                        request.Headers.Add(header.Key, header.Value);
-                    }
-
-                    // Add event type header
-                    request.Headers.Add(EventTypeHeaderName, eventType);
-                    request.Headers.Add(EventIdHeaderName, Guid.NewGuid().ToString());
-
-                    using var response = await httpClient.SendAsync(request, _);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        _logger.LogDebug(
-                            "Webhook delivered successfully: {WebhookId} ({StatusCode})",
-                            webhook.WebhookId,
-                            response.StatusCode);
-                        return;
-                    }
-
-                    _logger.LogWarning(
-                        "Webhook delivery failed: {WebhookId} ({StatusCode})",
+                    _logger.LogDebug(
+                        "Webhook delivered successfully: {WebhookId} ({StatusCode})",
                         webhook.WebhookId,
                         response.StatusCode);
+                    return;
+                }
 
-                    // Convert HTTP error to exception to trigger retry policy
-                    throw new HttpRequestException($"Webhook delivery failed with status code: {response.StatusCode}");
-                }, default);
-            }
-            catch (Exception ex) when (ex is HttpRequestException or TimeoutException)
-            {
-                _logger.LogError(ex, "Webhook delivery failed after retries: {WebhookId}", webhook.WebhookId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error delivering webhook: {WebhookId}", webhook.WebhookId);
-            }
+                _logger.LogWarning(
+                    "Webhook delivery failed: {WebhookId} ({StatusCode})",
+                    webhook.WebhookId,
+                    response.StatusCode);
+
+                // Convert HTTP error to exception to trigger retry policy
+                throw new HttpRequestException($"Webhook delivery failed with status code: {response.StatusCode}");
+            }, default);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TimeoutException)
+        {
+            _logger.LogError(ex, "Webhook delivery failed after retries: {WebhookId}", webhook.WebhookId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error delivering webhook: {WebhookId}", webhook.WebhookId);
         }
     }
 }

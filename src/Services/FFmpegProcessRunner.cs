@@ -7,6 +7,7 @@
 
 using System.Diagnostics;
 using System.Globalization;
+
 using FFmpegDotnetWrapper.Models;
 
 namespace FFmpegDotnetWrapper.Services;

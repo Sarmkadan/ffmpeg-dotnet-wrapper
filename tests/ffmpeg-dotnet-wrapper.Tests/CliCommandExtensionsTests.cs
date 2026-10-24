@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+
 using FFmpegDotnetWrapper.Cli;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace FFmpegDotnetWrapper.Tests;

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FFmpegDotnetWrapper.Integration
-{
+namespace FFmpegDotnetWrapper.Integration;
+
 	/// <summary>
 	/// Provides extension methods for <see cref="WebhookEndpoint"/> to enhance configuration validation, header management, and event handling.
 	/// </summary>
@@ -84,4 +84,3 @@ namespace FFmpegDotnetWrapper.Integration
 			return endpoint.EventTypes.Contains(eventType);
 		}
 	}
-}

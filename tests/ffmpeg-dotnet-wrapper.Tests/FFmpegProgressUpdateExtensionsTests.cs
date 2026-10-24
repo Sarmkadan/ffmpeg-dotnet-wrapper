@@ -1,5 +1,7 @@
 using FFmpegDotnetWrapper.Models;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace ffmpeg_dotnet_wrapper_tests;

@@ -1,10 +1,13 @@
 namespace FFmpegDotnetWrapper.Tests;
 
-using Xunit;
-using FluentAssertions;
-using FFmpegDotnetWrapper.Exceptions;
 using System;
 using System.Collections.Generic;
+
+using FFmpegDotnetWrapper.Exceptions;
+
+using FluentAssertions;
+
+using Xunit;
 
 public class OptionsValidationExceptionTests
 {
