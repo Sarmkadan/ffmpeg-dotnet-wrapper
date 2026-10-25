@@ -4062,3 +4062,22 @@ File.WriteAllText("operations.csv", metrics.ExportAsCSV());
 // Start a new measurement period.
 metrics.Reset();
 ```
+
+## Validation Helper Classes
+
+Static `*Validation` classes that check invariants for specific types. Most expose `Validate` (returns a list of problems), `IsValid`, and `EnsureValid` as extension methods.
+
+| Class | File | Purpose |
+|-------|------|---------|
+| `BackgroundJobValidation` | `src/BackgroundJobs/BackgroundJobValidation.cs` | Checks background job state, progress, timestamps, and other invariants. |
+| `SubtitleSettingsValidation` | `src/Models/SubtitleSettingsValidation.cs` | Validates `SubtitleSettings` values. |
+| `FFmpegServiceValidation` | `src/Services/FFmpegServiceValidation.cs` | Checks that an `IFFmpegService` instance is non-null and properly initialized. |
+| `ServiceExceptionValidation` | `src/Exceptions/ServiceExceptionValidation.cs` | Validates `ServiceException` instances. |
+| `ProcessExecutionExceptionValidation` | `src/Exceptions/ProcessExecutionExceptionValidation.cs` | Validates `ProcessExecutionException` instances. |
+| `RateLimitPolicyValidation` | `src/Middleware/RateLimitPolicyValidation.cs` | Ensures a `RateLimitPolicy` defines valid rate limits. |
+| `JsonOutputFormatterValidation` | `src/Serialization/JsonOutputFormatterValidation.cs` | Checks that a `JsonOutputFormatter` is properly configured. |
+| `FFmpegOperationValidation` | `src/Models/FFmpegOperationValidation.cs` | Validates `FFmpegOperation` instances. |
+| `ConversionResultValidation` | `src/Models/ConversionResultValidation.cs` | Validates and verifies `ConversionResult` instances. |
+| `StreamingPipelineOptionsValidation` | `src/Configuration/StreamingPipelineOptionsValidation.cs` | Validates `StreamingPipelineOptions` configuration. |
+| `MediaRepositoryValidation` | `src/Repository/MediaRepositoryValidation.cs` | Validates a `MediaRepository` and its `MediaFile` entries, plus ID, path, date, and number helpers. |
+| `CliOutputFormatterValidation` | `src/Cli/CliOutputFormatterValidation.cs` | Validates inputs to CLI output formatting (console width, colors, percentages, widths, strings, messages). |
