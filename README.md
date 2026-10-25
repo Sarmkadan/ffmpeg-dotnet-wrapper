@@ -2,6 +2,66 @@
 
 A strongly-typed .NET wrapper around the `ffmpeg` and `ffprobe` command-line tools. It provides services for transcoding, trimming, merging, watermarking, subtitles, thumbnails, GIF export, and adaptive bitrate streaming, with a fluent settings API. It also includes background jobs, an optional REST API, and a CLI.
 
+## Installation
+
+Clone the repository and build it with the .NET 10 SDK:
+
+```bash
+git clone https://github.com/sarmkadan/ffmpeg-dotnet-wrapper.git
+cd ffmpeg-dotnet-wrapper
+dotnet build -c Release
+```
+
+The `ffmpeg` and `ffprobe` executables must be on `PATH`. If they are installed elsewhere, pass their full paths through `FFmpegWrapperOptions` when you register the services:
+
+```csharp
+services.AddFFmpegWrapper(options =>
+{
+    options.FFmpegPath = "/opt/ffmpeg/bin/ffmpeg";
+    options.FFprobePath = "/opt/ffmpeg/bin/ffprobe";
+});
+```
+
+## Quick Start
+
+Register the services with `AddFFmpegWrapper` (from `FFmpegDotnetWrapper.Configuration`), resolve `IFFmpegService` from the container, and transcode a file to an H.264/AAC MP4:
+
+```csharp
+using FFmpegDotnetWrapper.Configuration;
+using FFmpegDotnetWrapper.Constants;
+using FFmpegDotnetWrapper.Models;
+using FFmpegDotnetWrapper.Services;
+using Microsoft.Extensions.DependencyInjection;
+
+var services = new ServiceCollection();
+services.AddFFmpegWrapper(options =>
+{
+    options.DefaultTimeout = TimeSpan.FromMinutes(10);
+});
+
+using var provider = services.BuildServiceProvider();
+var ffmpeg = provider.GetRequiredService<IFFmpegService>();
+
+var input = new MediaFile("input.mov");
+var settings = new TranscodeSettings
+{
+    VideoCodec = VideoCodec.H264,
+    AudioCodec = AudioCodec.AAC,
+    Container = ContainerFormat.MP4
+};
+
+var result = await ffmpeg.TranscodeAsync(input, "output.mp4", settings);
+
+if (result.IsSuccess)
+{
+    Console.WriteLine($"Wrote {result.OutputFilePath} in {result.Duration}.");
+}
+else
+{
+    Console.WriteLine($"Transcode failed (exit code {result.ExitCode}): {result.ErrorMessage}");
+}
+```
+
 ## Requirements
 
 - `ffmpeg` (and `ffprobe`) installed and available on `PATH`
@@ -10,6 +70,8 @@ A strongly-typed .NET wrapper around the `ffmpeg` and `ffprobe` command-line too
 ## Table of Contents
 
 **Getting Started**
+- [Installation](#installation)
+- [Quick Start](#quick-start)
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
 - [Inspecting media](#inspecting-media)
