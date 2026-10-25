@@ -4306,3 +4306,27 @@ Dictionary<int, int> countByPriority = queuedJobs
     .GroupByPriority()
     .ToDictionary(g => g.Key, g => g.Count());
 ```
+
+## Exception Hierarchy
+
+Almost every library exception derives from `FFmpegException`. The exceptions `CircuitBreakerOpenException` and `RetryFailedException` derive directly from `System.Exception`.
+
+```text
+Exception
+├── FFmpegException                              - base type; ExitCode, ErrorOutput, Context dictionary
+│   ├── InvalidMediaFileException                - thrown by MediaFile for an empty path, a missing file, or invalid probe data; extra: FilePath
+│   ├── FFmpegProcessException                   - thrown when an ffmpeg/ffprobe run fails or times out; extra: Timeout
+│   ├── InvalidOperationConfigurationException   - thrown by settings types (TrimSettings, TranscodeSettings, WatermarkSettings, ...) when a value is invalid; extra: ConfigurationKey
+│   ├── UnsupportedOperationException            - intended for unsupported operations; not thrown by library code at present; no extra properties
+│   ├── InvalidStreamSelectionException          - thrown by StreamSelector for an invalid stream selection; extra: SelectorDescription, AvailableStreams
+│   ├── FfmpegNotFoundException                  - thrown by FfmpegRunnerOptions when the ffmpeg executable cannot be located; no extra properties
+│   ├── ValidationException                      - thrown when input validation fails; extra: ValidationErrors (field name to error messages)
+│   │   └── OptionsValidationException           - thrown by ConversionOptions and FfmpegRunnerOptions with every violation at once; extra: Violations
+│   ├── RepositoryException                      - thrown by MediaRepository on a duplicate add or a missing ID; extra: RepositoryName
+│   ├── ConfigurationException                   - thrown for an invalid configuration value; created through ConfigurationExceptionExtensions; extra: ConfigurationKey
+│   ├── ServiceException                         - thrown by service-layer code on failure; created through ServiceExceptionExtensions; extra: ServiceName
+│   ├── FileOperationException                   - thrown when a file operation fails (I/O errors are wrapped); extra: FilePath
+│   └── ProcessExecutionException                - thrown when a process exits with an error or ffprobe output cannot be parsed; extra: ExitCode, ErrorOutput (inherited)
+├── CircuitBreakerOpenException                  - thrown by CircuitBreakerRetryPolicy while the circuit is Open, instead of running the operation; no extra properties
+└── RetryFailedException                         - thrown by ExponentialBackoffRetryPolicy and HttpClientFactory after the last retry attempt fails; the last error is InnerException; extra: Attempts (not yet set by the constructor, so it reads 0)
+```
