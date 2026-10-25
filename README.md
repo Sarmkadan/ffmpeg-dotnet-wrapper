@@ -4389,3 +4389,153 @@ dotnet run -- gif input.mp4 out.gif --max-width 320 --loop 0
 - Non-zero: only when an exception escapes `Main`, such as one thrown while building the service provider or resolving `ILogger<Program>` before the `try` block. The .NET runtime then reports the unhandled exception.
 
 The CLI defines no exit codes of its own. `ParseCommand` returns `null` for an unknown command, but nothing maps that to an exit code.
+
+## Configuration Options Reference
+
+`src/Configuration/FFmpegOptions.cs` defines the options classes that the host binds from configuration. Each top-level class has a `Section` constant that names its key in `appsettings.json`. Defaults below are the property initializers in source.
+
+`FFmpegOptions` does not contain the other classes as properties. Each class is a separate section, so the host binds each one on its own:
+
+```csharp
+services.Configure<FFmpegOptions>(configuration.GetSection(FFmpegOptions.Section));
+services.Configure<CachingOptions>(configuration.GetSection(CachingOptions.Section));
+services.Configure<RateLimitingOptions>(configuration.GetSection(RateLimitingOptions.Section));
+services.Configure<WebhookOptions>(configuration.GetSection(WebhookOptions.Section));
+services.Configure<LoggingOptions>(configuration.GetSection(LoggingOptions.Section));
+services.Configure<CliOptions>(configuration.GetSection(CliOptions.Section));
+```
+
+`AddFFmpegWrapperWithConfiguration` in `src/Configuration/ApplicationStartup.cs` configures `FFmpegOptions`, `CachingOptions` and `RateLimitingOptions`, but it takes delegates rather than configuration sections. `WebhookOptions`, `LoggingOptions` and `CliOptions` are not referenced anywhere else in `src/`, so they only take effect if the host reads them.
+
+### CachingOptions (`Caching`)
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `Enabled` | `bool` | `true` | Enable in-memory caching of media metadata. |
+| `MaxCacheSize` | `int` | `1000` | Maximum number of entries in the cache. |
+| `DefaultExpirationMinutes` | `int` | `60` | Default expiration time for cache entries, in minutes. |
+| `EnabledCacheTypes` | `List<string>` | `["Metadata", "ProbeResults"]` | Cache data types to enable (`Metadata`, `ProbeResults`, `ConversionResults`). |
+
+### RateLimitingOptions (`RateLimiting`)
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `Enabled` | `bool` | `true` | Enable rate limiting. |
+| `TranscodeOperationsPerHour` | `int` | `5` | Maximum transcode operations per hour per user. |
+| `WatermarkOperationsPerHour` | `int` | `20` | Maximum watermark operations per hour per user. |
+| `MergeOperationsPerHour` | `int` | `10` | Maximum merge operations per hour per user. |
+| `WindowSeconds` | `int` | `3600` | Global rate limit window, in seconds. |
+| `PerUserLimiting` | `bool` | `true` | Enable per-user limiting in addition to global limits. |
+
+### WebhookOptions (`Webhooks`)
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `Enabled` | `bool` | `false` | Enable webhook delivery of events. |
+| `MaxRetries` | `int` | `3` | Maximum number of retries for webhook delivery. |
+| `TimeoutSeconds` | `int` | `30` | Request timeout for webhook calls, in seconds. |
+| `HttpClientName` | `string` | `"webhook"` | HTTP client name for webhook delivery (from `HttpClientFactory`). |
+| `PreConfiguredWebhooks` | `List<PreConfiguredWebhook>` | empty list | Pre-configured webhook endpoints. Bound from `Webhooks:PreConfiguredWebhooks`. |
+
+### PreConfiguredWebhook (`Webhooks:PreConfiguredWebhooks[]`)
+
+This class has no `Section` constant. Each array item is bound under `WebhookOptions.PreConfiguredWebhooks`.
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `Name` | `string` | `""` | Display name of the endpoint. |
+| `Url` | `string` | `""` | Endpoint URL that receives the events. |
+| `AuthToken` | `string?` | `null` | Optional auth token for the endpoint. Keep it out of source control (user secrets or environment variables). |
+| `EventTypes` | `List<string>` | empty list | Event type names to deliver, such as `OperationStartedEvent`, `OperationCompletedEvent` or `OperationFailedEvent`. An empty list delivers all events. |
+| `Enabled` | `bool` | `true` | Whether this endpoint is active. |
+
+### LoggingOptions (`Logging`)
+
+The key `Logging` is also used by the ASP.NET Core and `Microsoft.Extensions.Logging` default configuration. Those readers look only at `Logging:LogLevel`, so the extra keys in this section are ignored by them.
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `LogRequestBody` | `bool` | `true` | Log request bodies. |
+| `LogResponseBody` | `bool` | `false` | Log response bodies. |
+| `LogPerformanceMetrics` | `bool` | `true` | Log performance metrics. |
+| `LogFFmpegCommands` | `bool` | `false` | Log FFmpeg command lines. |
+| `MaxValueLength` | `int` | `500` | Maximum length of values in logs, to keep large blobs out of the log. |
+| `IncludeStackTraces` | `bool` | `true` | Include stack traces in error logs. |
+
+### CliOptions (`Cli`)
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `EnableColoredOutput` | `bool` | `true` | Enable colored console output. |
+| `ShowProgressBars` | `bool` | `true` | Show progress bars for long operations. |
+| `VerbosityLevel` | `int` | `1` | Verbosity: `0` = Quiet, `1` = Normal, `2` = Verbose, `3` = Debug. |
+| `DefaultOutputFormat` | `string` | `"Text"` | Default output format: `JSON`, `CSV` or `Text`. |
+
+### Full appsettings.json example
+
+This example sets every `FFmpegOptions` property that has a non-null default, and the other sections to their defaults, except for `Webhooks`, which has one example endpoint. The nullable properties `FFmpegPath`, `FFprobePath` and `TemporaryDirectory` are omitted. The endpoint URL is a placeholder, and `AuthToken` is left out. Set it from a secret store, not from this file.
+
+```json
+{
+  "FFmpeg": {
+    "OperationTimeoutSeconds": 600,
+    "MaxFileSizeBytes": 53687091200,
+    "EnableHardwareAcceleration": false,
+    "EncodingPreset": "medium",
+    "KeepTemporaryFiles": false,
+    "VerboseLogging": false,
+    "DefaultQuality": 23,
+    "DefaultAudioBitrate": 128,
+    "DefaultVideoBitrate": 0,
+    "AllowConcurrentOperations": true,
+    "MaxConcurrentOperations": 0,
+    "SupportedFormats": [ "mp4", "mkv", "webm", "avi", "mov", "flv", "3gp", "ts" ],
+    "ValidatePaths": true,
+    "ValidateOutputPath": true,
+    "RetryAttempts": 1,
+    "RetryDelayMs": 1000
+  },
+  "Caching": {
+    "Enabled": true,
+    "MaxCacheSize": 1000,
+    "DefaultExpirationMinutes": 60,
+    "EnabledCacheTypes": [ "Metadata", "ProbeResults" ]
+  },
+  "RateLimiting": {
+    "Enabled": true,
+    "TranscodeOperationsPerHour": 5,
+    "WatermarkOperationsPerHour": 20,
+    "MergeOperationsPerHour": 10,
+    "WindowSeconds": 3600,
+    "PerUserLimiting": true
+  },
+  "Webhooks": {
+    "Enabled": false,
+    "MaxRetries": 3,
+    "TimeoutSeconds": 30,
+    "HttpClientName": "webhook",
+    "PreConfiguredWebhooks": [
+      {
+        "Name": "ops-dashboard",
+        "Url": "https://hooks.example.com/ffmpeg",
+        "EventTypes": [ "OperationCompletedEvent", "OperationFailedEvent" ],
+        "Enabled": true
+      }
+    ]
+  },
+  "Logging": {
+    "LogRequestBody": true,
+    "LogResponseBody": false,
+    "LogPerformanceMetrics": true,
+    "LogFFmpegCommands": false,
+    "MaxValueLength": 500,
+    "IncludeStackTraces": true
+  },
+  "Cli": {
+    "EnableColoredOutput": true,
+    "ShowProgressBars": true,
+    "VerbosityLevel": 1,
+    "DefaultOutputFormat": "Text"
+  }
+}
+```
