@@ -1,4 +1,11 @@
-// ... (rest of README.md content remains unchanged)
+# FFmpeg .NET Wrapper
+
+A strongly-typed .NET wrapper around the `ffmpeg` and `ffprobe` command-line tools. It provides services for transcoding, trimming, merging, watermarking, subtitles, thumbnails, GIF export, and adaptive bitrate streaming, with a fluent settings API. It also includes background jobs, an optional REST API, and a CLI.
+
+## Requirements
+
+- `ffmpeg` (and `ffprobe`) installed and available on `PATH`
+- .NET SDK 10.0 (the repository's `global.json` pins `10.0.100`)
 
 ## Table of Contents
 
