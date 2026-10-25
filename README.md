@@ -4118,3 +4118,191 @@ Console.WriteLine(copy?.Metadata["title"]);                 // Demo
 ```
 
 `Name`, `FileSize`, and `Extension` are derived from `FilePath` and are recomputed on load rather than trusted from the JSON.
+
+## Collection (Enumerable) Extensions
+
+The following extension methods operate on any `IEnumerable<T>` of the types below. They are declared in static classes, so bring the namespace into scope with `using` before calling them.
+
+### MediaFileEnumerableExtensions
+
+Namespace: `FFmpegDotnetWrapper.Models`. Aggregates and filters sequences of `MediaFile`.
+
+#### `GetTotalFileSize`
+
+```csharp
+public static long GetTotalFileSize(this IEnumerable<MediaFile> files)
+```
+
+Sums `MediaFile.FileSize` across the sequence, skipping `null` elements. Returns `0` for an empty sequence. Throws `ArgumentNullException` when `files` is `null`.
+
+```csharp
+using FFmpegDotnetWrapper.Models;
+
+var inputs = new List<MediaFile>
+{
+    new() { FilePath = "clip-a.mp4" },
+    new() { FilePath = "clip-b.mp4" },
+};
+
+long bytes = inputs.GetTotalFileSize();
+Console.WriteLine($"{bytes / 1024d / 1024d:F2} MB");
+
+// LINQ-style: total size of only the large files
+long largeBytes = inputs
+    .Where(f => f.FileSize > 100 * 1024 * 1024)
+    .GetTotalFileSize();
+```
+
+#### `GetTotalDuration`
+
+```csharp
+public static TimeSpan GetTotalDuration(this IEnumerable<MediaFile> files)
+```
+
+Sums `MediaFile.Duration` for every non-null element that has a known duration. Files with no duration are ignored. Returns `TimeSpan.Zero` when nothing qualifies. Throws `ArgumentNullException` when `files` is `null`.
+
+```csharp
+TimeSpan total = mediaFiles.GetTotalDuration();
+Console.WriteLine(total.ToString(@"hh\:mm\:ss"));
+
+// LINQ-style: duration of the video files only
+TimeSpan videoTotal = mediaFiles
+    .WithExtension("mp4")
+    .GetTotalDuration();
+```
+
+#### `WithExtension`
+
+```csharp
+public static IEnumerable<MediaFile> WithExtension(this IEnumerable<MediaFile> files, string extension)
+```
+
+Lazily filters the sequence to non-null files whose `MediaFile.Extension` matches `extension`. The comparison is case-insensitive, and the leading dot is optional (`".mkv"` and `"mkv"` are equivalent). Throws `ArgumentNullException` when `files` is `null`, and `ArgumentException` when `extension` is `null`, empty, or whitespace.
+
+```csharp
+IEnumerable<MediaFile> mkvFiles = mediaFiles.WithExtension(".MKV");
+
+// Chained with other LINQ operators
+var largestMp4 = mediaFiles
+    .WithExtension("mp4")
+    .OrderByDescending(f => f.FileSize)
+    .FirstOrDefault();
+```
+
+### ConversionResultEnumerableExtensions
+
+Namespace: `FFmpegDotnetWrapper.Models`. Summarizes sequences of `ConversionResult`.
+
+#### `GetSuccessRate`
+
+```csharp
+public static double GetSuccessRate(this IEnumerable<ConversionResult> results)
+```
+
+Returns the percentage (0–100) of results whose `IsSuccess` is `true`. Returns `0` for an empty sequence. Throws `ArgumentNullException` when `results` is `null`.
+
+```csharp
+double rate = conversionResults.GetSuccessRate();
+Console.WriteLine($"Success rate: {rate:F1}%");
+
+// LINQ-style: success rate of only the results that took longer than 30 seconds
+double slowRate = conversionResults
+    .Where(r => r.Duration > TimeSpan.FromSeconds(30))
+    .GetSuccessRate();
+```
+
+#### `CountFailed`
+
+```csharp
+public static int CountFailed(this IEnumerable<ConversionResult> results)
+```
+
+Counts results whose `IsSuccess` is `false`. Throws `ArgumentNullException` when `results` is `null`.
+
+```csharp
+int failures = conversionResults.CountFailed();
+
+// LINQ-style: failures among results that took longer than 30 seconds
+int slowFailures = conversionResults
+    .Where(r => r.Duration > TimeSpan.FromSeconds(30))
+    .CountFailed();
+```
+
+#### `GetTotalOutputSizeBytes`
+
+```csharp
+public static long GetTotalOutputSizeBytes(this IEnumerable<ConversionResult> results)
+```
+
+Sums `MediaFile.FileSize` of `OutputMedia` for successful results that have output metadata. Failed results and results without `OutputMedia` are skipped. Returns `0` when none qualify. Throws `ArgumentNullException` when `results` is `null`.
+
+```csharp
+long outputBytes = conversionResults.GetTotalOutputSizeBytes();
+
+// LINQ-style: output size as a percentage of the original input size known to the caller
+long originalBytes = sourceFiles.GetTotalFileSize();
+double ratio = outputBytes * 100.0 / originalBytes;
+```
+
+### QueuedJobEnumerableExtensions
+
+Namespace: `FFmpegDotnetWrapper.BackgroundJobs`. Orders, filters, and groups sequences of `QueuedJob`. Lower `Priority` values are more urgent (`1` is the highest).
+
+#### `OrderByPriorityThenEnqueued`
+
+```csharp
+public static IEnumerable<QueuedJob> OrderByPriorityThenEnqueued(this IEnumerable<QueuedJob> jobs)
+```
+
+Orders jobs by `QueuedJob.Priority` ascending, then by `QueuedJob.EnqueuedAt` ascending, so the oldest job wins ties. Throws `ArgumentNullException` when `jobs` is `null`.
+
+```csharp
+foreach (var job in queuedJobs.OrderByPriorityThenEnqueued())
+{
+    Console.WriteLine($"{job.JobId} (priority {job.Priority})");
+}
+
+// LINQ-style: next job to run, taking the first in the ordering
+QueuedJob? next = queuedJobs.OrderByPriorityThenEnqueued().FirstOrDefault();
+```
+
+#### `FilterPending`
+
+```csharp
+public static IEnumerable<QueuedJob> FilterPending(this IEnumerable<QueuedJob> jobs)
+```
+
+Keeps jobs that are ready to run: those with no `DueAt`, or whose `DueAt` is at or before the current UTC time. The check uses `DateTime.UtcNow` at the time of the call. Throws `ArgumentNullException` when `jobs` is `null`.
+
+```csharp
+var ready = queuedJobs
+    .FilterPending()
+    .OrderByPriorityThenEnqueued()
+    .Take(10)
+    .ToList();
+
+// LINQ-style: pending jobs that have already been retried at least once
+var retriedAndReady = queuedJobs
+    .FilterPending()
+    .Where(job => job.RetryCount > 0);
+```
+
+#### `GroupByPriority`
+
+```csharp
+public static IEnumerable<IGrouping<int, QueuedJob>> GroupByPriority(this IEnumerable<QueuedJob> jobs)
+```
+
+Groups jobs by `QueuedJob.Priority`. Groups are returned in ascending key order, so priority `1` comes first. Throws `ArgumentNullException` when `jobs` is `null`.
+
+```csharp
+foreach (var group in queuedJobs.GroupByPriority())
+{
+    Console.WriteLine($"Priority {group.Key}: {group.Count()} job(s)");
+}
+
+// LINQ-style: count of jobs per priority, as a dictionary
+Dictionary<int, int> countByPriority = queuedJobs
+    .GroupByPriority()
+    .ToDictionary(g => g.Key, g => g.Count());
+```
