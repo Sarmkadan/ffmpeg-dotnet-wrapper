@@ -24,10 +24,16 @@
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="7.0.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../FFmpegDotnetWrapper.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../appsettings.example.json" Link="appsettings.example.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
