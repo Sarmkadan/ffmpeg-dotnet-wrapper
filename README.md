@@ -3993,3 +3993,72 @@ string duration = await ProcessUtilitiesWithRetry.ExecuteWithRetryAsync(
 ```
 
 Note that the `ExecuteWithRetryAsync` example throws `IOException` on a non-zero exit so the policy's predicate can retry it. This is a design choice in the example; it is not built into the wrapper.
+
+## OperationStatistics
+
+The `OperationStatistics` class (namespace `FFmpegDotnetWrapper.Monitoring`) is an in-memory aggregator that counts attempts, successes and failures per `OperationType` and tracks execution time and bytes processed for successful runs. It builds on the per-type `OperationStats` record, which it creates on first use for each operation type. Use it to collect metrics from your own FFmpeg calls, then read them back as a snapshot, a performance report, or CSV.
+
+### Public methods
+
+| Method | Description |
+|--------|-------------|
+| `void RecordSuccess(OperationType type, TimeSpan executionTime, long bytesProcessed)` | Counts an attempt and a success. Adds the execution time and bytes to the totals and updates the min/max execution time. |
+| `void RecordFailure(OperationType type)` | Counts an attempt and a failure. It does not change execution time, bytes, or min/max. |
+| `OperationStats? GetStatistics(OperationType type)` | Returns the stats for one type, or `null` if nothing was recorded for it. |
+| `List<OperationStats> GetAllStatistics()` | Returns one entry per type that has been recorded. |
+| `OperationStats GetAggregateStatistics()` | Returns a new `OperationStats` (with `Type = OperationType.Unknown`) that sums the counts, bytes, and times of all types. |
+| `string GetPerformanceReport()` | Returns a plain-text report with a summary, aggregate performance numbers, and a per-type breakdown. |
+| `string ExportAsCSV()` | Returns a header row plus one CSV row per type (`OperationType,TotalAttempts,Successful,Failed,SuccessRate,AverageTime,MinTime,MaxTime,ThroughputMBps`). Times are in seconds, with one decimal. |
+| `void Reset()` | Removes all recorded statistics. |
+| `string ToString()` | Returns the one-line summary of `GetAggregateStatistics()`. |
+
+`OperationStats` exposes these properties: `Type`, `TotalAttempts`, `SuccessfulOperations`, `FailedOperations`, `SuccessRate` (0-100), `TotalBytesProcessed`, `TotalExecutionTime`, `AverageExecutionTime`, `MinimumExecutionTime`, `MaximumExecutionTime`, `LastUpdated`, and `AverageThroughputMBps`. The setters are public, but the tracker is the only code that should change these values. Do not edit objects that `GetStatistics` or `GetAllStatistics` return.
+
+### Metric semantics
+
+- `AverageExecutionTime` is `TotalExecutionTime` divided by `TotalAttempts`. `TotalExecutionTime` only includes successful runs, but the divisor includes failures. The average is therefore pulled down by failures. Use `TotalExecutionTime` divided by `SuccessfulOperations` if you want the average for successful runs only.
+- `AverageThroughputMBps` is `TotalBytesProcessed / 1024 / 1024` divided by `TotalExecutionTime` in seconds. Bytes are truncated to whole mebibytes before the division. It is `0` when there is no execution time or no bytes.
+- `MinimumExecutionTime` starts at `TimeSpan.MaxValue` and `MaximumExecutionTime` at `TimeSpan.Zero`. A type with only failures keeps these defaults. The performance report and CSV print those values as-is, so `MinTime` can show a very large number for failure-only types.
+
+### Thread safety
+
+- Every public method on `OperationStatistics` takes a private lock, so `RecordSuccess`, `RecordFailure`, and the query methods can be called from multiple threads.
+- `GetAggregateStatistics()`, `GetPerformanceReport()`, and `ExportAsCSV()` return snapshots that are consistent with respect to a single call.
+- `GetStatistics()` and `GetAllStatistics()` return the live `OperationStats` objects that the tracker updates in place. Their properties are read outside the lock. If you read them while other threads are recording, copy the values you need first, or take a report or CSV snapshot instead.
+- `Reset()` clears the tracker's map. Any `OperationStats` objects you already hold keep their last values and no longer receive updates.
+
+### Example
+
+```csharp
+using System;
+using System.IO;
+using FFmpegDotnetWrapper.Constants;
+using FFmpegDotnetWrapper.Monitoring;
+
+var metrics = new OperationStatistics();
+
+// Record each run after it finishes. Use RecordFailure for runs that threw or exited with an error.
+var started = DateTime.UtcNow;
+// ... run the transcode ...
+metrics.RecordSuccess(OperationType.Transcode, DateTime.UtcNow - started, bytesProcessed: 157_286_400);
+
+metrics.RecordFailure(OperationType.Watermark);
+
+// Per-type lookup (null if this type was never recorded).
+OperationStats? transcode = metrics.GetStatistics(OperationType.Transcode);
+if (transcode is not null)
+{
+    Console.WriteLine($"Transcode success rate: {transcode.SuccessRate:0.0}%");
+}
+
+// Totals across all types.
+OperationStats total = metrics.GetAggregateStatistics();
+Console.WriteLine($"Total attempts: {total.TotalAttempts}, failed: {total.FailedOperations}");
+
+// Full report and CSV export.
+Console.WriteLine(metrics.GetPerformanceReport());
+File.WriteAllText("operations.csv", metrics.ExportAsCSV());
+
+// Start a new measurement period.
+metrics.Reset();
+```
