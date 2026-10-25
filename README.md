@@ -4,6 +4,7 @@
 
 **Getting Started**
 - [Getting Started](#getting-started)
+- [Configuration](#configuration)
 - [Inspecting media](#inspecting-media)
 - [IntegrationExample](#integrationexample)
 
@@ -198,6 +199,40 @@ How it works:
 - **Runner and request.** `FFmpegProcessRunner.RunAsync` starts `ffmpeg` with an `FFmpegProcessRequest` and returns an `FFmpegProcessResult`, which contains the exit code, execution time, and captured stderr.
 - **Progress.** Setting `ParseProgressFromStdOut = true` makes the runner read FFmpeg's `-progress pipe:1` output and report an `FFmpegProgressUpdate` to your `IProgress<FFmpegProgressUpdate>` for each update. `PercentComplete` is clamped to 0–100. Percentages need `TotalDuration`, which the example takes from the `ffmpeg -i` banner. If the duration is unknown, the percentage stays at 0.
 - **Cancellation.** The `CancellationToken` is passed to `RunAsync`, and Ctrl+C cancels it. The runner sends `q` so FFmpeg can finalize the output, waits up to 5 seconds, then kills the process. The result reports `WasCancelled == true`.
+
+## Configuration
+
+`FfmpegDotnetWrapperOptions` holds the settings that control how FFmpeg and FFprobe are launched. It is bound from the `FfmpegDotnetWrapper` section of configuration, so it works with `appsettings.json`, environment variables, and user secrets. A complete example lives in [`appsettings.example.json`](appsettings.example.json).
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `FfmpegPath` | string | `null` | Full path to the `ffmpeg` executable. When empty, `ffmpeg` is resolved from `PATH`. |
+| `FfprobePath` | string | `null` | Full path to the `ffprobe` executable. When empty, `ffprobe` is resolved from `PATH`. |
+| `TimeoutSeconds` | int | `300` | Maximum run time of one FFmpeg process, in seconds. Must be between `1` and `3600`. |
+| `LogLevel` | string | `"info"` | Value passed to `ffmpeg -loglevel`. Must be one of `quiet`, `panic`, `fatal`, `error`, `warning`, `info`, `verbose`, `debug`, `trace`. |
+| `WorkingDirectory` | string | `null` | Directory that FFmpeg runs in. When set, the directory must exist. `null` uses the current process directory. |
+
+Register the options and bind the section in `Program.cs`:
+
+```csharp
+using FFmpegDotnetWrapper.Configuration;
+
+builder.Services
+    .AddFfmpegDotnetWrapperOptions()
+    .Bind(builder.Configuration.GetSection(FfmpegDotnetWrapperOptions.SectionName))
+    .ValidateOnStart();
+```
+
+`IOptions<FfmpegDotnetWrapperOptions>` is validated whenever it is resolved. With `ValidateOnStart()`, an invalid value stops the host at startup and the message names each failing setting. Without it, the error is thrown on the first access to `.Value`. `FfmpegDotnetWrapperOptions.ToRunnerOptions()` converts the bound values into the `FfmpegRunnerOptions` that `AddFfmpeg` takes.
+
+Environment variables use `__` as the section separator:
+
+```bash
+export FfmpegDotnetWrapper__TimeoutSeconds=600
+export FfmpegDotnetWrapper__FfmpegPath=/opt/ffmpeg/bin/ffmpeg
+```
+
+None of these settings is a secret, and the defaults contain no credentials. If your host adds settings that are secret, put them in user secrets or environment variables rather than in a file committed to source control.
 
 ## Inspecting media
 
