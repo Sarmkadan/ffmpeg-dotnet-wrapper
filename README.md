@@ -3841,3 +3841,63 @@ public sealed class OperationStartedHandler : IEventHandler<OperationStartedEven
     }
 }
 ```
+
+## PathValidation
+
+The `PathValidation` static class guards file-system paths that come from callers (input files, output files, output directories) so that they cannot escape a trusted base directory. Each method first resolves the input to an absolute, normalized path with `Path.GetFullPath`, converts `/` and `\` to the platform separator, and resolves `.` and `..` segments. The resolved path must then start with the normalized base directory (compared case-insensitively). Anything that resolves outside the base is rejected: `../` traversal, an absolute path to another location, or a sibling directory whose name shares the base's prefix (`/srv/media2` against `/srv/media`).
+
+Relative paths are resolved against the process working directory, not against the base directory, so pass absolute paths or make sure the working directory is what you expect. The check is lexical: symbolic links and junctions are not followed, so a link inside the base directory that points elsewhere still passes. Paths that contain characters the platform rejects (for example a null character) or that are too long are reported as `ArgumentException`.
+
+The class exposes the following public methods:
+
+- **`ValidatePathWithinBaseDirectory(path, baseDirectory, paramName)`** checks any path without requiring that it exists. Returns the resolved absolute path. Rejects null, empty, or whitespace input and any path that resolves outside `baseDirectory`.
+- **`ValidateDirectoryWithinBaseDirectory(directoryPath, baseDirectory, paramName)`** applies the same checks to a directory path and returns the resolved path with a trailing directory separator. It does not require the directory to exist and does not create it.
+- **`ValidateExistingFileWithinBaseDirectory(filePath, baseDirectory, paramName)`** runs the same traversal check, then requires the file to exist. Returns the resolved file path.
+- **`ValidateOutputPathWithinBaseDirectory(outputPath, baseDirectory, paramName)`** validates a path that will be written to. It applies the same checks as `ValidatePathWithinBaseDirectory` and does not create anything on disk.
+- **`ValidateOutputDirectoryWithinBaseDirectory(outputDirectory, baseDirectory, paramName)`** validates a directory that will receive output and creates it if it does not exist. Returns the resolved path with a trailing directory separator.
+
+`paramName` becomes the `ParamName` of any `ArgumentException` thrown, so pass the name of the caller's parameter to make the error point at the right argument.
+
+### Exceptions
+
+| Exception | Thrown when |
+|-----------|-------------|
+| `ArgumentNullException` | `path`, `baseDirectory`, or the other input argument is `null`. |
+| `ArgumentNullException` | `paramName` is `null`. |
+| `ArgumentException` | `paramName` is empty or whitespace. |
+| `ArgumentException` | The path is empty or whitespace, contains characters the platform rejects, or is too long for the platform. |
+| `ArgumentException` | The resolved path lies outside the base directory (path traversal). The message includes the resolved path and the base directory. |
+| `FileNotFoundException` | `ValidateExistingFileWithinBaseDirectory` passes the traversal check but the file does not exist. |
+| `ArgumentException` | `ValidateOutputDirectoryWithinBaseDirectory` cannot create the directory because of an I/O error, missing permissions, or a too-long path. The inner exception holds the original error. |
+
+Example:
+
+```csharp
+using System.IO;
+using FFmpegDotnetWrapper.Utilities;
+
+string baseDir = "/srv/media";
+
+// Returns "/srv/media/input/clip.mp4". The file must exist, or FileNotFoundException is thrown.
+string input = PathValidation.ValidateExistingFileWithinBaseDirectory(
+    "/srv/media/input/clip.mp4", baseDir, "inputPath");
+
+// Creates "/srv/media/output" if it is missing and returns "/srv/media/output/"
+string outputDir = PathValidation.ValidateOutputDirectoryWithinBaseDirectory(
+    "/srv/media/output", baseDir, "outputDirectory");
+
+// Returns "/srv/media/output/thumb.jpg"
+string output = PathValidation.ValidateOutputPathWithinBaseDirectory(
+    Path.Combine(outputDir, "thumb.jpg"), baseDir, "outputPath");
+
+try
+{
+    // "/srv/media/../etc/passwd" resolves to "/srv/etc/passwd", which is outside the base
+    PathValidation.ValidatePathWithinBaseDirectory(
+        "/srv/media/../etc/passwd", baseDir, "inputPath");
+}
+catch (ArgumentException ex)
+{
+    Console.Error.WriteLine(ex.Message);
+}
+```
