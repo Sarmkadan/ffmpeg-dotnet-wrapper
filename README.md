@@ -2214,7 +2214,7 @@ Console.WriteLine(FormattingUtilities.TruncateString(longPath, 60));
 // Output: /home/user/videos/very/long/path/with/many/n...mp4
 
 // Sanitize strings for safe display
-var unsafeString = "Hello World\tLine1\nLine2";
+var unsafeString = "Hello\0World\tLine1\nLine2";
 Console.WriteLine(FormattingUtilities.SanitizeForDisplay(unsafeString));
 // Output: HelloWorld
 Line1
@@ -2614,9 +2614,9 @@ public void FormatETA_HalfwayThrough_ReturnsRemainingTimeEstimate()
 [Fact]
 public void SanitizeForDisplay_StringWithControlChars_RemovesThem()
 {
-    var unsafeString = "Hello World\tLine1\nLine2";
+    var unsafeString = "Hello\0World\tLine1\nLine2";
     var result = FormattingUtilities.SanitizeForDisplay(unsafeString);
-    Assert.DoesNotContain(" ", result);
+    Assert.DoesNotContain("\0", result);
     Assert.Contains("Line1", result);
     Assert.Contains("Line2", result);
 }
