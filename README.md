@@ -4330,3 +4330,62 @@ Exception
 ├── CircuitBreakerOpenException                  - thrown by CircuitBreakerRetryPolicy while the circuit is Open, instead of running the operation; no extra properties
 └── RetryFailedException                         - thrown by ExponentialBackoffRetryPolicy and HttpClientFactory after the last retry attempt fails; the last error is InnerException; extra: Attempts (not yet set by the constructor, so it reads 0)
 ```
+
+## Running the CLI (Program.cs)
+
+`src/Program.cs` (`Program.Main`) is an example console host for the wrapper. It does not read its command-line arguments and does not dispatch any command. It is excluded from the library project (`FFmpegDotnetWrapper.csproj`).
+
+### Service wiring
+
+`Main` builds a `ServiceCollection` and:
+
+1. Adds console logging with a minimum level of `Information`.
+2. Calls `AddFFmpegWrapper(...)` with `DefaultTimeout = 600 s` and `EnableDetailedLogging = true`.
+3. Builds the provider and resolves `ILogger<Program>`.
+4. Inside a `try` block, resolves `IFFmpegService` and calls `IsFFmpegAvailableAsync()`. If FFmpeg is missing it logs an error and returns; otherwise it logs `GetFFmpegVersionAsync()`.
+5. `RunExamplesAsync` resolves `IFFmpegService` and `TranscodeService`, then logs example `TranscodeSettings`, `TrimSettings`, `MergeSettings` and `WatermarkSettings` values. It runs no FFmpeg operation; the input files it names (`input1.mp4`, ...) are placeholders.
+
+### Arguments and commands
+
+`args` is ignored, and `CliCommandParser` (`src/Cli/CliCommandParser.cs`) is not used by `Program.cs`. The `gif` command defined by `RegisterGifExportCommands` (`src/Cli/GifExportCliCommands.cs`) is only exercised by the tests, so the entry point currently accepts no commands.
+
+If the parser were wired in, `CliCommandParser.ParseCommand` would apply these rules:
+
+- The first token is the command name, matched case-insensitively. An unknown name returns `null`.
+- `--name value` takes the next token as the value unless that token starts with `-`, in which case the option has no value (`null`).
+- Only single-character short options (`-s`) are recognized. Two-character short forms such as `-mw` and `-dt` are read as positional arguments.
+- Negative values cannot be passed: `--loop -1` leaves `loop` without a value, and `-1` is parsed as a separate option.
+- There is no `--name=value` syntax.
+- `ValidateCommand` reports any missing required positional argument.
+
+The registered `gif` command:
+
+| Argument / option | Short | Required | Default | Description |
+|---|---|---|---|---|
+| `source-path` | | yes | | Source video file. |
+| `output-path` | | yes | | Output GIF path. |
+| `--start` | `-s` | no | `00:00:00` | Segment start (`HH:MM:SS`). |
+| `--duration` | `-d` | no | `00:00:10` | Segment length (`HH:MM:SS`). |
+| `--fps` | `-f` | no | `10` | Output frame rate. |
+| `--width` | `-w` | no | `640` | Target width; height keeps the aspect ratio. |
+| `--max-width` | `-mw` | no | none | Maximum width; overrides `--width`. Use the long form (see above). |
+| `--dither` | `-dt` | no | `sierra2_4a` | Palette dithering mode. Use the long form (see above). |
+| `--loop` | `-l` | no | `-1` | Loop count; `-1` means infinite (see above for the negative-value limitation). |
+| `--quality` | `-q` | no | `medium` | `low`, `medium` or `high`. |
+
+### Sample invocations
+
+These show the argument syntax the parser accepts for `gif`. **They do not run today.** `dotnet run --` against this repository fails with `The current OutputType is 'Library'`, because the root project is a library and `Program.cs` is excluded from it. `make run` has the same problem: it passes `src/Program.cs` to `--project`.
+
+```bash
+dotnet run -- gif input.mp4 out.gif --start 00:00:05 --duration 00:00:03 --fps 12 --width 480
+dotnet run -- gif clip.mov clip.gif -s 00:01:00 -d 00:00:04 -q high --dither bayer
+dotnet run -- gif input.mp4 out.gif --max-width 320 --loop 0
+```
+
+### Exit codes
+
+- `0`: `Main` returns normally. This includes FFmpeg not being found, and exceptions thrown inside the `try` block, which are logged and not rethrown.
+- Non-zero: only when an exception escapes `Main`, such as one thrown while building the service provider or resolving `ILogger<Program>` before the `try` block. The .NET runtime then reports the unhandled exception.
+
+The CLI defines no exit codes of its own. `ParseCommand` returns `null` for an unknown command, but nothing maps that to an exit code.
