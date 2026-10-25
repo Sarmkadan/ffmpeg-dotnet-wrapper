@@ -4081,3 +4081,40 @@ Static `*Validation` classes that check invariants for specific types. Most expo
 | `StreamingPipelineOptionsValidation` | `src/Configuration/StreamingPipelineOptionsValidation.cs` | Validates `StreamingPipelineOptions` configuration. |
 | `MediaRepositoryValidation` | `src/Repository/MediaRepositoryValidation.cs` | Validates a `MediaRepository` and its `MediaFile` entries, plus ID, path, date, and number helpers. |
 | `CliOutputFormatterValidation` | `src/Cli/CliOutputFormatterValidation.cs` | Validates inputs to CLI output formatting (console width, colors, percentages, widths, strings, messages). |
+
+## JSON Serialization Extensions
+
+The repository currently has no `*JsonExtensions` classes. No file matching `*JsonExtensions.cs` exists under `src/`, and `MediaFile` has no `ToJson`/`FromJson` methods. The JSON support that does exist is `JsonOutputFormatter`:
+
+| File | Type | Methods | Notes |
+|------|------|---------|-------|
+| `src/Serialization/JsonOutputFormatter.cs` | `JsonOutputFormatter` | `Format<T>(ApiResponse<T>)`, `Format(ApiResponse)`, `Format<T>(T)`, `DeserializeApiResponse<T>(string)`, `Deserialize<T>(string)` | Excluded from the library build via `<Compile Remove>` in `FFmpegDotnetWrapper.csproj`, so it is not part of the NuGet package. See `docs/JsonOutputFormatter.md`. |
+
+### Round-trip example with `MediaFile`
+
+`MediaFile` has no dedicated JSON helpers, so serialize it with `System.Text.Json` directly. On deserialization, the `FilePath` setter checks that the file exists, so the file must be present at the same path:
+
+```csharp
+using System.Text.Json;
+using FFmpegDotnetWrapper.Models;
+
+var options = new JsonSerializerOptions { WriteIndented = true };
+
+var media = new MediaFile("/videos/input.mp4")
+{
+    Duration = TimeSpan.FromSeconds(90),
+    Width = 1920,
+    Height = 1080,
+    VideoCodec = "h264"
+};
+media.Metadata["title"] = "Demo";
+
+string json = JsonSerializer.Serialize(media, options);
+MediaFile? copy = JsonSerializer.Deserialize<MediaFile>(json, options);
+
+Console.WriteLine(copy?.FilePath == media.FilePath);        // True
+Console.WriteLine(copy?.Duration == media.Duration);        // True
+Console.WriteLine(copy?.Metadata["title"]);                 // Demo
+```
+
+`Name`, `FileSize`, and `Extension` are derived from `FilePath` and are recomputed on load rather than trusted from the JSON.
