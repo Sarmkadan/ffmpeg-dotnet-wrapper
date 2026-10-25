@@ -3901,3 +3901,95 @@ catch (ArgumentException ex)
     Console.Error.WriteLine(ex.Message);
 }
 ```
+
+## ProcessUtilitiesWithRetry
+
+The `ProcessUtilitiesWithRetry` static class wraps `ProcessUtilities.ExecuteProcessAsync` (and any other async operation) in an `IRetryPolicy`. Use it when a process call can fail for transient reasons and you want the library to try again. It adds no retry behavior of its own: the retry decisions, delays, and attempt limits all come from the policy you pass in. When `retryPolicy` is `null`, each method runs the operation exactly once.
+
+The class exposes the following public methods:
+
+- **`ExecuteProcessWithRetryAsync(fileName, arguments, retryPolicy, workingDirectory, timeout, cancellationToken)`** runs a process through `ProcessUtilities.ExecuteProcessAsync` and returns a `ProcessUtilities.ProcessResult`. Each retry starts a new process with the same arguments. Throws `ArgumentException` when `fileName` is null or empty.
+- **`ExecuteWithRetryAsync<T>(operation, retryPolicy, cancellationToken)`** runs any `Func<CancellationToken, Task<T>>` through the policy and returns its result. Use it to retry your own process or I/O code, including calls to `ProcessUtilities` that you make yourself.
+- **`ExecuteWithRetryAsync(operation, retryPolicy, cancellationToken)`** is the `Task`-returning overload of the same wrapper.
+
+Both `ExecuteWithRetryAsync` overloads throw `ArgumentNullException` when `operation` is null.
+
+### How it wraps ProcessUtilities
+
+`ExecuteProcessWithRetryAsync` passes the same `workingDirectory` and `timeout` to every attempt and forwards the `CancellationToken` to the policy, so cancellation stops both the running process and any pending retry delay. The policy calls the operation again only when the operation **throws** an exception that `ShouldRetry` accepts. `ProcessUtilities.ExecuteProcessAsync` does not throw for a non-zero exit code or a timeout; it returns a `ProcessResult` with `ExitCode` and `TimedOut` set. A `ProcessResult` with a non-zero exit code is therefore returned to the caller as-is and is **not** retried by this wrapper. Check `result.Success` after the call.
+
+If you need to retry on a bad exit code, make the operation throw when it sees one, and let your `shouldRetryPredicate` decide whether to retry it.
+
+### Retry parameters
+
+The retry parameters belong to the `IRetryPolicy` implementation. The library's default implementation is `ExponentialBackoffRetryPolicy`, with these constructor parameters:
+
+| Parameter | Default | Meaning |
+|-----------|---------|---------|
+| `maxAttempts` | `3` | Total attempts, including the first call. `1` means no retry. |
+| `initialDelayMilliseconds` | `100` | Delay before the first retry. Must be greater than zero. |
+| `backoffFactor` | `2.0` | Multiplier applied to the delay after each retry. Must be greater than `1.0`. |
+| `jitterFactor` | `0.5` | Random extra delay, from 0 up to `jitterFactor` times the base delay. Valid range is 0.0 to 1.0. |
+| `shouldRetryPredicate` | `null` | Replaces the default retry rules when set. |
+
+The delay before retry *n* is `initialDelayMilliseconds × backoffFactor^(n-1)`, plus jitter. With the defaults, retries wait about 100 ms and then about 200 ms, plus up to 50% jitter on each.
+
+The default `ShouldRetry` rules retry `TimeoutException`, `IOException`, and `ProcessExecutionException` with an exit code other than 1, 2, 126, 127, or 130. It does not retry `OperationCanceledException`, `ConfigurationException`, `ValidationException`, or `UnauthorizedAccessException`. Exceptions it does not recognize are not retried. The wrapper's own `InvalidOperationException` (thrown when `ProcessUtilities` cannot start the process) is not in the default retry list. Pass your own `shouldRetryPredicate` if you need a different set of rules.
+
+When all attempts fail, `ExponentialBackoffRetryPolicy` throws `RetryFailedException`. Catch it in the caller.
+
+### Example
+
+```csharp
+using System;
+using FFmpegDotnetWrapper.Policies;
+using FFmpegDotnetWrapper.Utilities;
+
+// Up to 4 attempts, starting at 200 ms, doubling each time.
+// Retry only on I/O and timeout exceptions.
+var retryPolicy = new ExponentialBackoffRetryPolicy(
+    maxAttempts: 4,
+    initialDelayMilliseconds: 200,
+    backoffFactor: 2.0,
+    jitterFactor: 0.25,
+    shouldRetryPredicate: ex => ex is IOException || ex is TimeoutException);
+
+using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+
+// Process call: each retry runs ffprobe again with the same arguments.
+ProcessUtilities.ProcessResult probe = await ProcessUtilitiesWithRetry.ExecuteProcessWithRetryAsync(
+    "ffprobe",
+    "-v error -show_entries format=duration -of csv=p=0 \"/srv/media/input/clip.mp4\"",
+    retryPolicy,
+    timeout: TimeSpan.FromSeconds(30),
+    cancellationToken: cts.Token);
+
+if (!probe.Success)
+{
+    // Non-zero exit codes and timeouts are returned here, not retried.
+    Console.Error.WriteLine($"ffprobe failed ({probe.ExitCode}): {probe.StandardError}");
+}
+
+// Custom operation: retry any async work, and turn a bad exit code into an exception
+// so the policy can see it.
+string duration = await ProcessUtilitiesWithRetry.ExecuteWithRetryAsync(
+    async ct =>
+    {
+        var result = await ProcessUtilities.ExecuteProcessAsync(
+            "ffprobe",
+            "-v error -show_entries format=duration -of csv=p=0 \"/srv/media/input/clip.mp4\"",
+            timeout: TimeSpan.FromSeconds(30),
+            cancellationToken: ct);
+
+        if (!result.Success)
+        {
+            throw new IOException($"ffprobe exited with {result.ExitCode}: {result.StandardError}");
+        }
+
+        return result.StandardOutput.Trim();
+    },
+    retryPolicy,
+    cts.Token);
+```
+
+Note that the `ExecuteWithRetryAsync` example throws `IOException` on a non-zero exit so the policy's predicate can retry it. This is a design choice in the example; it is not built into the wrapper.
