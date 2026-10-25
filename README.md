@@ -2225,65 +2225,6 @@ Console.WriteLine(FormattingUtilities.TitleCase("output-format")); // Output: Ou
 Console.WriteLine(FormattingUtilities.TitleCase("input_file-path")); // Output: Input File Path
 ```
 
-## MediaFileTests
-
-The `MediaFileTests` class provides unit tests for the `MediaFile` class, verifying that media file properties, constructors, and validation methods work correctly. It includes tests for file path validation, file properties extraction, video validation, metadata storage, and unique identifier generation.
-
-Here is an example usage of the `MediaFileTests` class with its public members:
-
-```csharp
-using FFmpegDotnetWrapper.Models;
-using FluentAssertions;
-using Xunit;
-
-// Create a new MediaFile instance using the default constructor
-var mediaFile = new MediaFile();
-
-// Verify default values
-mediaFile.Id.Should().NotBeEmpty();
-mediaFile.Name.Should().BeEmpty();
-mediaFile.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-mediaFile.Metadata.Should().BeEmpty();
-
-// Create a MediaFile instance from a real file path
-var mediaFileFromPath = new MediaFile(@"/home/user/videos/sample.mp4");
-
-// Verify file properties are correctly extracted
-mediaFileFromPath.FilePath.Should().NotBeEmpty();
-mediaFileFromPath.Name.Should().Be("sample");
-mediaFileFromPath.Extension.Should().Be(".mp4");
-mediaFileFromPath.FileSize.Should().BeGreaterThan(0);
-
-// Set and validate video metadata
-mediaFileFromPath.VideoCodec = "h264";
-mediaFileFromPath.AudioCodec = "aac";
-mediaFileFromPath.FrameRate = 30.0;
-mediaFileFromPath.Bitrate = 5000000;
-mediaFileFromPath.Duration = TimeSpan.FromSeconds(125);
-mediaFileFromPath.Width = 1920;
-mediaFileFromPath.Height = 1080;
-
-// Validate the media file as a valid video
-var act = () => mediaFileFromPath.ValidateAsVideo();
-act.Should().NotThrow();
-
-// Store arbitrary metadata for additional properties
-mediaFileFromPath.Metadata["encoder"] = "libx264";
-mediaFileFromPath.Metadata["profile"] = "High";
-mediaFileFromPath.Metadata["created-by"] = "FFmpeg .NET Wrapper";
-
-// Set descriptive properties
-mediaFileFromPath.Description = "Sample video for testing transcoding operations";
-mediaFileFromPath.ModifiedAt = DateTime.UtcNow;
-
-// Verify unique ID generation
-var anotherMediaFile = new MediaFile(@"/home/user/videos/another.mp4");
-anotherMediaFile.Id.Should().NotBe(mediaFileFromPath.Id);
-
-// Verify FilePath normalizes to absolute path
-mediaFileFromPath.FilePath.Should().Be(Path.GetFullPath(@"/home/user/videos/sample.mp4"));
-```
-
 ## FFmpegServiceIntegrationTests
 
 The `FFmpegServiceIntegrationTests` class provides integration tests for the `FFmpegService` class, verifying end-to-end video processing workflows including transcoding, trimming, merging, watermarking, and batch operations. These tests ensure that the FFmpeg wrapper integrates correctly with the actual FFmpeg binary and produces expected results with various configurations and edge cases.
